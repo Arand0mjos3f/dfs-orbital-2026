@@ -1,7 +1,3 @@
-from fastapi import FastAPI
+from app.main import app
 
-app = FastAPI()
-
-@app.get("/")
-def read_root():
-    return {"Hello": "Orbital 26! 这里是队友甲的 API!"}
+__all__ = ["app"]
