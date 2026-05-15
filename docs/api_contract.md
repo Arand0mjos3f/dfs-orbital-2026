@@ -1087,3 +1087,546 @@ Status: `200 OK`
 | Status Code | Error Code | Meaning |
 |---|---|---|
 | `404 Not Found` | `ITEM_SHARE_NOT_FOUND` | The item share record does not exist |
+
+## 5. Users APIs
+
+### 5.1 Register User
+
+`POST /api/v1/auth/register`
+
+#### Purpose
+
+Register a new user account.
+
+#### Request Body
+
+```json
+{
+  "username": "alice_tan",
+  "email": "alice@example.com",
+  "password": "securePassword123"
+}
+```
+
+#### Success Response
+
+Status: `201 Created`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "user_001",
+    "username": "alice_tan",
+    "email": "alice@example.com",
+    "avatar_url": null,
+    "created_at": "2026-05-14T19:00:00+08:00",
+    "updated_at": "2026-05-14T19:00:00+08:00"
+  }
+}
+```
+
+#### Error Cases
+
+| Status Code | Error Code | Meaning |
+|---|---|---|
+| `400 Bad Request` | `INVALID_USER_DATA` | Missing or invalid registration data |
+| `422 Validation Error` | `EMAIL_ALREADY_EXISTS` | The email is already registered |
+| `422 Validation Error` | `INVALID_EMAIL_FORMAT` | The email format is invalid |
+| `422 Validation Error` | `WEAK_PASSWORD` | The password does not meet security requirements |
+
+#### Notes
+
+- The password should be hashed before storing in the database.
+- The `password_hash` field should never be returned in any API response.
+- `users.email` should be unique.
+
+---
+
+### 5.2 Login User
+
+`POST /api/v1/auth/login`
+
+#### Purpose
+
+Authenticate a user and return an access token.
+
+#### Request Body
+
+```json
+{
+  "email": "alice@example.com",
+  "password": "securePassword123"
+}
+```
+
+#### Success Response
+
+Status: `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "token_type": "bearer",
+    "user": {
+      "id": "user_001",
+      "username": "alice_tan",
+      "email": "alice@example.com",
+      "avatar_url": null
+    }
+  }
+}
+```
+
+#### Error Cases
+
+| Status Code | Error Code | Meaning |
+|---|---|---|
+| `400 Bad Request` | `INVALID_CREDENTIALS` | Email or password is incorrect |
+| `422 Validation Error` | `MISSING_LOGIN_DATA` | Email or password is missing |
+
+#### Notes
+
+- The access token should be used for authenticating subsequent API requests.
+- The frontend should store the token securely and include it in the `Authorization` header.
+
+---
+
+### 5.3 Get Current User Profile
+
+`GET /api/v1/users/me`
+
+#### Purpose
+
+Get the profile of the currently authenticated user.
+
+#### Success Response
+
+Status: `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "user_001",
+    "username": "alice_tan",
+    "email": "alice@example.com",
+    "avatar_url": null,
+    "created_at": "2026-05-14T19:00:00+08:00",
+    "updated_at": "2026-05-14T19:00:00+08:00"
+  }
+}
+```
+
+#### Error Cases
+
+| Status Code | Error Code | Meaning |
+|---|---|---|
+| `401 Unauthorized` | `INVALID_TOKEN` | The access token is invalid or expired |
+| `401 Unauthorized` | `MISSING_TOKEN` | The access token is missing |
+
+---
+
+### 5.4 Update User Profile
+
+`PATCH /api/v1/users/me`
+
+#### Purpose
+
+Update the current user's profile information.
+
+#### Request Body
+
+```json
+{
+  "username": "alice_updated",
+  "avatar_url": "https://example.com/avatars/alice.jpg"
+}
+```
+
+#### Success Response
+
+Status: `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "user_001",
+    "username": "alice_updated",
+    "email": "alice@example.com",
+    "avatar_url": "https://example.com/avatars/alice.jpg",
+    "created_at": "2026-05-14T19:00:00+08:00",
+    "updated_at": "2026-05-14T19:30:00+08:00"
+  }
+}
+```
+
+#### Error Cases
+
+| Status Code | Error Code | Meaning |
+|---|---|---|
+| `400 Bad Request` | `INVALID_USER_DATA` | Invalid profile data |
+| `401 Unauthorized` | `INVALID_TOKEN` | The access token is invalid or expired |
+| `422 Validation Error` | `USERNAME_TAKEN` | The username is already in use |
+
+#### Notes
+
+- The email field should not be updated through this endpoint.
+- Password updates should use a separate endpoint with proper verification.
+
+---
+
+## 6. Groups APIs
+
+### 6.1 Create Group
+
+`POST /api/v1/groups`
+
+#### Purpose
+
+Create a new expense-sharing group.
+
+#### Request Body
+
+```json
+{
+  "name": "NUS Dinner",
+  "description": "Weekly dinner group",
+  "created_by_id": "user_001"
+}
+```
+
+#### Success Response
+
+Status: `201 Created`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "group_001",
+    "name": "NUS Dinner",
+    "description": "Weekly dinner group",
+    "created_by_id": "user_001",
+    "created_at": "2026-05-14T19:45:00+08:00",
+    "updated_at": "2026-05-14T19:45:00+08:00"
+  }
+}
+```
+
+#### Error Cases
+
+| Status Code | Error Code | Meaning |
+|---|---|---|
+| `400 Bad Request` | `INVALID_GROUP_DATA` | Missing or invalid group data |
+| `401 Unauthorized` | `INVALID_TOKEN` | The access token is invalid or expired |
+| `404 Not Found` | `USER_NOT_FOUND` | The creator user does not exist |
+
+#### Notes
+
+- The creator should automatically be added as a group member with `role = owner`.
+- The frontend should use the authenticated user's ID for `created_by_id`.
+
+---
+
+### 6.2 Get All Groups for Current User
+
+`GET /api/v1/groups`
+
+#### Purpose
+
+Get all groups that the current user is a member of.
+
+#### Success Response
+
+Status: `200 OK`
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "group_001",
+      "name": "NUS Dinner",
+      "description": "Weekly dinner group",
+      "created_by_id": "user_001",
+      "member_count": 3,
+      "user_role": "owner",
+      "created_at": "2026-05-14T19:45:00+08:00",
+      "updated_at": "2026-05-14T19:45:00+08:00"
+    }
+  ]
+}
+```
+
+#### Error Cases
+
+| Status Code | Error Code | Meaning |
+|---|---|---|
+| `401 Unauthorized` | `INVALID_TOKEN` | The access token is invalid or expired |
+
+#### Notes
+
+- The response includes `member_count` and `user_role` for frontend display convenience.
+- Groups are filtered by the authenticated user's membership.
+
+---
+
+### 6.3 Get Group Detail
+
+`GET /api/v1/groups/{group_id}`
+
+#### Purpose
+
+Get detailed information for one group.
+
+#### Path Parameters
+
+| Name | Type | Required | Description |
+|---|---|---|---|
+| `group_id` | string | Yes | ID of the group |
+
+#### Success Response
+
+Status: `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "group_001",
+    "name": "NUS Dinner",
+    "description": "Weekly dinner group",
+    "created_by_id": "user_001",
+    "created_at": "2026-05-14T19:45:00+08:00",
+    "updated_at": "2026-05-14T19:45:00+08:00"
+  }
+}
+```
+
+#### Error Cases
+
+| Status Code | Error Code | Meaning |
+|---|---|---|
+| `401 Unauthorized` | `INVALID_TOKEN` | The access token is invalid or expired |
+| `403 Forbidden` | `NOT_GROUP_MEMBER` | The user is not a member of this group |
+| `404 Not Found` | `GROUP_NOT_FOUND` | The group does not exist |
+
+---
+
+### 6.4 Update Group
+
+`PATCH /api/v1/groups/{group_id}`
+
+#### Purpose
+
+Update group information.
+
+#### Path Parameters
+
+| Name | Type | Required | Description |
+|---|---|---|---|
+| `group_id` | string | Yes | ID of the group |
+
+#### Request Body
+
+```json
+{
+  "name": "NUS Dinner Updated",
+  "description": "Weekly dinner group for CS students"
+}
+```
+
+#### Success Response
+
+Status: `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "group_001",
+    "name": "NUS Dinner Updated",
+    "description": "Weekly dinner group for CS students",
+    "created_by_id": "user_001",
+    "created_at": "2026-05-14T19:45:00+08:00",
+    "updated_at": "2026-05-14T20:00:00+08:00"
+  }
+}
+```
+
+#### Error Cases
+
+| Status Code | Error Code | Meaning |
+|---|---|---|
+| `400 Bad Request` | `INVALID_GROUP_DATA` | Invalid group data |
+| `401 Unauthorized` | `INVALID_TOKEN` | The access token is invalid or expired |
+| `403 Forbidden` | `INSUFFICIENT_PERMISSION` | Only group owners can update group information |
+| `404 Not Found` | `GROUP_NOT_FOUND` | The group does not exist |
+
+---
+
+### 6.5 Add Member to Group
+
+`POST /api/v1/groups/{group_id}/members`
+
+#### Purpose
+
+Add a user to a group.
+
+#### Path Parameters
+
+| Name | Type | Required | Description |
+|---|---|---|---|
+| `group_id` | string | Yes | ID of the group |
+
+#### Request Body
+
+```json
+{
+  "user_id": "user_002",
+  "role": "member"
+}
+```
+
+#### Success Response
+
+Status: `201 Created`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "member_001",
+    "group_id": "group_001",
+    "user_id": "user_002",
+    "role": "member",
+    "joined_at": "2026-05-14T20:10:00+08:00"
+  }
+}
+```
+
+#### Error Cases
+
+| Status Code | Error Code | Meaning |
+|---|---|---|
+| `400 Bad Request` | `INVALID_MEMBER_DATA` | Missing or invalid member data |
+| `400 Bad Request` | `INVALID_ROLE` | The role value is not valid |
+| `401 Unauthorized` | `INVALID_TOKEN` | The access token is invalid or expired |
+| `403 Forbidden` | `INSUFFICIENT_PERMISSION` | Only group owners can add members |
+| `404 Not Found` | `GROUP_NOT_FOUND` | The group does not exist |
+| `404 Not Found` | `USER_NOT_FOUND` | The user does not exist |
+| `422 Validation Error` | `DUPLICATE_MEMBERSHIP` | The user is already a member of this group |
+
+#### Notes
+
+- Valid role values should be `owner` or `member`.
+- The backend should prevent duplicate membership records for the same user in the same group.
+
+---
+
+### 6.6 Get Group Members
+
+`GET /api/v1/groups/{group_id}/members`
+
+#### Purpose
+
+Get all members of a group.
+
+#### Path Parameters
+
+| Name | Type | Required | Description |
+|---|---|---|---|
+| `group_id` | string | Yes | ID of the group |
+
+#### Success Response
+
+Status: `200 OK`
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "member_001",
+      "group_id": "group_001",
+      "user_id": "user_001",
+      "username": "alice_tan",
+      "avatar_url": null,
+      "role": "owner",
+      "joined_at": "2026-05-14T19:45:00+08:00"
+    },
+    {
+      "id": "member_002",
+      "group_id": "group_001",
+      "user_id": "user_002",
+      "username": "bob_lim",
+      "avatar_url": null,
+      "role": "member",
+      "joined_at": "2026-05-14T20:10:00+08:00"
+    }
+  ]
+}
+```
+
+#### Error Cases
+
+| Status Code | Error Code | Meaning |
+|---|---|---|
+| `401 Unauthorized` | `INVALID_TOKEN` | The access token is invalid or expired |
+| `403 Forbidden` | `NOT_GROUP_MEMBER` | The user is not a member of this group |
+| `404 Not Found` | `GROUP_NOT_FOUND` | The group does not exist |
+
+#### Notes
+
+- The response includes user information such as `username` and `avatar_url` for frontend display convenience.
+- This avoids the need for the frontend to make separate user profile requests.
+
+---
+
+### 6.7 Remove Member from Group
+
+`DELETE /api/v1/groups/{group_id}/members/{user_id}`
+
+#### Purpose
+
+Remove a user from a group.
+
+#### Path Parameters
+
+| Name | Type | Required | Description |
+|---|---|---|---|
+| `group_id` | string | Yes | ID of the group |
+| `user_id` | string | Yes | ID of the user to remove |
+
+#### Success Response
+
+Status: `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "removed_user_id": "user_002",
+    "group_id": "group_001"
+  }
+}
+```
+
+#### Error Cases
+
+| Status Code | Error Code | Meaning |
+|---|---|---|
+| `401 Unauthorized` | `INVALID_TOKEN` | The access token is invalid or expired |
+| `403 Forbidden` | `INSUFFICIENT_PERMISSION` | Only group owners can remove members |
+| `403 Forbidden` | `CANNOT_REMOVE_OWNER` | The group owner cannot be removed |
+| `404 Not Found` | `GROUP_NOT_FOUND` | The group does not exist |
+| `404 Not Found` | `MEMBER_NOT_FOUND` | The user is not a member of this group |
+
+#### Notes
+
+- Group owners cannot be removed from the group.
+- Members can leave the group by removing themselves.
