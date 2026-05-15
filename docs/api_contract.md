@@ -4,7 +4,7 @@
 
 This document defines the initial API contract between the frontend and backend of the DFS project.
 
-The goal is to make sure both sides use consistent end point names, request formats, response formats, and status codes.
+The goal is to make sure both sides use consistent endpoint names, request formats, response formats, and status codes.
 
 This is a draft for the first version of API Contract and will be updated as the project develops.
 
@@ -43,7 +43,7 @@ POST /api/v1/expenses/{expense_id}/receipts
 
 ## Common Response Format
 
-### Success Respons
+### Success Response
 
 
 ```json
@@ -1630,3 +1630,261 @@ Status: `200 OK`
 
 - Group owners cannot be removed from the group.
 - Members can leave the group by removing themselves.
+
+---
+
+## 7. Debts APIs
+
+### 7.1 Calculate Debts for Expense
+
+`POST /api/v1/expenses/{expense_id}/debts/calculate`
+
+#### Purpose
+
+Calculate debt records for one expense based on receipts, items, item shares, and payers.
+
+This endpoint converts item-level sharing information into final payment instructions, such as `Bob should pay Alice 10.50`.
+
+#### Path Parameters
+
+| Name | Type | Required | Description |
+|---|---|---|---|
+| `expense_id` | string | Yes | ID of the expense to calculate debts for |
+
+#### Request Body
+
+```json
+{}
+```
+
+#### Success Response
+
+Status: `201 Created`
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "debt_001",
+      "group_id": "group_001",
+      "expense_id": "expense_001",
+      "from_user_id": "user_002",
+      "to_user_id": "user_001",
+      "amount": 14.28,
+      "status": "pending",
+      "payment_proof_url": null,
+      "created_at": "2026-05-14T20:30:00+08:00",
+      "marked_paid_at": null,
+      "confirmed_received_at": null,
+      "settled_at": null
+    }
+  ]
+}
+```
+
+#### Error Cases
+
+| Status Code | Error Code | Meaning |
+|---|---|---|
+| `400 Bad Request` | `EXPENSE_NOT_READY` | The expense does not have enough confirmed receipt, item, or share data |
+| `400 Bad Request` | `DEBT_ALREADY_CALCULATED` | Debts have already been calculated for this expense |
+| `404 Not Found` | `EXPENSE_NOT_FOUND` | The expense does not exist |
+
+#### Notes
+
+- This endpoint is for the basic Milestone 1 debt calculation.
+- It should use `receipts.payer_id` to determine who paid first.
+- It should use `item_shares.total_share_amount` to determine how much each user should finally pay.
+- New debt records should start with `status = pending`.
+- If debts are recalculated later, the backend should avoid creating duplicate active debt records.
+
+---
+
+### 7.2 Get Debts in Group
+
+`GET /api/v1/groups/{group_id}/debts`
+
+#### Purpose
+
+Get all debt records under a group.
+
+This endpoint is used by the frontend to display settlement instructions.
+
+#### Path Parameters
+
+| Name | Type | Required | Description |
+|---|---|---|---|
+| `group_id` | string | Yes | ID of the group |
+
+#### Success Response
+
+Status: `200 OK`
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "debt_001",
+      "group_id": "group_001",
+      "expense_id": "expense_001",
+      "from_user_id": "user_002",
+      "from_username": "Bob",
+      "to_user_id": "user_001",
+      "to_username": "Alice",
+      "amount": 14.28,
+      "status": "pending",
+      "payment_proof_url": null,
+      "created_at": "2026-05-14T20:30:00+08:00",
+      "marked_paid_at": null,
+      "confirmed_received_at": null,
+      "settled_at": null
+    }
+  ]
+}
+```
+
+#### Error Cases
+
+| Status Code | Error Code | Meaning |
+|---|---|---|
+| `401 Unauthorized` | `INVALID_TOKEN` | The access token is invalid or expired |
+| `403 Forbidden` | `NOT_GROUP_MEMBER` | The user is not a member of this group |
+| `404 Not Found` | `GROUP_NOT_FOUND` | The group does not exist |
+
+#### Notes
+
+- `from_user_id` is the user who needs to pay.
+- `to_user_id` is the user who should receive the money.
+- `from_username` and `to_username` are included for frontend display convenience.
+
+---
+
+### 7.3 Mark Debt as Paid
+
+`PATCH /api/v1/debts/{debt_id}/mark-paid`
+
+#### Purpose
+
+Allow the payer to mark a debt as paid.
+
+The payer may optionally provide a payment proof image URL, such as a PayNow screenshot.
+
+#### Path Parameters
+
+| Name | Type | Required | Description |
+|---|---|---|---|
+| `debt_id` | string | Yes | ID of the debt record |
+
+#### Request Body
+
+```json
+{
+  "payment_proof_url": "https://example.com/payment_proofs/debt_001.jpg"
+}
+```
+
+#### Success Response
+
+Status: `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "debt_001",
+    "group_id": "group_001",
+    "expense_id": "expense_001",
+    "from_user_id": "user_002",
+    "to_user_id": "user_001",
+    "amount": 14.28,
+    "status": "marked_paid",
+    "payment_proof_url": "https://example.com/payment_proofs/debt_001.jpg",
+    "created_at": "2026-05-14T20:30:00+08:00",
+    "marked_paid_at": "2026-05-14T20:40:00+08:00",
+    "confirmed_received_at": null,
+    "settled_at": null
+  }
+}
+```
+
+#### Error Cases
+
+| Status Code | Error Code | Meaning |
+|---|---|---|
+| `400 Bad Request` | `INVALID_DEBT_STATUS` | The debt cannot be marked as paid from its current status |
+| `401 Unauthorized` | `INVALID_TOKEN` | The access token is invalid or expired |
+| `403 Forbidden` | `NOT_DEBT_PAYER` | Only the payer can mark this debt as paid |
+| `404 Not Found` | `DEBT_NOT_FOUND` | The debt record does not exist |
+
+#### Notes
+
+- Only `from_user_id` should be allowed to mark the debt as paid.
+- After this action, `status` should become `marked_paid`.
+- `marked_paid_at` should be set by the backend.
+- `payment_proof_url` is optional.
+
+---
+
+### 7.4 Confirm Debt Received
+
+`PATCH /api/v1/debts/{debt_id}/confirm-received`
+
+#### Purpose
+
+Allow the receiver to confirm that the payment has been received.
+
+This is the final confirmation step in the debt settlement flow.
+
+#### Path Parameters
+
+| Name | Type | Required | Description |
+|---|---|---|---|
+| `debt_id` | string | Yes | ID of the debt record |
+
+#### Request Body
+
+```json
+{}
+```
+
+#### Success Response
+
+Status: `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "debt_001",
+    "group_id": "group_001",
+    "expense_id": "expense_001",
+    "from_user_id": "user_002",
+    "to_user_id": "user_001",
+    "amount": 14.28,
+    "status": "confirmed_received",
+    "payment_proof_url": "https://example.com/payment_proofs/debt_001.jpg",
+    "created_at": "2026-05-14T20:30:00+08:00",
+    "marked_paid_at": "2026-05-14T20:40:00+08:00",
+    "confirmed_received_at": "2026-05-14T20:45:00+08:00",
+    "settled_at": "2026-05-14T20:45:00+08:00"
+  }
+}
+```
+
+#### Error Cases
+
+| Status Code | Error Code | Meaning |
+|---|---|---|
+| `400 Bad Request` | `INVALID_DEBT_STATUS` | The debt cannot be confirmed from its current status |
+| `401 Unauthorized` | `INVALID_TOKEN` | The access token is invalid or expired |
+| `403 Forbidden` | `NOT_DEBT_RECEIVER` | Only the receiver can confirm this debt |
+| `404 Not Found` | `DEBT_NOT_FOUND` | The debt record does not exist |
+
+#### Notes
+
+- Only `to_user_id` should be allowed to confirm that the payment has been received.
+- Normally, a debt should only be confirmed after it has `status = marked_paid`.
+- After confirmation, `status` should become `confirmed_received`.
+- `confirmed_received_at` and `settled_at` should be set by the backend.
