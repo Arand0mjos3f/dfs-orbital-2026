@@ -1,21 +1,73 @@
-import { Routes, Route } from 'react-router-dom';
-import { Box } from '@chakra-ui/react';
-import Dashboard from './pages/Dashboard.jsx';
-import BottomNav from './components/BottomNav.jsx';
+// src/App.jsx
+import React from 'react';
+import { ChakraProvider, extendTheme } from '@chakra-ui/react';
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from 'react-router-dom';
+import Login from './features/auth/Login';
+
+// Placeholder components for routing
+const Dashboard = () => <div>Dashboard View</div>;
+const Groups = () => <div>Groups View</div>;
+const Register = () => <div>Register View</div>;
+
+// Configure the router with your defined boundaries
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <Navigate to="/dashboard" replace />,
+  },
+  {
+    path: '/login',
+    element: <Login />,
+  },
+  {
+    path: '/register',
+    element: <Register />,
+  },
+  {
+    path: '/dashboard',
+    element: <Dashboard />,
+  },
+  {
+    path: '/groups',
+    element: <Groups />,
+  },
+]);
+
+// Optional: Customize Chakra theme for the iOS/Mobile-first feel
+const theme = extendTheme({
+  styles: {
+    global: {
+      body: {
+        bg: 'gray.50', // Soft background for iOS feel
+        color: 'gray.800',
+      },
+    },
+  },
+  components: {
+    Button: {
+      baseStyle: {
+        borderRadius: '2xl', // 16px rounded corners
+      },
+    },
+    Input: {
+      baseStyle: {
+        field: {
+          borderRadius: 'xl',
+        },
+      },
+    },
+  },
+});
 
 function App() {
   return (
-    <Box bg="#F8FAFC" minH="100vh">
-      {/* 限制手机展示宽度并在电脑屏幕上居中 */}
-      <Box px={5} maxW="md" mx="auto" position="relative" minH="100vh"> 
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-        </Routes>
-        
-        {/* 底部导航栏挂载在底部 */}
-        <BottomNav />
-      </Box>
-    </Box>
+    <ChakraProvider theme={theme}>
+      <RouterProvider router={router} />
+    </ChakraProvider>
   );
 }
 

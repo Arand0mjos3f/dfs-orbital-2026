@@ -6,13 +6,13 @@ export default function Dashboard() {
   return (
     <Box pt={4} pb={28}> 
       
-      {/* 头部欢迎语 */}
+      {/* greeting at top */}
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg" color="gray.800">Hello, Justin</Heading>
         <Avatar size="sm" name="Justin" src="https://bit.ly/dan-abramov" />
       </Flex>
 
-      {/* 核心余额渐变卡片 (外圆角严格 24px) */}
+      {/* core balance gradient card (outer corners strictly 24px) */}
       <Box 
         bgGradient="linear(to-br, gray.700, gray.900)" 
         borderRadius="24px" 
@@ -33,12 +33,12 @@ export default function Dashboard() {
         </Flex>
       </Box>
 
-      {/* 待结算账目列表 */}
+      {/* pending settlement list */}
       <Box mb={8}>
         <Heading size="md" mb={4} color="gray.800">Pending Balances</Heading>
         <VStack spacing={3} align="stretch">
           
-          {/* 第一行：欠 Alice 钱 */}
+          {/* first row: you owe Alice */}
           <Flex bg="#FFFFFF" p={4} borderRadius="16px" boxShadow={softShadow} align="center" justify="space-between">
             <HStack spacing={3}>
               <Avatar size="sm" name="Alice" bg="pink.400" />
@@ -49,7 +49,7 @@ export default function Dashboard() {
             </Button>
           </Flex>
 
-          {/* 第二行：Bob 欠你钱 */}
+          {/* second row: Bob owes you money */}
           <Flex bg="#FFFFFF" p={4} borderRadius="16px" boxShadow={softShadow} align="center" justify="space-between">
             <HStack spacing={3}>
               <Avatar size="sm" name="Bob" bg="blue.400" />
@@ -63,7 +63,7 @@ export default function Dashboard() {
         </VStack>
       </Box>
 
-      {/* 最近活动列表 */}
+      {/* recent activity list */}
       <Box>
         <Heading size="md" mb={4} color="gray.800">Recent Activity</Heading>
         <VStack spacing={3} align="stretch">
