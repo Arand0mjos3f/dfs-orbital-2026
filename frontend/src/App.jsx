@@ -1,24 +1,35 @@
-import { Routes, Route } from 'react-router-dom';
-import { Box } from '@chakra-ui/react';
-import Dashboard from './pages/Dashboard.jsx';
-import Groups from './pages/Groups.jsx'; // 👈 新增这一行
-import BottomNav from './components/BottomNav.jsx';
+// src/App.jsx
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import MainLayout from './layouts/MainLayout';
+import ProtectedRoute from './features/auth/ProtectedRoute';
+import Login from './features/auth/Login';
+import Dashboard from './pages/Dashboard';
+import Groups from './pages/Groups';
 
-function App() {
-  return (
-    <Box bg="#F8FAFC" minH="100vh">
-      <Box px={5} maxW="md" mx="auto" position="relative" minH="100vh"> 
-        
-        {/* Routing configuration: Tells application which page to display at respective URL */}
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/groups" element={<Groups />} /> {/* 👈 新增这一行 */}
-        </Routes>
-        
-        <BottomNav />
-      </Box>
-    </Box>
-  );
+const router = createBrowserRouter([
+  {
+    // Public route
+    path: '/login',
+    element: <Login />,
+  },
+  {
+    // 🚨 CRITICAL FIX: Explicitly define the root path so absolute navigation works
+    path: '/',
+    element: <ProtectedRoute />,
+    children: [
+      {
+        // Visual layout wrapper
+        element: <MainLayout />,
+        children: [
+          { index: true, element: <Navigate to="/dashboard" replace /> },
+          { path: 'dashboard', element: <Dashboard /> },
+          { path: 'groups', element: <Groups /> },
+        ],
+      },
+    ],
+  },
+]);
+
+export default function App() {
+  return <RouterProvider router={router} />;
 }
-
-export default App;

@@ -1,5 +1,8 @@
 // src/features/auth/Login.jsx
 import React from 'react';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useAuthStore } from '../../store/useAuthStore';
+import axios from '../../api/axios'; // Keep this import ready for when the real API is available
 import {
   Box,
   Button,
@@ -14,31 +17,49 @@ import {
   useToast,
   Container,
 } from '@chakra-ui/react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 
 const Login = () => {
   const navigate = useNavigate();
   const toast = useToast();
-  
+
+  // 1. Extract the setAuth action from Zustand (CRITICAL!)
+  const setAuth = useAuthStore((state) => state.setAuth);
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm();
 
-  // Mock submit handler
   const onSubmit = async (data) => {
     try {
-      // TODO: Replace with actual API call: await apiClient.post('/auth/login', data)
-      console.log('Login Payload:', data);
-      
-      // Simulate network request
+      console.log('Attempting login for:', data.email);
+
+      // Simulate a 1-second network delay to show the loading animation on the Button
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      // Mock successful login
-      localStorage.setItem('dfs_token', 'mock_jwt_token_123');
-      
+
+      /* * 🚨 Architect's Note: Once the backend API is ready, remove the Mock code below and replace it with this:
+       * const response = await axios.post('/api/v1/login', { email: data.email, password: data.password });
+       * if (response.data.success) {
+       * const { access_token, user } = response.data.data;
+       * setAuth(user, access_token);
+       * }
+       */
+
+      // --- MOCK LOGIC START (Simulating backend response data) ---
+      const mockUser = {
+        id: 'usr_mock_777',
+        username: 'DFS_Pioneer',
+        email: data.email,
+        avatar_url: null,
+      };
+      const mockToken = 'mock_jwt_token_123456789';
+
+      // 2. Call Zustand's setAuth. This automatically saves the user to memory, the token to localStorage, and sets isAuthenticated to true!
+      setAuth(mockUser, mockToken);
+      // --- MOCK LOGIC END ---
+
       toast({
         title: 'Welcome back!',
         status: 'success',
@@ -46,9 +67,11 @@ const Login = () => {
         isClosable: true,
         position: 'top',
       });
-      
-      navigate('/dashboard');
+
+      // 3. Safely navigate to Dashboard (replace: true prevents navigating back to the login page)
+      navigate('/dashboard', { replace: true });
     } catch (error) {
+      console.error(error);
       toast({
         title: 'Login failed',
         description: 'Please check your credentials and try again.',
@@ -98,9 +121,7 @@ const Login = () => {
                     },
                   })}
                 />
-                <FormErrorMessage>
-                  {errors.email && errors.email.message}
-                </FormErrorMessage>
+                <FormErrorMessage>{errors.email && errors.email.message}</FormErrorMessage>
               </FormControl>
 
               <FormControl isInvalid={errors.password}>
@@ -122,9 +143,7 @@ const Login = () => {
                     },
                   })}
                 />
-                <FormErrorMessage>
-                  {errors.password && errors.password.message}
-                </FormErrorMessage>
+                <FormErrorMessage>{errors.password && errors.password.message}</FormErrorMessage>
               </FormControl>
 
               <Button
@@ -145,12 +164,7 @@ const Login = () => {
 
         <Text textAlign="center" color="gray.600">
           Don't have an account?{' '}
-          <ChakraLink
-            as={RouterLink}
-            to="/register"
-            color="blue.500"
-            fontWeight="bold"
-          >
+          <ChakraLink as={RouterLink} to="/register" color="blue.500" fontWeight="bold">
             Sign up
           </ChakraLink>
         </Text>
