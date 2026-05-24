@@ -1,31 +1,21 @@
 from fastapi import FastAPI
-
+from fastapi.middleware.cors import CORSMiddleware # NEW IMPORT
 from app.api.v1.router import api_router
-from app.core.config import get_settings
 
+app = FastAPI(title="DFS Orbital 2026")
 
-def create_app() -> FastAPI:
-    """Create and configure the FastAPI application."""
+# --- NEW CORS CONFIGURATION ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"], # Allow React
+    allow_credentials=True,
+    allow_methods=["*"], # Allow GET, POST, PUT, DELETE
+    allow_headers=["*"], # Allow all headers
+)
+# ------------------------------
 
-    settings = get_settings()
-    application = FastAPI(
-        title=settings.app_name,
-        version="0.1.0",
-        description="Backend API for the Debt-First Search shared expense app.",
-    )
+app.include_router(api_router, prefix="/api/v1")
 
-    @application.get("/", tags=["root"])
-    def read_root() -> dict[str, str]:
-        """Return basic API metadata."""
-
-        return {
-            "message": "Welcome to the Debt-First Search API",
-            "docs": "/docs",
-            "health": f"{settings.api_v1_prefix}/health",
-        }
-
-    application.include_router(api_router, prefix=settings.api_v1_prefix)
-    return application
-
-
-app = create_app()
+@app.get("/")
+def root():
+    return {"message": "Welcome to DFS Orbital API"}

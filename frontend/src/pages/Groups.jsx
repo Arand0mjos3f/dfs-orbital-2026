@@ -1,102 +1,86 @@
-import {
-  Box,
-  Flex,
-  Text,
-  Heading,
-  Avatar,
-  AvatarGroup,
-  VStack,
-  HStack,
-  Badge,
-} from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
+import { useGroupStore } from '../store/groupStore';
 
 export default function Groups() {
-  const softShadow = '0 4px 20px rgba(0, 0, 0, 0.05)';
+  const { groups, isLoading, error, fetchGroups, createGroup } = useGroupStore();
 
-  // ==========================================
-  // 1.Mock data layer: this will be replaced by real API calls in the future, but for now we hardcode it to build the UI
-  // ==========================================
-  const mockGroups = [
-    {
-      id: 1,
-      name: 'Bali Trip 2026 🌴',
-      members: ['Sixian', 'Justin', 'Alice'],
-      totalSpent: 850.5,
-      myStatus: 'owe',
-      myAmount: 120.0,
-    },
-    {
-      id: 2,
-      name: 'NUS Roommates 🏠',
-      members: ['Sixian', 'Bob', 'Charlie', 'David'],
-      totalSpent: 120.0,
-      myStatus: 'owed',
-      myAmount: 45.0,
-    },
-  ];
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupDesc, setNewGroupDesc] = useState('');
 
-  // ==========================================
-  // 2. View layer: data driven interface rendering
-  // ==========================================
+  // Hardcoded test user ID (will link this to useAuthStore later!)
+  const testUserId = '16ab9e31-56f1-4afc-8d2f-09f45dfd57da';
+
+  useEffect(() => {
+    fetchGroups(testUserId);
+  }, [fetchGroups]);
+
+  const handleCreateGroup = async (e) => {
+    e.preventDefault();
+    if (!newGroupName) return;
+
+    await createGroup({ name: newGroupName, description: newGroupDesc }, testUserId);
+
+    setNewGroupName('');
+    setNewGroupDesc('');
+  };
+
+  if (isLoading) return <div className="p-4 text-center">Loading your groups...</div>;
+  if (error) return <div className="p-4 text-red-500">{error}</div>;
+
   return (
-    <Box pt={4} pb={28}>
-      {/* page title */}
-      <Flex justify="space-between" align="center" mb={6}>
-        <Heading size="lg" color="gray.800">
-          My Groups
-        </Heading>
-        {/* cute button */}
-        <Badge
-          bg="#4F46E5"
-          color="white"
-          px={3}
-          py={1}
-          borderRadius="full"
-          fontSize="sm"
-          cursor="pointer"
+    <div className="max-w-2xl mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6">My Groups</h1>
+
+      <form
+        onSubmit={handleCreateGroup}
+        className="bg-white p-4 rounded-lg shadow-md border mb-8 space-y-4"
+      >
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Group Name</label>
+          <input
+            type="text"
+            value={newGroupName}
+            onChange={(e) => setNewGroupName(e.target.value)}
+            className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="e.g., Weekend Getaway"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <input
+            type="text"
+            value={newGroupDesc}
+            onChange={(e) => setNewGroupDesc(e.target.value)}
+            className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="What is this group for?"
+          />
+        </div>
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors w-full font-medium"
         >
-          + New
-        </Badge>
-      </Flex>
+          Create Group
+        </button>
+      </form>
 
-      {/* group list rendering */}
-      <VStack spacing={4} align="stretch">
-        {mockGroups.map((group) => (
-          <Box key={group.id} bg="#FFFFFF" p={5} borderRadius="20px" boxShadow={softShadow}>
-            <Flex justify="space-between" align="center" mb={4}>
-              <Text fontSize="md" fontWeight="bold" color="gray.800">
-                {group.name}
-              </Text>
-              <Text fontSize="xs" color="gray.400">
-                Total: ${group.totalSpent.toFixed(2)}
-              </Text>
-            </Flex>
-
-            <Flex justify="space-between" align="flex-end">
-              {/* group member avatars */}
-              <AvatarGroup size="sm" max={3}>
-                {group.members.map((member, index) => (
-                  <Avatar key={index} name={member} />
-                ))}
-              </AvatarGroup>
-
-              {/* my balance status in this group */}
-              <Box textAlign="right">
-                <Text fontSize="xs" color="gray.400" mb={1}>
-                  {group.myStatus === 'owe' ? 'You owe' : 'You are owed'}
-                </Text>
-                <Text
-                  fontSize="lg"
-                  fontWeight="bold"
-                  color={group.myStatus === 'owe' ? '#EF4444' : '#10B981'}
-                >
-                  {group.myStatus === 'owe' ? '-' : '+'} ${group.myAmount.toFixed(2)}
-                </Text>
-              </Box>
-            </Flex>
-          </Box>
-        ))}
-      </VStack>
-    </Box>
+      {groups.length === 0 ? (
+        <p className="text-gray-500 text-center py-8">
+          No groups found. Create your first one above!
+        </p>
+      ) : (
+        <ul className="space-y-3">
+          {groups.map((group) => (
+            <li
+              key={group.id}
+              className="border p-4 rounded-lg shadow-sm bg-gray-50 hover:bg-white transition-colors"
+            >
+              <h2 className="text-xl font-semibold text-gray-800">{group.name}</h2>
+              <p className="text-gray-600 mt-1">{group.description}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
