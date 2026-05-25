@@ -1,28 +1,20 @@
-from pydantic import BaseModel, ConfigDict
+import uuid
 from datetime import datetime
-from uuid import UUID
 
-# WHY: The JSON payload React sends when a user clicks "Create Group"
-class GroupCreate(BaseModel):
-    name: str
-    description: str
+from pydantic import BaseModel, ConfigDict, Field
 
-# WHY: The JSON response FastAPI sends back to React
-class GroupResponse(BaseModel):
-    id: UUID
+
+class GroupUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    description: str | None = None
+
+
+class GroupRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
     name: str
-    description: str
-    created_by_id: UUID
+    description: str | None
+    created_by_id: uuid.UUID
     created_at: datetime
-    
-    model_config = ConfigDict(from_attributes=True)
-
-# WHY: Represents the relationship between a user and a group
-class GroupMemberResponse(BaseModel):
-    id: UUID
-    group_id: UUID
-    user_id: UUID
-    role: str
-    joined_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
+    updated_at: datetime
