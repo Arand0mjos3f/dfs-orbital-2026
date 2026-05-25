@@ -1,46 +1,68 @@
+import uuid
+
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
-from uuid import UUID
+
+from app.crud.base import delete_record, get_by_id, update_record
+from app.models.expense import Expense
 from app.models.group import Group, GroupMember
-from app.schemas.group import GroupCreate
 
-class CRUDGroup:
-    # WHY: We need to find all groups a specific user belongs to.
-    # We use a SQL JOIN to connect the Groups table and the GroupMembers table.
-    def get_multi_by_user(self, db: Session, user_id: UUID, skip: int = 0, limit: int = 100):
-        return (
-            db.query(Group)
-            .join(GroupMember)
-            .filter(GroupMember.user_id == user_id)
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
 
-    # WHY: When a user creates a group, they don't just make the group. 
-    # They must instantly become a member of that group with the role of "owner".
-    # This must happen in a single database transaction.
-    def create_with_owner(self, db: Session, *, obj_in: GroupCreate, owner_id: UUID) -> Group:
-        # 1. Prepare the Group object
-        db_obj = Group(
-            name=obj_in.name,
-            description=obj_in.description,
-            created_by_id=owner_id
-        )
-        db.add(db_obj)
-        db.flush() # WHY: flush() assigns a UUID to db_obj without finalizing the save yet.
+def get_group(
+    db: Session,
+    group_id: uuid.UUID,
+) -> Group | None:
+    return get_by_id(db, Group, group_id)
 
-        # 2. Prepare the GroupMember relationship
-        member_obj = GroupMember(
-            group_id=db_obj.id,
-            user_id=owner_id,
-            role="owner"
-        )
-        db.add(member_obj)
-        
-        # 3. Save both to the database simultaneously
-        db.commit()
-        db.refresh(db_obj)
-        
-        return db_obj
 
-group = CRUDGroup()
+def get_group_member(
+    db: Session,
+    group_id: uuid.UUID,
+    user_id: uuid.UUID,
+) -> GroupMember | None:
+    statement = select(GroupMember).where(
+        GroupMember.group_id == group_id,
+        GroupMember.user_id == user_id,
+    )
+    return db.execute(statement).scalar_one_or_none()
+
+
+def is_group_owner(
+    db: Session,
+    group_id: uuid.UUID,
+    user_id: uuid.UUID,
+) -> bool:
+    member = get_group_member(db, group_id, user_id)
+    return member is not None and member.role == "owner"
+
+
+def update_group(
+    db: Session,
+    group: Group,
+    data: dict,
+) -> Group:
+    return update_record(db, group, data)
+
+
+def group_has_expenses(
+    db: Session,
+    group_id: uuid.UUID,
+) -> bool:
+    statement = select(Expense.id).where(Expense.group_id == group_id).limit(1)
+    return db.execute(statement).scalar_one_or_none() is not None
+
+
+def delete_group_members(
+    db: Session,
+    group_id: uuid.UUID,
+) -> None:
+    statement = delete(GroupMember).where(GroupMember.group_id == group_id)
+    db.execute(statement)
+    db.commit()
+
+
+def delete_group(
+    db: Session,
+    group: Group,
+) -> None:
+    delete_record(db, group)
