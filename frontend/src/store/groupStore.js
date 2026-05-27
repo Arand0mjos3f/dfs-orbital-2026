@@ -1,5 +1,12 @@
 import { create } from 'zustand';
-import { apiClient } from '../api/client';
+import {
+  createGroup as createGroupRequest,
+  deleteGroup as deleteGroupRequest,
+  getGroupDetail as getGroupDetailRequest,
+  getGroupMembers as getGroupMembersRequest,
+  getGroups as getGroupsRequest,
+  updateGroup as updateGroupRequest,
+} from '../api/groups';
 
 export const useGroupStore = create((set) => ({
   groups: [],
@@ -12,7 +19,7 @@ export const useGroupStore = create((set) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const response = await apiClient.get(`/groups?user_id=${userId}`);
+      const response = await getGroupsRequest(userId);
 
       set({ groups: response.data.data, isLoading: false });
     } catch (error) {
@@ -25,7 +32,7 @@ export const useGroupStore = create((set) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const response = await apiClient.get(`/groups/${groupId}?user_id=${userId}`);
+      const response = await getGroupDetailRequest(groupId, userId);
 
       set({ selectedGroup: response.data.data, isLoading: false });
       return response.data.data;
@@ -38,7 +45,7 @@ export const useGroupStore = create((set) => ({
 
   fetchGroupMembers: async (groupId, userId) => {
     try {
-      const response = await apiClient.get(`/groups/${groupId}/members?user_id=${userId}`);
+      const response = await getGroupMembersRequest(groupId, userId);
 
       set({ members: response.data.data });
       return response.data.data;
@@ -51,7 +58,7 @@ export const useGroupStore = create((set) => ({
 
   createGroup: async (groupData, userId) => {
     try {
-      const response = await apiClient.post('/groups', {
+      const response = await createGroupRequest({
         ...groupData,
         created_by_id: userId,
       });
@@ -70,7 +77,7 @@ export const useGroupStore = create((set) => ({
 
   updateGroup: async (groupId, groupData, userId) => {
     try {
-      const response = await apiClient.patch(`/groups/${groupId}?user_id=${userId}`, groupData);
+      const response = await updateGroupRequest(groupId, groupData, userId);
 
       set((state) => ({
         groups: state.groups.map((group) => (group.id === groupId ? response.data.data : group)),
@@ -88,7 +95,7 @@ export const useGroupStore = create((set) => ({
 
   deleteGroup: async (groupId, userId) => {
     try {
-      await apiClient.delete(`/groups/${groupId}?user_id=${userId}`);
+      await deleteGroupRequest(groupId, userId);
 
       set((state) => ({
         groups: state.groups.filter((group) => group.id !== groupId),
