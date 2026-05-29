@@ -53,59 +53,66 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-[393px] rounded-2xl bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)]">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-extrabold text-gray-800">DFS Orbital</h1>
-          <p className="mt-2 text-sm text-gray-400">Sign in to manage your groups.</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-gray-700">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setError('');
-              }}
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-800 outline-none focus:border-gray-400 focus:bg-white"
-              required
-            />
+    <div className="flex min-h-dvh items-center justify-center bg-slate-200 px-4 py-4">
+      <div className="flex h-[min(852px,calc(100dvh-32px))] w-full max-w-[393px] items-center justify-center rounded-[44px] border border-white/80 bg-[#F8FAFC] px-5 shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
+        <div className="w-full rounded-[24px] bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.05)]">
+          <div className="mb-8">
+            <p className="text-sm font-semibold text-slate-400">Welcome to</p>
+            <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">
+              O(n) Debtor
+            </h1>
+            <p className="mt-2 text-sm font-medium text-slate-400">
+              Sign in to continue your expense-sharing workflow.
+            </p>
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-gray-700">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setError('');
-              }}
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-800 outline-none focus:border-gray-400 focus:bg-white"
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-500">
-              {error}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="mb-2 block text-sm font-bold text-slate-700">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError('');
+                }}
+                className="w-full rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+                required
+              />
             </div>
-          )}
 
-          <button
-            type="submit"
-            className="w-full rounded-xl bg-gray-800 px-4 py-3 text-sm font-bold text-white transition hover:bg-gray-700"
-          >
-            Sign In
-          </button>
-        </form>
+            <div>
+              <label className="mb-2 block text-sm font-bold text-slate-700">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError('');
+                }}
+                className="w-full rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+                required
+              />
+            </div>
 
-        <p className="mt-6 text-center text-xs text-gray-400">
-          Demo account is prefilled for local testing.
-        </p>
+            {error && (
+              <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-[#EF4444]">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="w-full rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white shadow-[0_8px_20px_rgba(79,70,229,0.25)]"
+            >
+              Sign In
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-xs font-semibold text-slate-400">
+            Demo account is prefilled for Milestone 1 testing.
+          </p>
+        </div>
       </div>
     </div>
   );
