@@ -1,7 +1,10 @@
 import uuid
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, HTTPException, status
+import shutil
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.crud.expense import get_expense
@@ -13,8 +16,14 @@ from app.crud.receipt import (
 )
 from app.crud.user import get_user
 from app.db.database import get_db
-from app.schemas.receipt import ReceiptCreate, ReceiptRead, ReceiptUpdate
+from app.schemas.receipt import (
+    ReceiptCreate,
+    ReceiptRead,
+    ReceiptUpdate,
+    ReceiptUploadRead,
+)
 
+from app.services.ocr_service import run_mock_ocr
 
 router = APIRouter(tags=["receipts"])
 
@@ -178,4 +187,80 @@ def update_receipt_detail(
     return {
         "success": True,
         "data": ReceiptRead.model_validate(updated_receipt),
+    }
+
+@router.post(
+    "/expenses/{expense_id}/receipts/upload",
+    status_code=status.HTTP_201_CREATED,
+)
+def upload_receipt_image(
+    expense_id: uuid.UUID,
+    payer_id: uuid.UUID = Form(...),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    expense = get_expense(db, expense_id)
+
+    if expense is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "EXPENSE_NOT_FOUND",
+                "message": "The expense does not exist.",
+            },
+        )
+
+    payer = get_user(db, payer_id)
+
+    if payer is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "PAYER_NOT_FOUND",
+                "message": "The payer does not exist.",
+            },
+        )
+
+    if file.content_type is None or not file.content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": "INVALID_FILE_TYPE",
+                "message": "Only image files are allowed.",
+            },
+        )
+
+    upload_dir = Path("uploads/receipts")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    file_extension = Path(file.filename or "").suffix
+    saved_filename = f"{uuid.uuid4()}{file_extension}"
+    saved_path = upload_dir / saved_filename
+
+    with saved_path.open("wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    ocr_result = run_mock_ocr(saved_path)
+
+    receipt = create_receipt(
+        db,
+        expense_id=expense_id,
+        payer_id=payer_id,
+        subtotal_amount=ocr_result["subtotal_amount"],
+        tax_amount=ocr_result["tax_amount"],
+        service_charge_amount=ocr_result["service_charge_amount"],
+        total_amount=ocr_result["total_amount"],
+        source_type="ocr",
+        status="ocr_parsed",
+        image_url=str(saved_path),
+        raw_ocr_text=ocr_result["raw_text"],
+    )
+
+    return {
+        "success": True,
+        "data": ReceiptUploadRead(
+            receipt=ReceiptRead.model_validate(receipt),
+            items=ocr_result["items"],
+            raw_ocr_text=ocr_result["raw_text"],
+        ),
     }

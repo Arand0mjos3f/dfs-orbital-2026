@@ -36,3 +36,17 @@ class ReceiptRead(BaseModel):
     source_type: str
     status: str
     uploaded_at: datetime
+
+class ReceiptOcrItemRead(BaseModel):
+    name: str
+    original_name: str
+    unit_price: Decimal
+    quantity: int
+    total_price: Decimal
+    is_manually_edited: bool
+
+
+class ReceiptUploadRead(BaseModel):
+    receipt: ReceiptRead
+    items: list[ReceiptOcrItemRead]
+    raw_ocr_text: str
