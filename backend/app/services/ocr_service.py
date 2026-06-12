@@ -1,12 +1,16 @@
 from decimal import Decimal
 from pathlib import Path
-from uuid import UUID
 
 
 def run_mock_ocr(image_path: Path) -> dict:
     """
     Temporary mock OCR service for Milestone 2.
-    Later this function will be replaced by PaddleOCR.
+
+    This service simulates the OCR pipeline:
+    receipt image -> raw OCR text -> parsed receipt items.
+
+    Later this function can be replaced by PaddleOCR without changing
+    the receipt upload endpoint contract.
     """
     mock_items = [
         {
