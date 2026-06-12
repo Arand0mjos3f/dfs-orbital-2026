@@ -161,3 +161,126 @@ def delete_receipt_item(
             "deleted_item_id": str(item_id),
         },
     }
+
+import uuid as _uuid_for_ocr_items
+from decimal import Decimal as _DecimalForOcrItems
+
+from sqlalchemy import inspect as _sa_inspect_for_ocr_items
+
+from app.crud.receipt import get_receipt as _get_receipt_for_ocr_items
+from app.models.item import Item as _ItemForOcrItems
+from app.schemas.item import OcrItemsConfirmCreate, ItemRead
+
+
+def _set_item_value_if_column(
+    values: dict,
+    columns: set[str],
+    column_name: str,
+    value,
+) -> None:
+    if column_name in columns:
+        values[column_name] = value
+
+
+def _build_confirmed_item_values(
+    *,
+    receipt_id: _uuid_for_ocr_items.UUID,
+    item_in,
+    columns: set[str],
+) -> dict:
+    quantity = item_in.quantity
+    total_price = item_in.total_price
+
+    if total_price is None:
+        total_price = item_in.unit_price * _DecimalForOcrItems(quantity)
+
+    original_name = item_in.original_name or item_in.name
+
+    values = {}
+
+    _set_item_value_if_column(values, columns, "id", _uuid_for_ocr_items.uuid4())
+    _set_item_value_if_column(values, columns, "receipt_id", receipt_id)
+
+    _set_item_value_if_column(values, columns, "name", item_in.name)
+    _set_item_value_if_column(values, columns, "item_name", item_in.name)
+
+    _set_item_value_if_column(values, columns, "original_name", original_name)
+
+    _set_item_value_if_column(values, columns, "quantity", quantity)
+
+    _set_item_value_if_column(values, columns, "unit_price", item_in.unit_price)
+    _set_item_value_if_column(values, columns, "unit_price_amount", item_in.unit_price)
+
+    _set_item_value_if_column(values, columns, "total_price", total_price)
+    _set_item_value_if_column(values, columns, "total_amount", total_price)
+
+    _set_item_value_if_column(values, columns, "original_unit_price", item_in.unit_price)
+    _set_item_value_if_column(values, columns, "original_total_price", total_price)
+
+    _set_item_value_if_column(
+        values,
+        columns,
+        "is_manually_edited",
+        item_in.is_manually_edited,
+    )
+
+    return values
+
+
+@router.post(
+    "/receipts/{receipt_id}/items/confirm",
+    status_code=status.HTTP_201_CREATED,
+)
+def confirm_ocr_items(
+    receipt_id: _uuid_for_ocr_items.UUID,
+    items_in: OcrItemsConfirmCreate,
+    db: Session = Depends(get_db),
+):
+    receipt = _get_receipt_for_ocr_items(db, receipt_id)
+
+    if receipt is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "RECEIPT_NOT_FOUND",
+                "message": "The receipt does not exist.",
+            },
+        )
+
+    if len(items_in.items) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": "EMPTY_ITEMS",
+                "message": "At least one item is required.",
+            },
+        )
+
+    item_columns = {
+        column.name
+        for column in _sa_inspect_for_ocr_items(_ItemForOcrItems).columns
+    }
+
+    saved_items = []
+
+    for item_in in items_in.items:
+        item_values = _build_confirmed_item_values(
+            receipt_id=receipt_id,
+            item_in=item_in,
+            columns=item_columns,
+        )
+
+        item = _ItemForOcrItems(**item_values)
+        db.add(item)
+        saved_items.append(item)
+
+    db.commit()
+
+    for item in saved_items:
+        db.refresh(item)
+
+    return {
+        "success": True,
+        "data": [ItemRead.model_validate(item) for item in saved_items],
+    }
+

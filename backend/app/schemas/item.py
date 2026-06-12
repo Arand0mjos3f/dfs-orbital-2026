@@ -34,3 +34,21 @@ class ItemRead(BaseModel):
     is_manually_edited: bool
     created_at: datetime
     updated_at: datetime
+
+from decimal import Decimal as _DecimalForOcrItem
+from pydantic import BaseModel as _BaseModelForOcrItem
+from pydantic import Field as _FieldForOcrItem
+
+
+class OcrItemConfirmCreate(_BaseModelForOcrItem):
+    name: str = _FieldForOcrItem(min_length=1)
+    original_name: str | None = None
+    unit_price: _DecimalForOcrItem = _FieldForOcrItem(ge=0)
+    quantity: int = _FieldForOcrItem(default=1, ge=1)
+    total_price: _DecimalForOcrItem | None = _FieldForOcrItem(default=None, ge=0)
+    is_manually_edited: bool = False
+
+
+class OcrItemsConfirmCreate(_BaseModelForOcrItem):
+    items: list[OcrItemConfirmCreate]
+
