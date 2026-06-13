@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { createGroupExpense, getGroupExpenses } from '../api/expenses';
 import { useGroupStore } from '../store/groupStore';
 
 const testUserId = '16ab9e31-56f1-4afc-8d2f-09f45dfd57da';
@@ -37,6 +38,15 @@ function AvatarStack({ members }) {
   );
 }
 
+function formatDate(value) {
+  if (!value) return 'Unknown date';
+
+  return new Date(value).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
 export default function GroupDetail() {
   const { groupId } = useParams();
   const {
@@ -49,12 +59,83 @@ export default function GroupDetail() {
     clearSelectedGroup,
   } = useGroupStore();
 
+  const [expenses, setExpenses] = useState([]);
+  const [isExpensesLoading, setIsExpensesLoading] = useState(true);
+  const [expensesError, setExpensesError] = useState(null);
+  const [isCreatingExpense, setIsCreatingExpense] = useState(false);
+  const [expenseTitle, setExpenseTitle] = useState('');
+  const [expenseDescription, setExpenseDescription] = useState('');
+  const [isSavingExpense, setIsSavingExpense] = useState(false);
+
+  const sortedExpenses = useMemo(
+    () =>
+      [...expenses].sort((first, second) => {
+        return new Date(second.created_at).getTime() - new Date(first.created_at).getTime();
+      }),
+    [expenses]
+  );
+
+  const refreshExpenses = useCallback(async () => {
+    const response = await getGroupExpenses(groupId, testUserId);
+    setExpenses(response.data.data);
+  }, [groupId]);
+
   useEffect(() => {
+    let isActive = true;
+
     fetchGroupDetail(groupId, testUserId);
     fetchGroupMembers(groupId, testUserId);
 
-    return () => clearSelectedGroup();
+    getGroupExpenses(groupId, testUserId)
+      .then((response) => {
+        if (isActive) {
+          setExpenses(response.data.data);
+          setExpensesError(null);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching group expenses:', error);
+        if (isActive) {
+          setExpensesError('Failed to fetch expenses');
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsExpensesLoading(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+      clearSelectedGroup();
+    };
   }, [groupId, fetchGroupDetail, fetchGroupMembers, clearSelectedGroup]);
+
+  const handleCreateExpense = async (event) => {
+    event.preventDefault();
+
+    if (!expenseTitle.trim()) return;
+
+    setIsSavingExpense(true);
+
+    try {
+      await createGroupExpense(groupId, {
+        title: expenseTitle.trim(),
+        description: expenseDescription.trim() || null,
+        created_by_id: testUserId,
+      });
+
+      setExpenseTitle('');
+      setExpenseDescription('');
+      setIsCreatingExpense(false);
+      await refreshExpenses();
+    } catch (error) {
+      console.error('Error creating expense:', error);
+      setExpensesError('Failed to create expense');
+    } finally {
+      setIsSavingExpense(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -78,7 +159,7 @@ export default function GroupDetail() {
 
   return (
     <div className="min-h-dvh bg-[#F8FAFC] px-5 pb-8 pt-5">
-      <header className="mb-6 flex items-center justify-between">
+      <header className="mb-6 flex items-center justify-between gap-4">
         <div>
           <Link to="/groups" className="text-sm font-extrabold text-[#4F46E5]">
             Back
@@ -93,7 +174,8 @@ export default function GroupDetail() {
 
         <button
           type="button"
-          className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#4F46E5] text-2xl font-light leading-none text-white shadow-[0_12px_24px_rgba(79,70,229,0.25)]"
+          onClick={() => setIsCreatingExpense((value) => !value)}
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#4F46E5] text-2xl font-light leading-none text-white shadow-[0_12px_24px_rgba(79,70,229,0.25)]"
         >
           +
         </button>
@@ -104,11 +186,30 @@ export default function GroupDetail() {
           <div>
             <p className="text-sm font-bold text-slate-400">Members</p>
             <p className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900">
-              {members.length || 1}
+              {members.length}
             </p>
           </div>
           <AvatarStack members={members} />
         </div>
+
+        {members.length > 0 && (
+          <div className="mt-5 space-y-3">
+            {members.map((member) => (
+              <div
+                key={member.id}
+                className="flex items-center justify-between rounded-2xl bg-[#F8FAFC] px-4 py-3"
+              >
+                <div>
+                  <p className="text-sm font-extrabold text-slate-900">
+                    {String(member.user_id).slice(0, 8)}
+                  </p>
+                  <p className="text-xs font-semibold text-slate-400">{member.role}</p>
+                </div>
+                <p className="text-xs font-bold text-slate-400">Member</p>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <section
@@ -119,27 +220,91 @@ export default function GroupDetail() {
           You are owed $0.00
         </p>
         <p className="mt-2 text-sm font-semibold text-slate-400">
-          Expense splitting will appear here after manual expenses are added.
+          Split results will appear here after item assignment is completed.
         </p>
       </section>
 
       <section>
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="text-xl font-extrabold tracking-tight text-slate-900">Expenses</h2>
           <button
             type="button"
+            onClick={() => setIsCreatingExpense((value) => !value)}
             className="rounded-2xl bg-[#4F46E5] px-4 py-2 text-xs font-extrabold text-white shadow-[0_8px_20px_rgba(79,70,229,0.25)]"
           >
             Add Expense
           </button>
         </div>
 
-        <div className={`${cardClass} text-center`}>
-          <p className="text-sm font-semibold text-slate-400">No expenses yet.</p>
-          <p className="mt-2 text-sm font-semibold text-slate-400">
-            Next Milestone 1 step: add manual expense entry here.
-          </p>
-        </div>
+        {isCreatingExpense && (
+          <form onSubmit={handleCreateExpense} className={`${cardClass} mb-5 space-y-3`}>
+            <input
+              type="text"
+              value={expenseTitle}
+              onChange={(event) => setExpenseTitle(event.target.value)}
+              className="w-full rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+              placeholder="Expense title"
+              required
+            />
+
+            <textarea
+              value={expenseDescription}
+              onChange={(event) => setExpenseDescription(event.target.value)}
+              className="min-h-24 w-full resize-none rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+              placeholder="Description"
+            />
+
+            <button
+              type="submit"
+              disabled={isSavingExpense}
+              className="w-full rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white shadow-[0_8px_20px_rgba(79,70,229,0.25)] disabled:bg-slate-300"
+            >
+              {isSavingExpense ? 'Creating...' : 'Create Expense'}
+            </button>
+          </form>
+        )}
+
+        {isExpensesLoading ? (
+          <div className={`${cardClass} text-center`}>
+            <p className="text-sm font-semibold text-slate-400">Loading expenses...</p>
+          </div>
+        ) : expensesError ? (
+          <div className={`${cardClass} text-center`}>
+            <p className="text-sm font-semibold text-[#EF4444]">{expensesError}</p>
+          </div>
+        ) : sortedExpenses.length === 0 ? (
+          <div className={`${cardClass} text-center`}>
+            <p className="text-sm font-semibold text-slate-400">No expenses yet.</p>
+            <p className="mt-2 text-sm font-semibold text-slate-400">
+              Create a manual expense to start the Milestone 2 prototype flow.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {sortedExpenses.map((expense) => (
+              <article key={expense.id} className={cardClass}>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-extrabold tracking-tight text-slate-900">
+                      {expense.title}
+                    </h3>
+                    <p className="mt-2 text-sm font-semibold text-slate-400">
+                      {expense.description || 'No description'}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-extrabold text-[#4F46E5]">
+                    {expense.status}
+                  </span>
+                </div>
+
+                <div className="mt-5 flex items-center justify-between text-xs font-bold text-slate-400">
+                  <span>{formatDate(expense.created_at)}</span>
+                  <span>{String(expense.id).slice(0, 8)}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
