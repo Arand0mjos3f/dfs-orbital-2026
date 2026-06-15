@@ -200,3 +200,116 @@ def delete_item_share_detail(
             "deleted_item_share_id": str(item_share_id),
         },
     }
+
+from decimal import ROUND_HALF_UP as _ROUND_HALF_UP_FOR_EQUAL_SPLIT
+
+from app.schemas.item_share import ItemShareEqualSplitCreate
+
+
+def _split_amount_equally(amount: Decimal, count: int) -> list[Decimal]:
+    amount = amount.quantize(Decimal("0.01"), rounding=_ROUND_HALF_UP_FOR_EQUAL_SPLIT)
+    total_cents = int(amount * Decimal("100"))
+
+    base_cents = total_cents // count
+    remainder_cents = total_cents % count
+
+    shares = []
+
+    for index in range(count):
+        cents = base_cents
+
+        if index < remainder_cents:
+            cents += 1
+
+        shares.append((Decimal(cents) / Decimal("100")).quantize(Decimal("0.01")))
+
+    return shares
+
+
+@router.post(
+    "/items/{item_id}/shares/equal",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_equal_item_shares(
+    item_id: uuid.UUID,
+    split_in: ItemShareEqualSplitCreate,
+    db: Session = Depends(get_db),
+):
+    item = get_item(db, item_id)
+
+    if item is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "ITEM_NOT_FOUND",
+                "message": "The item does not exist.",
+            },
+        )
+
+    if len(split_in.user_ids) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": "EMPTY_USERS",
+                "message": "At least one user is required.",
+            },
+        )
+
+    if len(set(split_in.user_ids)) != len(split_in.user_ids):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": "DUPLICATE_USERS",
+                "message": "Duplicate users are not allowed.",
+            },
+        )
+
+    for user_id in split_in.user_ids:
+        user = get_user(db, user_id)
+
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "code": "USER_NOT_FOUND",
+                    "message": "One or more users do not exist.",
+                },
+            )
+
+    existing_shares = list_item_shares_by_item(db, item_id)
+
+    if existing_shares and not split_in.replace_existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "ITEM_SHARES_ALREADY_EXIST",
+                "message": "This item already has share records.",
+            },
+        )
+
+    if existing_shares and split_in.replace_existing:
+        for existing_share in existing_shares:
+            delete_item_share(db, existing_share)
+
+    share_amounts = _split_amount_equally(item.total_price, len(split_in.user_ids))
+
+    created_shares = []
+
+    for user_id, share_amount in zip(split_in.user_ids, share_amounts, strict=True):
+        item_share = create_item_share(
+            db,
+            item_id=item_id,
+            user_id=user_id,
+            item_share_amount=share_amount,
+            tax_share_amount=Decimal("0.00"),
+            service_charge_share_amount=Decimal("0.00"),
+            total_share_amount=share_amount,
+        )
+
+        created_shares.append(item_share)
+
+    return {
+        "success": True,
+        "data": [ItemShareRead.model_validate(share) for share in created_shares],
+    }
+
