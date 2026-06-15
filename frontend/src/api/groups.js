@@ -26,3 +26,8 @@ export const deleteGroup = (groupId, userId) =>
   api.delete(`/groups/${groupId}`, {
     params: { user_id: userId },
   });
+
+export const addGroupMember = (groupId, payload, userId) =>
+  api.post(`/groups/${groupId}/members`, payload, {
+    params: { user_id: userId },
+  });
