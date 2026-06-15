@@ -26,8 +26,7 @@ def list_records(
     limit: int = 100,
 ) -> Sequence[ModelT]:
     statement = select(model).offset(skip).limit(limit)
-    return db.excute(statement).scalars().all()
-
+    return db.execute(statement).scalars().all()
 
 def create_record(
     db: Session,
