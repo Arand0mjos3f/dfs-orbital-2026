@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { createGroupExpense, getGroupExpenses } from '../api/expenses';
 import AddMemberForm from '../components/AddMemberForm';
+import ExpenseReceiptItems from '../components/ExpenseReceiptItems';
 import { useGroupStore } from '../store/groupStore';
 
 const testUserId = '16ab9e31-56f1-4afc-8d2f-09f45dfd57da';
@@ -119,12 +120,7 @@ export default function GroupDetail() {
       isActive = false;
       clearSelectedGroup();
     };
-  }, [
-    groupId,
-    fetchGroupDetail,
-    fetchGroupMembers,
-    clearSelectedGroup,
-  ]);
+  }, [groupId, fetchGroupDetail, fetchGroupMembers, clearSelectedGroup]);
 
   const handleCreateExpense = async (event) => {
     event.preventDefault();
@@ -181,10 +177,7 @@ export default function GroupDetail() {
     <div className="min-h-dvh bg-[#F8FAFC] px-5 pb-8 pt-5">
       <header className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <Link
-            to="/groups"
-            className="text-sm font-extrabold text-[#4F46E5]"
-          >
+          <Link to="/groups" className="text-sm font-extrabold text-[#4F46E5]">
             Back
           </Link>
 
@@ -244,18 +237,14 @@ export default function GroupDetail() {
           groupId={groupId}
           ownerUserId={testUserId}
           members={members}
-          onMemberAdded={() =>
-            fetchGroupMembers(groupId, testUserId)
-          }
+          onMemberAdded={() => fetchGroupMembers(groupId, testUserId)}
         />
       </section>
 
       <section
         className={`${cardClass} mb-5 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white`}
       >
-        <p className="text-sm font-semibold text-slate-400">
-          Group Balance
-        </p>
+        <p className="text-sm font-semibold text-slate-400">Group Balance</p>
 
         <p className="mt-3 text-3xl font-extrabold tracking-tight text-[#10B981]">
           You are owed $0.00
@@ -297,9 +286,7 @@ export default function GroupDetail() {
 
             <textarea
               value={expenseDescription}
-              onChange={(event) =>
-                setExpenseDescription(event.target.value)
-              }
+              onChange={(event) => setExpenseDescription(event.target.value)}
               className="min-h-24 w-full resize-none rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
               placeholder="Description"
             />
@@ -333,8 +320,7 @@ export default function GroupDetail() {
             </p>
 
             <p className="mt-2 text-sm font-semibold text-slate-400">
-              Create a manual expense to start the Milestone 2 prototype
-              flow.
+              Create a manual expense to start the Milestone 2 prototype flow.
             </p>
           </div>
         ) : (
@@ -361,6 +347,8 @@ export default function GroupDetail() {
                   <span>{formatDate(expense.created_at)}</span>
                   <span>{String(expense.id).slice(0, 8)}</span>
                 </div>
+
+                <ExpenseReceiptItems expense={expense} members={members} />
               </article>
             ))}
           </div>
