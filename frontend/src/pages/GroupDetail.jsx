@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { createGroupExpense, getGroupExpenses } from '../api/expenses';
+import { getUsers } from '../api/users';
 import AddMemberForm from '../components/AddMemberForm';
 import ExpenseReceiptItems from '../components/ExpenseReceiptItems';
 import { useGroupStore } from '../store/groupStore';
@@ -68,12 +69,28 @@ export default function GroupDetail() {
   } = useGroupStore();
 
   const [expenses, setExpenses] = useState([]);
+  const [users, setUsers] = useState([]);
   const [isExpensesLoading, setIsExpensesLoading] = useState(true);
   const [expensesError, setExpensesError] = useState(null);
   const [isCreatingExpense, setIsCreatingExpense] = useState(false);
   const [expenseTitle, setExpenseTitle] = useState('');
   const [expenseDescription, setExpenseDescription] = useState('');
   const [isSavingExpense, setIsSavingExpense] = useState(false);
+
+  const userById = useMemo(
+    () => Object.fromEntries(users.map((user) => [String(user.id), user])),
+    [users]
+  );
+
+  const enrichedMembers = useMemo(
+    () =>
+      members.map((member) => ({
+        ...member,
+        username: userById[String(member.user_id)]?.username,
+        email: userById[String(member.user_id)]?.email,
+      })),
+    [members, userById]
+  );
 
   const sortedExpenses = useMemo(
     () =>
@@ -95,6 +112,16 @@ export default function GroupDetail() {
 
     fetchGroupDetail(groupId, testUserId);
     fetchGroupMembers(groupId, testUserId);
+
+    getUsers()
+      .then((response) => {
+        if (isActive) {
+          setUsers(response.data);
+        }
+      })
+      .catch((requestError) => {
+        console.error('Error fetching users:', requestError);
+      });
 
     getGroupExpenses(groupId, testUserId)
       .then((response) => {
@@ -204,30 +231,32 @@ export default function GroupDetail() {
           <div>
             <p className="text-sm font-bold text-slate-400">Members</p>
             <p className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900">
-              {members.length}
+              {enrichedMembers.length}
             </p>
           </div>
 
-          <AvatarStack members={members} />
+          <AvatarStack members={enrichedMembers} />
         </div>
 
-        {members.length > 0 && (
+        {enrichedMembers.length > 0 && (
           <div className="mt-5 space-y-3">
-            {members.map((member) => (
+            {enrichedMembers.map((member) => (
               <div
                 key={member.id}
                 className="flex items-center justify-between rounded-2xl bg-[#F8FAFC] px-4 py-3"
               >
                 <div>
                   <p className="text-sm font-extrabold text-slate-900">
-                    {String(member.user_id).slice(0, 8)}
+                    {member.username || String(member.user_id).slice(0, 8)}
                   </p>
                   <p className="text-xs font-semibold text-slate-400">
-                    {member.role}
+                    {member.email || member.role}
                   </p>
                 </div>
 
-                <p className="text-xs font-bold text-slate-400">Member</p>
+                <p className="text-xs font-bold text-slate-400">
+                  {member.role}
+                </p>
               </div>
             ))}
           </div>
@@ -236,7 +265,7 @@ export default function GroupDetail() {
         <AddMemberForm
           groupId={groupId}
           ownerUserId={testUserId}
-          members={members}
+          members={enrichedMembers}
           onMemberAdded={() => fetchGroupMembers(groupId, testUserId)}
         />
       </section>
@@ -348,7 +377,10 @@ export default function GroupDetail() {
                   <span>{String(expense.id).slice(0, 8)}</span>
                 </div>
 
-                <ExpenseReceiptItems expense={expense} members={members} />
+                <ExpenseReceiptItems
+                  expense={expense}
+                  members={enrichedMembers}
+                />
               </article>
             ))}
           </div>
