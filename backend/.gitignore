@@ -2,3 +2,9 @@
 .env
 __pycache__/
 *.pyc
+
+# Uploaded receipt files
+uploads/
+
+# Local test files
+tmp/
