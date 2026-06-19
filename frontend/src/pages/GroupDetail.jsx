@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { calculateExpenseDebts, getGroupDebts } from '../api/debts';
 import { createGroupExpense, getGroupExpenses } from '../api/expenses';
 import { getUsers } from '../api/users';
 import AddMemberForm from '../components/AddMemberForm';
@@ -46,6 +47,10 @@ function AvatarStack({ members }) {
   );
 }
 
+function formatCurrency(value) {
+  return `$${Number(value || 0).toFixed(2)}`;
+}
+
 function formatDate(value) {
   if (!value) return 'Unknown date';
 
@@ -53,6 +58,10 @@ function formatDate(value) {
     month: 'short',
     day: 'numeric',
   });
+}
+
+function formatUser(userId, userById) {
+  return userById[String(userId)]?.username || String(userId).slice(0, 8);
 }
 
 export default function GroupDetail() {
@@ -69,13 +78,17 @@ export default function GroupDetail() {
   } = useGroupStore();
 
   const [expenses, setExpenses] = useState([]);
+  const [debts, setDebts] = useState([]);
   const [users, setUsers] = useState([]);
   const [isExpensesLoading, setIsExpensesLoading] = useState(true);
+  const [isDebtsLoading, setIsDebtsLoading] = useState(true);
   const [expensesError, setExpensesError] = useState(null);
+  const [debtsError, setDebtsError] = useState(null);
   const [isCreatingExpense, setIsCreatingExpense] = useState(false);
   const [expenseTitle, setExpenseTitle] = useState('');
   const [expenseDescription, setExpenseDescription] = useState('');
   const [isSavingExpense, setIsSavingExpense] = useState(false);
+  const [calculatingExpenseId, setCalculatingExpenseId] = useState('');
 
   const userById = useMemo(
     () => Object.fromEntries(users.map((user) => [String(user.id), user])),
@@ -92,6 +105,32 @@ export default function GroupDetail() {
     [members, userById]
   );
 
+  const pendingDebts = useMemo(
+    () => debts.filter((debt) => debt.status !== 'cancelled'),
+    [debts]
+  );
+
+  const totalPendingDebt = useMemo(
+    () =>
+      pendingDebts.reduce(
+        (total, debt) => total + Number(debt.amount || 0),
+        0
+      ),
+    [pendingDebts]
+  );
+
+  const debtByExpenseId = useMemo(() => {
+    const result = {};
+
+    debts.forEach((debt) => {
+      if (!debt.expense_id) return;
+
+      result[debt.expense_id] = [...(result[debt.expense_id] || []), debt];
+    });
+
+    return result;
+  }, [debts]);
+
   const sortedExpenses = useMemo(
     () =>
       [...expenses].sort(
@@ -105,6 +144,11 @@ export default function GroupDetail() {
   const refreshExpenses = useCallback(async () => {
     const response = await getGroupExpenses(groupId, testUserId);
     setExpenses(response.data.data);
+  }, [groupId]);
+
+  const refreshDebts = useCallback(async () => {
+    const response = await getGroupDebts(groupId, testUserId);
+    setDebts(response.data.data);
   }, [groupId]);
 
   useEffect(() => {
@@ -143,6 +187,26 @@ export default function GroupDetail() {
         }
       });
 
+    getGroupDebts(groupId, testUserId)
+      .then((response) => {
+        if (isActive) {
+          setDebts(response.data.data);
+          setDebtsError(null);
+        }
+      })
+      .catch((requestError) => {
+        console.error('Error fetching group debts:', requestError);
+
+        if (isActive) {
+          setDebtsError('Failed to fetch settlement summary');
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsDebtsLoading(false);
+        }
+      });
+
     return () => {
       isActive = false;
       clearSelectedGroup();
@@ -173,6 +237,24 @@ export default function GroupDetail() {
       setExpensesError('Failed to create expense');
     } finally {
       setIsSavingExpense(false);
+    }
+  };
+
+  const handleCalculateDebts = async (expenseId) => {
+    setCalculatingExpenseId(expenseId);
+    setDebtsError(null);
+
+    try {
+      await calculateExpenseDebts(expenseId);
+      await refreshDebts();
+    } catch (requestError) {
+      console.error('Error calculating debts:', requestError);
+      setDebtsError(
+        requestError.response?.data?.detail?.message ||
+          'Failed to calculate settlement'
+      );
+    } finally {
+      setCalculatingExpenseId('');
     }
   };
 
@@ -273,15 +355,68 @@ export default function GroupDetail() {
       <section
         className={`${cardClass} mb-5 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white`}
       >
-        <p className="text-sm font-semibold text-slate-400">Group Balance</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-slate-400">
+              Settlement Summary
+            </p>
 
-        <p className="mt-3 text-3xl font-extrabold tracking-tight text-[#10B981]">
-          You are owed $0.00
-        </p>
+            <p className="mt-3 text-3xl font-extrabold tracking-tight text-[#10B981]">
+              {formatCurrency(totalPendingDebt)}
+            </p>
 
-        <p className="mt-2 text-sm font-semibold text-slate-400">
-          Split results will appear here after item assignment is completed.
-        </p>
+            <p className="mt-2 text-sm font-semibold text-slate-400">
+              {pendingDebts.length === 0
+                ? 'No settlement has been calculated yet.'
+                : `${pendingDebts.length} settlement transaction${pendingDebts.length === 1 ? '' : 's'} pending.`}
+            </p>
+          </div>
+
+          <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-extrabold text-white">
+            DFS
+          </span>
+        </div>
+
+        <div className="mt-5 space-y-3">
+          {isDebtsLoading ? (
+            <p className="rounded-2xl bg-white/10 px-4 py-3 text-sm font-semibold text-slate-300">
+              Loading settlement summary...
+            </p>
+          ) : pendingDebts.length === 0 ? (
+            <p className="rounded-2xl bg-white/10 px-4 py-3 text-sm font-semibold text-slate-300">
+              Assign items and calculate settlement for an expense to see who
+              should pay whom.
+            </p>
+          ) : (
+            pendingDebts.map((debt) => (
+              <div
+                key={debt.id}
+                className="rounded-2xl bg-white px-4 py-3 text-slate-900"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-extrabold">
+                    {formatUser(debt.from_user_id, userById)} pays{' '}
+                    {formatUser(debt.to_user_id, userById)}
+                  </p>
+
+                  <p className="text-sm font-extrabold text-[#10B981]">
+                    {formatCurrency(debt.amount)}
+                  </p>
+                </div>
+
+                <p className="mt-1 text-xs font-semibold text-slate-400">
+                  {debt.status}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+
+        {debtsError && (
+          <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-[#EF4444]">
+            {debtsError}
+          </p>
+        )}
       </section>
 
       <section>
@@ -354,35 +489,60 @@ export default function GroupDetail() {
           </div>
         ) : (
           <div className="space-y-4">
-            {sortedExpenses.map((expense) => (
-              <article key={expense.id} className={cardClass}>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="text-lg font-extrabold tracking-tight text-slate-900">
-                      {expense.title}
-                    </h3>
+            {sortedExpenses.map((expense) => {
+              const expenseDebts = debtByExpenseId[expense.id] || [];
+              const hasCalculatedDebts = expenseDebts.some(
+                (debt) => debt.status !== 'cancelled'
+              );
 
-                    <p className="mt-2 text-sm font-semibold text-slate-400">
-                      {expense.description || 'No description'}
-                    </p>
+              return (
+                <article key={expense.id} className={cardClass}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-extrabold tracking-tight text-slate-900">
+                        {expense.title}
+                      </h3>
+
+                      <p className="mt-2 text-sm font-semibold text-slate-400">
+                        {expense.description || 'No description'}
+                      </p>
+                    </div>
+
+                    <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-extrabold text-[#4F46E5]">
+                      {expense.status}
+                    </span>
                   </div>
 
-                  <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-extrabold text-[#4F46E5]">
-                    {expense.status}
-                  </span>
-                </div>
+                  <div className="mt-5 flex items-center justify-between text-xs font-bold text-slate-400">
+                    <span>{formatDate(expense.created_at)}</span>
+                    <span>{String(expense.id).slice(0, 8)}</span>
+                  </div>
 
-                <div className="mt-5 flex items-center justify-between text-xs font-bold text-slate-400">
-                  <span>{formatDate(expense.created_at)}</span>
-                  <span>{String(expense.id).slice(0, 8)}</span>
-                </div>
+                  <ExpenseReceiptItems
+                    expense={expense}
+                    members={enrichedMembers}
+                  />
 
-                <ExpenseReceiptItems
-                  expense={expense}
-                  members={enrichedMembers}
-                />
-              </article>
-            ))}
+                  <div className="mt-5 border-t border-slate-100 pt-5">
+                    <button
+                      type="button"
+                      onClick={() => handleCalculateDebts(expense.id)}
+                      disabled={
+                        hasCalculatedDebts ||
+                        calculatingExpenseId === expense.id
+                      }
+                      className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+                    >
+                      {hasCalculatedDebts
+                        ? 'Settlement calculated'
+                        : calculatingExpenseId === expense.id
+                          ? 'Calculating settlement...'
+                          : 'Calculate settlement'}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
       </section>
