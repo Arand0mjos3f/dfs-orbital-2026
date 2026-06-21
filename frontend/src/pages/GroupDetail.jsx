@@ -5,9 +5,8 @@ import { createGroupExpense, getGroupExpenses } from '../api/expenses';
 import { getUsers } from '../api/users';
 import AddMemberForm from '../components/AddMemberForm';
 import ExpenseReceiptItems from '../components/ExpenseReceiptItems';
+import { useAuthStore } from '../store/useAuthStore';
 import { useGroupStore } from '../store/groupStore';
-
-const testUserId = '16ab9e31-56f1-4afc-8d2f-09f45dfd57da';
 
 const cardClass =
   'rounded-[24px] bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.05)]';
@@ -66,6 +65,8 @@ function formatUser(userId, userById) {
 
 export default function GroupDetail() {
   const { groupId } = useParams();
+  const currentUser = useAuthStore((state) => state.user);
+  const currentUserId = currentUser?.id;
 
   const {
     selectedGroup,
@@ -106,7 +107,12 @@ export default function GroupDetail() {
   );
 
   const pendingDebts = useMemo(
-    () => debts.filter((debt) => debt.status !== 'cancelled'),
+    () =>
+      debts.filter(
+        (debt) =>
+          debt.status !== 'cancelled' &&
+          debt.status !== 'confirmed_received'
+      ),
     [debts]
   );
 
@@ -142,20 +148,30 @@ export default function GroupDetail() {
   );
 
   const refreshExpenses = useCallback(async () => {
-    const response = await getGroupExpenses(groupId, testUserId);
+    if (!currentUserId) return;
+
+    const response = await getGroupExpenses(groupId, currentUserId);
     setExpenses(response.data.data);
-  }, [groupId]);
+  }, [currentUserId, groupId]);
 
   const refreshDebts = useCallback(async () => {
-    const response = await getGroupDebts(groupId, testUserId);
+    if (!currentUserId) return;
+
+    const response = await getGroupDebts(groupId, currentUserId);
     setDebts(response.data.data);
-  }, [groupId]);
+  }, [currentUserId, groupId]);
 
   useEffect(() => {
     let isActive = true;
 
-    fetchGroupDetail(groupId, testUserId);
-    fetchGroupMembers(groupId, testUserId);
+    if (!currentUserId) {
+      return () => {
+        isActive = false;
+      };
+    }
+
+    fetchGroupDetail(groupId, currentUserId);
+    fetchGroupMembers(groupId, currentUserId);
 
     getUsers()
       .then((response) => {
@@ -167,7 +183,7 @@ export default function GroupDetail() {
         console.error('Error fetching users:', requestError);
       });
 
-    getGroupExpenses(groupId, testUserId)
+    getGroupExpenses(groupId, currentUserId)
       .then((response) => {
         if (isActive) {
           setExpenses(response.data.data);
@@ -187,7 +203,7 @@ export default function GroupDetail() {
         }
       });
 
-    getGroupDebts(groupId, testUserId)
+    getGroupDebts(groupId, currentUserId)
       .then((response) => {
         if (isActive) {
           setDebts(response.data.data);
@@ -211,12 +227,18 @@ export default function GroupDetail() {
       isActive = false;
       clearSelectedGroup();
     };
-  }, [groupId, fetchGroupDetail, fetchGroupMembers, clearSelectedGroup]);
+  }, [
+    currentUserId,
+    groupId,
+    fetchGroupDetail,
+    fetchGroupMembers,
+    clearSelectedGroup,
+  ]);
 
   const handleCreateExpense = async (event) => {
     event.preventDefault();
 
-    if (!expenseTitle.trim()) return;
+    if (!expenseTitle.trim() || !currentUserId) return;
 
     setIsSavingExpense(true);
     setExpensesError(null);
@@ -225,7 +247,7 @@ export default function GroupDetail() {
       await createGroupExpense(groupId, {
         title: expenseTitle.trim(),
         description: expenseDescription.trim() || null,
-        created_by_id: testUserId,
+        created_by_id: currentUserId,
       });
 
       setExpenseTitle('');
@@ -290,7 +312,7 @@ export default function GroupDetail() {
             Back
           </Link>
 
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">
+          <h1 className="mt-2 text-3xl font-extrabold text-slate-900">
             {selectedGroup?.name || 'Group'}
           </h1>
 
@@ -302,7 +324,7 @@ export default function GroupDetail() {
         <button
           type="button"
           onClick={() => setIsCreatingExpense((value) => !value)}
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#4F46E5] text-2xl font-light leading-none text-white shadow-[0_12px_24px_rgba(79,70,229,0.25)]"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#4F46E5] text-2xl font-light leading-none text-white"
         >
           +
         </button>
@@ -312,7 +334,7 @@ export default function GroupDetail() {
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-bold text-slate-400">Members</p>
-            <p className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900">
+            <p className="mt-1 text-2xl font-extrabold text-slate-900">
               {enrichedMembers.length}
             </p>
           </div>
@@ -344,16 +366,20 @@ export default function GroupDetail() {
           </div>
         )}
 
-        <AddMemberForm
-          groupId={groupId}
-          ownerUserId={testUserId}
-          members={enrichedMembers}
-          onMemberAdded={() => fetchGroupMembers(groupId, testUserId)}
-        />
+        {String(selectedGroup?.created_by_id) === String(currentUserId) && (
+          <AddMemberForm
+            groupId={groupId}
+            ownerUserId={currentUserId}
+            members={enrichedMembers}
+            onMemberAdded={() =>
+              fetchGroupMembers(groupId, currentUserId)
+            }
+          />
+        )}
       </section>
 
       <section
-        className={`${cardClass} mb-5 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white`}
+        className={`${cardClass} mb-5 bg-slate-900 text-white`}
       >
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -361,14 +387,14 @@ export default function GroupDetail() {
               Settlement Summary
             </p>
 
-            <p className="mt-3 text-3xl font-extrabold tracking-tight text-[#10B981]">
+            <p className="mt-3 text-3xl font-extrabold text-[#10B981]">
               {formatCurrency(totalPendingDebt)}
             </p>
 
             <p className="mt-2 text-sm font-semibold text-slate-400">
               {pendingDebts.length === 0
-                ? 'No settlement has been calculated yet.'
-                : `${pendingDebts.length} settlement transaction${pendingDebts.length === 1 ? '' : 's'} pending.`}
+                ? 'No outstanding settlement transactions.'
+                : `${pendingDebts.length} settlement transaction${pendingDebts.length === 1 ? '' : 's'} outstanding.`}
             </p>
           </div>
 
@@ -384,8 +410,7 @@ export default function GroupDetail() {
             </p>
           ) : pendingDebts.length === 0 ? (
             <p className="rounded-2xl bg-white/10 px-4 py-3 text-sm font-semibold text-slate-300">
-              Assign items and calculate settlement for an expense to see who
-              should pay whom.
+              Assigned and settled transactions will appear in the Debts tab.
             </p>
           ) : (
             pendingDebts.map((debt) => (
@@ -421,14 +446,14 @@ export default function GroupDetail() {
 
       <section>
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="text-xl font-extrabold tracking-tight text-slate-900">
+          <h2 className="text-xl font-extrabold text-slate-900">
             Expenses
           </h2>
 
           <button
             type="button"
             onClick={() => setIsCreatingExpense((value) => !value)}
-            className="rounded-2xl bg-[#4F46E5] px-4 py-2 text-xs font-extrabold text-white shadow-[0_8px_20px_rgba(79,70,229,0.25)]"
+            className="rounded-2xl bg-[#4F46E5] px-4 py-2 text-xs font-extrabold text-white"
           >
             Add Expense
           </button>
@@ -458,7 +483,7 @@ export default function GroupDetail() {
             <button
               type="submit"
               disabled={isSavingExpense}
-              className="w-full rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white shadow-[0_8px_20px_rgba(79,70,229,0.25)] disabled:bg-slate-300"
+              className="w-full rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
             >
               {isSavingExpense ? 'Creating...' : 'Create Expense'}
             </button>
@@ -482,10 +507,6 @@ export default function GroupDetail() {
             <p className="text-sm font-semibold text-slate-400">
               No expenses yet.
             </p>
-
-            <p className="mt-2 text-sm font-semibold text-slate-400">
-              Create a manual expense to start the Milestone 2 prototype flow.
-            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -499,7 +520,7 @@ export default function GroupDetail() {
                 <article key={expense.id} className={cardClass}>
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h3 className="text-lg font-extrabold tracking-tight text-slate-900">
+                      <h3 className="text-lg font-extrabold text-slate-900">
                         {expense.title}
                       </h3>
 
