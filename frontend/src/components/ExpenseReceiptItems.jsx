@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createItem, getItems } from '../api/items';
 import { createItemShares, getItemShares } from '../api/itemShares';
 import { createReceipt, getReceipts } from '../api/receipts';
+import ReceiptTotalStatus from './ReceiptTotalStatus';
 
 function formatCurrency(value) {
   return `$${Number(value || 0).toFixed(2)}`;
@@ -233,7 +234,10 @@ export default function ExpenseReceiptItems({ expense, members }) {
     setError('');
 
     try {
-      const shareAmounts = splitAmount(item.total_price, selectedUserIds.length);
+      const shareAmounts = splitAmount(
+        item.total_price,
+        selectedUserIds.length
+      );
 
       await createItemShares(item.id, {
         shares: selectedUserIds.map((userId, index) => ({
@@ -251,6 +255,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
         ...currentShares,
         [item.id]: sharesResponse.data.data,
       }));
+
       setSelectedUsersByItem((currentSelections) => ({
         ...currentSelections,
         [item.id]: [],
@@ -272,7 +277,9 @@ export default function ExpenseReceiptItems({ expense, members }) {
     <div className="mt-5 border-t border-slate-100 pt-5">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-extrabold text-slate-900">Bill content</p>
+          <p className="text-sm font-extrabold text-slate-900">
+            Bill content
+          </p>
           <p className="mt-1 text-xs font-semibold text-slate-400">
             Add receipt items, assign them to members, and preview the split.
           </p>
@@ -300,6 +307,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                 required
               >
                 <option value="">Choose payer</option>
+
                 {members.map((member) => (
                   <option key={member.id} value={member.user_id}>
                     {formatMemberLabel(member)}
@@ -343,6 +351,11 @@ export default function ExpenseReceiptItems({ expense, members }) {
                 </select>
               )}
 
+              <ReceiptTotalStatus
+                receipt={activeReceipt}
+                items={activeItems}
+              />
+
               <form
                 onSubmit={handleCreateItem}
                 className="grid grid-cols-[1fr_100px] gap-3"
@@ -384,7 +397,8 @@ export default function ExpenseReceiptItems({ expense, members }) {
                 <div className="space-y-3">
                   {activeItems.map((item) => {
                     const itemShares = sharesByItem[item.id] || [];
-                    const selectedUserIds = selectedUsersByItem[item.id] || [];
+                    const selectedUserIds =
+                      selectedUsersByItem[item.id] || [];
                     const isAssigned = itemShares.length > 0;
 
                     return (
@@ -397,6 +411,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                             <p className="text-sm font-extrabold text-slate-900">
                               {item.name}
                             </p>
+
                             <p className="mt-1 text-xs font-semibold text-slate-400">
                               Quantity {item.quantity}
                             </p>
@@ -413,6 +428,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                               <p className="text-xs font-extrabold uppercase text-slate-400">
                                 Split preview
                               </p>
+
                               <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-extrabold text-emerald-600">
                                 {itemShares.length} people
                               </span>
@@ -420,7 +436,8 @@ export default function ExpenseReceiptItems({ expense, members }) {
 
                             <div className="mt-3 space-y-2">
                               {itemShares.map((share) => {
-                                const member = memberMap[String(share.user_id)];
+                                const member =
+                                  memberMap[String(share.user_id)];
 
                                 return (
                                   <div
@@ -434,7 +451,9 @@ export default function ExpenseReceiptItems({ expense, members }) {
                                     </span>
 
                                     <span className="text-xs font-extrabold text-slate-900">
-                                      {formatCurrency(share.total_share_amount)}
+                                      {formatCurrency(
+                                        share.total_share_amount
+                                      )}
                                     </span>
                                   </div>
                                 );
@@ -475,7 +494,10 @@ export default function ExpenseReceiptItems({ expense, members }) {
                                         }
                                         className="h-4 w-4 accent-[#4F46E5]"
                                       />
-                                      <span>{formatMemberLabel(member)}</span>
+
+                                      <span>
+                                        {formatMemberLabel(member)}
+                                      </span>
                                     </label>
                                   );
                                 })}
@@ -510,7 +532,9 @@ export default function ExpenseReceiptItems({ expense, members }) {
       )}
 
       {error && (
-        <p className="mt-3 text-sm font-semibold text-[#EF4444]">{error}</p>
+        <p className="mt-3 text-sm font-semibold text-[#EF4444]">
+          {error}
+        </p>
       )}
     </div>
   );
