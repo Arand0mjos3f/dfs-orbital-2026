@@ -35,3 +35,8 @@ class ItemShareRead(BaseModel):
     service_charge_share_amount: Decimal
     total_share_amount: Decimal
     created_at: datetime
+
+class ItemShareEqualSplitCreate(BaseModel):
+    user_ids: list[uuid.UUID]
+    replace_existing: bool = True
+
