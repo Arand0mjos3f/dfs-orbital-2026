@@ -40,3 +40,12 @@ class ItemShareEqualSplitCreate(BaseModel):
     user_ids: list[uuid.UUID]
     replace_existing: bool = True
 
+class ReceiptChargeAllocationRead(BaseModel):
+    receipt_id: uuid.UUID
+    item_share_count: int
+    item_subtotal_amount: Decimal
+    tax_amount: Decimal
+    service_charge_amount: Decimal
+    total_allocated_amount: Decimal
+    shares: list[ItemShareRead]
+

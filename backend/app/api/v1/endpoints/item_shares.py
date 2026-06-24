@@ -313,3 +313,185 @@ def create_equal_item_shares(
         "data": [ItemShareRead.model_validate(share) for share in created_shares],
     }
 
+from decimal import ROUND_FLOOR as _ROUND_FLOOR_FOR_CHARGE_ALLOCATION
+from decimal import ROUND_HALF_UP as _ROUND_HALF_UP_FOR_CHARGE_ALLOCATION
+
+from sqlalchemy import select as _select_for_charge_allocation
+
+from app.crud.receipt import get_receipt as _get_receipt_for_charge_allocation
+from app.models.item import Item as _ItemForChargeAllocation
+from app.models.item_share import ItemShare as _ItemShareForChargeAllocation
+from app.schemas.item_share import ReceiptChargeAllocationRead
+
+
+def _to_cents_for_charge_allocation(amount: Decimal) -> int:
+    rounded_amount = amount.quantize(
+        Decimal("0.01"),
+        rounding=_ROUND_HALF_UP_FOR_CHARGE_ALLOCATION,
+    )
+    return int(rounded_amount * Decimal("100"))
+
+
+def _from_cents_for_charge_allocation(cents: int) -> Decimal:
+    return (Decimal(cents) / Decimal("100")).quantize(Decimal("0.01"))
+
+
+def _allocate_amount_proportionally(
+    total_amount: Decimal,
+    base_amounts: list[Decimal],
+) -> list[Decimal]:
+    total_cents = _to_cents_for_charge_allocation(total_amount)
+
+    if total_cents == 0:
+        return [Decimal("0.00") for _ in base_amounts]
+
+    base_total = sum(base_amounts, Decimal("0.00"))
+
+    if base_total <= Decimal("0.00"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": "INVALID_SHARE_BASE",
+                "message": "Total item share amount must be greater than zero.",
+            },
+        )
+
+    raw_allocations = [
+        (base_amount / base_total) * Decimal(total_cents)
+        for base_amount in base_amounts
+    ]
+
+    floor_cents = [
+        int(raw_value.to_integral_value(rounding=_ROUND_FLOOR_FOR_CHARGE_ALLOCATION))
+        for raw_value in raw_allocations
+    ]
+
+    remaining_cents = total_cents - sum(floor_cents)
+
+    fractional_parts = sorted(
+        [
+            (raw_value - Decimal(floor_value), index)
+            for index, (raw_value, floor_value) in enumerate(
+                zip(raw_allocations, floor_cents, strict=True)
+            )
+        ],
+        reverse=True,
+    )
+
+    for _, index in fractional_parts[:remaining_cents]:
+        floor_cents[index] += 1
+
+    return [
+        _from_cents_for_charge_allocation(cents)
+        for cents in floor_cents
+    ]
+
+
+def _list_item_shares_by_receipt_for_charge_allocation(
+    db: Session,
+    receipt_id: uuid.UUID,
+):
+    statement = (
+        _select_for_charge_allocation(_ItemShareForChargeAllocation)
+        .join(
+            _ItemForChargeAllocation,
+            _ItemShareForChargeAllocation.item_id == _ItemForChargeAllocation.id,
+        )
+        .where(_ItemForChargeAllocation.receipt_id == receipt_id)
+        .order_by(_ItemShareForChargeAllocation.created_at)
+    )
+
+    return db.execute(statement).scalars().all()
+
+
+@router.post(
+    "/receipts/{receipt_id}/shares/allocate-charges",
+    status_code=status.HTTP_200_OK,
+)
+def allocate_receipt_charges_to_item_shares(
+    receipt_id: uuid.UUID,
+    db: Session = Depends(get_db),
+):
+    receipt = _get_receipt_for_charge_allocation(db, receipt_id)
+
+    if receipt is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "RECEIPT_NOT_FOUND",
+                "message": "The receipt does not exist.",
+            },
+        )
+
+    item_shares = _list_item_shares_by_receipt_for_charge_allocation(db, receipt_id)
+
+    if len(item_shares) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": "NO_ITEM_SHARES",
+                "message": "This receipt does not have item share records yet.",
+            },
+        )
+
+    base_amounts = [
+        share.item_share_amount.quantize(Decimal("0.01"))
+        for share in item_shares
+    ]
+
+    tax_allocations = _allocate_amount_proportionally(
+        receipt.tax_amount,
+        base_amounts,
+    )
+    service_charge_allocations = _allocate_amount_proportionally(
+        receipt.service_charge_amount,
+        base_amounts,
+    )
+
+    updated_shares = []
+
+    for share, tax_share, service_charge_share in zip(
+        item_shares,
+        tax_allocations,
+        service_charge_allocations,
+        strict=True,
+    ):
+        total_share_amount = (
+            share.item_share_amount
+            + tax_share
+            + service_charge_share
+        ).quantize(Decimal("0.01"))
+
+        updated_share = update_item_share(
+            db,
+            share,
+            {
+                "tax_share_amount": tax_share,
+                "service_charge_share_amount": service_charge_share,
+                "total_share_amount": total_share_amount,
+            },
+        )
+
+        updated_shares.append(updated_share)
+
+    item_subtotal_amount = sum(base_amounts, Decimal("0.00")).quantize(Decimal("0.01"))
+    total_allocated_amount = sum(
+        share.total_share_amount for share in updated_shares
+    ).quantize(Decimal("0.01"))
+
+    return {
+        "success": True,
+        "data": ReceiptChargeAllocationRead(
+            receipt_id=receipt_id,
+            item_share_count=len(updated_shares),
+            item_subtotal_amount=item_subtotal_amount,
+            tax_amount=receipt.tax_amount,
+            service_charge_amount=receipt.service_charge_amount,
+            total_allocated_amount=total_allocated_amount,
+            shares=[
+                ItemShareRead.model_validate(share)
+                for share in updated_shares
+            ],
+        ),
+    }
+
