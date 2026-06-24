@@ -314,3 +314,53 @@ def confirm_debt_received(
         "success": True,
         "data": DebtRead.model_validate(updated_debt),
     }
+
+
+@router.post(
+    "/expenses/{expense_id}/debts/recalculate",
+    status_code=status.HTTP_201_CREATED,
+)
+def recalculate_debts_for_expense(
+    expense_id: uuid.UUID,
+    db: Session = Depends(get_db),
+):
+    existing_debts = list_debts_by_expense(db, expense_id)
+
+    active_existing_debts = [
+        debt for debt in existing_debts if debt.status != "cancelled"
+    ]
+
+    for debt in active_existing_debts:
+        update_debt(
+            db,
+            debt,
+            {
+                "status": "cancelled",
+            },
+        )
+
+    debt_specs = _calculate_debt_specs_for_expense(db, expense_id)
+
+    created_debts = [
+        create_debt(
+            db,
+            group_id=spec["group_id"],
+            expense_id=spec["expense_id"],
+            from_user_id=spec["from_user_id"],
+            to_user_id=spec["to_user_id"],
+            amount=spec["amount"],
+            status="pending",
+        )
+        for spec in debt_specs
+    ]
+
+    return {
+        "success": True,
+        "data": {
+            "cancelled_debt_count": len(active_existing_debts),
+            "created_debts": [
+                DebtRead.model_validate(debt) for debt in created_debts
+            ],
+        },
+    }
+
