@@ -1,25 +1,21 @@
 from pathlib import Path
 
+from app.services.ocr_engine import get_ocr_engine
 from app.services.receipt_parser import parse_receipt_text
 
 
-def run_mock_ocr(image_path: Path) -> dict:
+def run_receipt_ocr(image_path: Path, engine_name: str = "mock") -> dict:
     """
-    Temporary mock OCR service for Milestone 2.
+    Run OCR and parse the extracted receipt text.
 
-    This service simulates the OCR pipeline:
-    receipt image -> raw OCR text -> parsed receipt items.
+    Current Milestone 2 default:
+    image_path -> MockOcrEngine -> raw_text -> receipt_parser -> structured data
 
-    Later this function can be replaced by PaddleOCR while keeping
-    parse_receipt_text() as the receipt parsing layer.
+    Later:
+    image_path -> PaddleOcrEngine -> raw_text -> receipt_parser -> structured data
     """
-    raw_text = (
-        "Chicken Rice 5.50\n"
-        "Iced Lemon Tea 3.20\n"
-        "GST 0.70\n"
-        "SERVICE 1.30\n"
-        "TOTAL 10.70"
-    )
+    ocr_engine = get_ocr_engine(engine_name)
+    raw_text = ocr_engine.extract_text(image_path)
 
     parsed_result = parse_receipt_text(raw_text)
 
@@ -27,3 +23,10 @@ def run_mock_ocr(image_path: Path) -> dict:
         "raw_text": raw_text,
         **parsed_result,
     }
+
+
+def run_mock_ocr(image_path: Path) -> dict:
+    """
+    Backward-compatible wrapper used by the existing receipt upload endpoint.
+    """
+    return run_receipt_ocr(image_path, engine_name="mock")
