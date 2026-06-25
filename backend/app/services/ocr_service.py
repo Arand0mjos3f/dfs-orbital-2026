@@ -1,5 +1,6 @@
-from decimal import Decimal
 from pathlib import Path
+
+from app.services.receipt_parser import parse_receipt_text
 
 
 def run_mock_ocr(image_path: Path) -> dict:
@@ -9,35 +10,20 @@ def run_mock_ocr(image_path: Path) -> dict:
     This service simulates the OCR pipeline:
     receipt image -> raw OCR text -> parsed receipt items.
 
-    Later this function can be replaced by PaddleOCR without changing
-    the receipt upload endpoint contract.
+    Later this function can be replaced by PaddleOCR while keeping
+    parse_receipt_text() as the receipt parsing layer.
     """
-    mock_items = [
-        {
-            "name": "Chicken Rice",
-            "original_name": "Chicken Rice",
-            "unit_price": Decimal("5.50"),
-            "quantity": 1,
-            "total_price": Decimal("5.50"),
-            "is_manually_edited": False,
-        },
-        {
-            "name": "Iced Lemon Tea",
-            "original_name": "Iced Lemon Tea",
-            "unit_price": Decimal("3.20"),
-            "quantity": 1,
-            "total_price": Decimal("3.20"),
-            "is_manually_edited": False,
-        },
-    ]
+    raw_text = (
+        "Chicken Rice 5.50\n"
+        "Iced Lemon Tea 3.20\n"
+        "GST 0.70\n"
+        "SERVICE 1.30\n"
+        "TOTAL 10.70"
+    )
 
-    raw_text = "Chicken Rice 5.50\nIced Lemon Tea 3.20\nTOTAL 8.70"
+    parsed_result = parse_receipt_text(raw_text)
 
     return {
         "raw_text": raw_text,
-        "items": mock_items,
-        "subtotal_amount": Decimal("8.70"),
-        "tax_amount": Decimal("0.00"),
-        "service_charge_amount": Decimal("0.00"),
-        "total_amount": Decimal("8.70"),
+        **parsed_result,
     }
