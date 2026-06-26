@@ -23,7 +23,7 @@ from app.schemas.receipt import (
     ReceiptUploadRead,
 )
 
-from app.services.ocr_service import run_mock_ocr
+from app.services.ocr_service import run_receipt_ocr
 
 router = APIRouter(tags=["receipts"])
 
@@ -240,7 +240,7 @@ def upload_receipt_image(
     with saved_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    ocr_result = run_mock_ocr(saved_path)
+    ocr_result = run_receipt_ocr(saved_path)
 
     receipt = create_receipt(
         db,
