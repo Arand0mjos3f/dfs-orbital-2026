@@ -8,3 +8,6 @@ uploads/
 
 # Local test files
 tmp/
+
+# OCR local virtual environment
+.venv-ocr/
