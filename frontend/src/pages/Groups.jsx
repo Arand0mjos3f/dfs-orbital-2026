@@ -1,15 +1,25 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/useAuthStore';
 import { useGroupStore } from '../store/groupStore';
 
-const testUserId = '16ab9e31-56f1-4afc-8d2f-09f45dfd57da';
-
-const cardClass = 'rounded-[24px] bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.05)]';
+const cardClass =
+  'rounded-[24px] bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.05)]';
 
 export default function Groups() {
   const navigate = useNavigate();
-  const { groups, isLoading, error, fetchGroups, createGroup, updateGroup, deleteGroup } =
-    useGroupStore();
+  const currentUser = useAuthStore((state) => state.user);
+  const currentUserId = currentUser?.id;
+
+  const {
+    groups,
+    isLoading,
+    error,
+    fetchGroups,
+    createGroup,
+    updateGroup,
+    deleteGroup,
+  } = useGroupStore();
 
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupDesc, setNewGroupDesc] = useState('');
@@ -20,20 +30,22 @@ export default function Groups() {
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
-    fetchGroups(testUserId);
-  }, [fetchGroups]);
+    if (currentUserId) {
+      fetchGroups(currentUserId);
+    }
+  }, [currentUserId, fetchGroups]);
 
-  const handleCreateGroup = async (e) => {
-    e.preventDefault();
+  const handleCreateGroup = async (event) => {
+    event.preventDefault();
 
-    if (!newGroupName.trim()) return;
+    if (!newGroupName.trim() || !currentUserId) return;
 
     await createGroup(
       {
         name: newGroupName.trim(),
         description: newGroupDesc.trim(),
       },
-      testUserId
+      currentUserId
     );
 
     setNewGroupName('');
@@ -54,7 +66,7 @@ export default function Groups() {
   };
 
   const handleUpdateGroup = async (groupId) => {
-    if (!editName.trim()) return;
+    if (!editName.trim() || !currentUserId) return;
 
     setSavingGroupId(groupId);
 
@@ -65,7 +77,7 @@ export default function Groups() {
           name: editName.trim(),
           description: editDesc.trim(),
         },
-        testUserId
+        currentUserId
       );
 
       cancelEditing();
@@ -75,32 +87,42 @@ export default function Groups() {
   };
 
   const handleDeleteGroup = async (groupId) => {
-    const confirmed = window.confirm('Delete this group? This action cannot be undone.');
+    if (!currentUserId) return;
+
+    const confirmed = window.confirm(
+      'Delete this group? This action cannot be undone.'
+    );
 
     if (!confirmed) return;
 
-    await deleteGroup(groupId, testUserId);
+    await deleteGroup(groupId, currentUserId);
   };
 
   return (
     <div className="min-h-dvh bg-[#F8FAFC] px-5 pb-8 pt-5">
       <header className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">My Groups</h1>
+        <h1 className="text-3xl font-extrabold text-slate-900">
+          My Groups
+        </h1>
+
         <button
           type="button"
           onClick={() => setIsCreating((value) => !value)}
-          className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#4F46E5] text-2xl font-light leading-none text-white shadow-[0_12px_24px_rgba(79,70,229,0.25)]"
+          className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#4F46E5] text-2xl font-light leading-none text-white"
         >
           +
         </button>
       </header>
 
       {isCreating && (
-        <form onSubmit={handleCreateGroup} className={`${cardClass} mb-5 space-y-3`}>
+        <form
+          onSubmit={handleCreateGroup}
+          className={`${cardClass} mb-5 space-y-3`}
+        >
           <input
             type="text"
             value={newGroupName}
-            onChange={(e) => setNewGroupName(e.target.value)}
+            onChange={(event) => setNewGroupName(event.target.value)}
             className="w-full rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
             placeholder="Group name"
             required
@@ -109,14 +131,14 @@ export default function Groups() {
           <input
             type="text"
             value={newGroupDesc}
-            onChange={(e) => setNewGroupDesc(e.target.value)}
+            onChange={(event) => setNewGroupDesc(event.target.value)}
             className="w-full rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
             placeholder="Description"
           />
 
           <button
             type="submit"
-            className="w-full rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white shadow-[0_8px_20px_rgba(79,70,229,0.25)]"
+            className="w-full rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white"
           >
             Create Group
           </button>
@@ -124,15 +146,21 @@ export default function Groups() {
       )}
 
       {isLoading ? (
-        <div className={`${cardClass} text-center text-sm font-semibold text-slate-400`}>
+        <div
+          className={`${cardClass} text-center text-sm font-semibold text-slate-400`}
+        >
           Loading your groups...
         </div>
       ) : error ? (
-        <div className={`${cardClass} text-center text-sm font-semibold text-[#EF4444]`}>
+        <div
+          className={`${cardClass} text-center text-sm font-semibold text-[#EF4444]`}
+        >
           {error}
         </div>
       ) : groups.length === 0 ? (
-        <div className={`${cardClass} text-center text-sm font-semibold text-slate-400`}>
+        <div
+          className={`${cardClass} text-center text-sm font-semibold text-slate-400`}
+        >
           No groups found. Create your first one.
         </div>
       ) : (
@@ -140,6 +168,8 @@ export default function Groups() {
           {groups.map((group) => {
             const isEditing = editingGroupId === group.id;
             const isSaving = savingGroupId === group.id;
+            const isOwner =
+              String(group.created_by_id) === String(currentUserId);
 
             return (
               <div
@@ -147,24 +177,29 @@ export default function Groups() {
                 role="button"
                 tabIndex={0}
                 onClick={() => navigate(`/groups/${group.id}`)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') navigate(`/groups/${group.id}`);
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    navigate(`/groups/${group.id}`);
+                  }
                 }}
                 className={`${cardClass} cursor-pointer transition active:scale-[0.99]`}
               >
                 {isEditing ? (
-                  <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
+                  <div
+                    className="space-y-3"
+                    onClick={(event) => event.stopPropagation()}
+                  >
                     <input
                       type="text"
                       value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
+                      onChange={(event) => setEditName(event.target.value)}
                       className="w-full rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
                       required
                     />
 
                     <textarea
                       value={editDesc}
-                      onChange={(e) => setEditDesc(e.target.value)}
+                      onChange={(event) => setEditDesc(event.target.value)}
                       className="min-h-24 w-full resize-none rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
                       placeholder="Description"
                     />
@@ -174,7 +209,7 @@ export default function Groups() {
                         type="button"
                         onClick={() => handleUpdateGroup(group.id)}
                         disabled={isSaving}
-                        className="rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white shadow-[0_8px_20px_rgba(79,70,229,0.25)] disabled:bg-slate-300"
+                        className="rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
                       >
                         {isSaving ? 'Saving...' : 'Save'}
                       </button>
@@ -191,9 +226,10 @@ export default function Groups() {
                 ) : (
                   <div>
                     <div className="mb-5">
-                      <h2 className="text-xl font-extrabold tracking-tight text-slate-900">
+                      <h2 className="text-xl font-extrabold text-slate-900">
                         {group.name}
                       </h2>
+
                       <p className="mt-2 line-clamp-2 text-sm font-medium text-slate-400">
                         {group.description || 'No description yet.'}
                       </p>
@@ -202,36 +238,40 @@ export default function Groups() {
                     <div className="flex flex-wrap items-center gap-3">
                       <button
                         type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
+                        onClick={(event) => {
+                          event.stopPropagation();
                           navigate(`/groups/${group.id}`);
                         }}
-                        className="rounded-2xl bg-[#4F46E5] px-4 py-2.5 text-xs font-extrabold text-white shadow-[0_8px_20px_rgba(79,70,229,0.25)]"
+                        className="rounded-2xl bg-[#4F46E5] px-4 py-2.5 text-xs font-extrabold text-white"
                       >
                         Open
                       </button>
 
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          startEditing(group);
-                        }}
-                        className="rounded-2xl bg-slate-100 px-4 py-2.5 text-xs font-extrabold text-slate-500"
-                      >
-                        Edit
-                      </button>
+                      {isOwner && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              startEditing(group);
+                            }}
+                            className="rounded-2xl bg-slate-100 px-4 py-2.5 text-xs font-extrabold text-slate-500"
+                          >
+                            Edit
+                          </button>
 
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteGroup(group.id);
-                        }}
-                        className="rounded-2xl bg-red-50 px-4 py-2.5 text-xs font-extrabold text-[#EF4444]"
-                      >
-                        Delete
-                      </button>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleDeleteGroup(group.id);
+                            }}
+                            className="rounded-2xl bg-red-50 px-4 py-2.5 text-xs font-extrabold text-[#EF4444]"
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}

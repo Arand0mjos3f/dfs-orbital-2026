@@ -10,6 +10,13 @@ const mockUsers = [
     password: 'password123',
     avatarUrl: '',
   },
+  {
+    id: 'facda849-579e-48d6-a589-b160f0533bf5',
+    username: 'Jingyi',
+    email: 'jingyi.demo@example.com',
+    password: 'password123',
+    avatarUrl: '',
+  },
 ];
 
 export default function Login() {
@@ -27,11 +34,12 @@ export default function Login() {
     return <Navigate to={from} replace />;
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = (event) => {
+    event.preventDefault();
 
     const user = mockUsers.find(
-      (mockUser) => mockUser.email === email.trim() && mockUser.password === password
+      (mockUser) =>
+        mockUser.email === email.trim() && mockUser.password === password
     );
 
     if (!user) {
@@ -56,18 +64,29 @@ export default function Login() {
     <div className="flex min-h-dvh items-center justify-center bg-gray-100 px-4">
       <div className="w-full max-w-[393px] rounded-2xl bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)]">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-extrabold text-gray-800">DFS Orbital</h1>
-          <p className="mt-2 text-sm text-gray-400">Sign in to manage your groups.</p>
+          <h1 className="text-3xl font-extrabold text-gray-800">
+            DFS Orbital
+          </h1>
+          <p className="mt-2 text-sm text-gray-400">
+            Sign in to manage your groups.
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-2 block text-sm font-semibold text-gray-700">Email</label>
+            <label
+              htmlFor="login-email"
+              className="mb-2 block text-sm font-semibold text-gray-700"
+            >
+              Email
+            </label>
+
             <input
+              id="login-email"
               type="email"
               value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
+              onChange={(event) => {
+                setEmail(event.target.value);
                 setError('');
               }}
               className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-800 outline-none focus:border-gray-400 focus:bg-white"
@@ -76,12 +95,19 @@ export default function Login() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-gray-700">Password</label>
+            <label
+              htmlFor="login-password"
+              className="mb-2 block text-sm font-semibold text-gray-700"
+            >
+              Password
+            </label>
+
             <input
+              id="login-password"
               type="password"
               value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
+              onChange={(event) => {
+                setPassword(event.target.value);
                 setError('');
               }}
               className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-800 outline-none focus:border-gray-400 focus:bg-white"
@@ -103,9 +129,11 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-gray-400">
-          Demo account is prefilled for local testing.
-        </p>
+        <div className="mt-6 rounded-xl bg-gray-50 px-4 py-3 text-xs text-gray-400">
+          <p>Sixian: sixian@example.com</p>
+          <p className="mt-1">Jingyi: jingyi.demo@example.com</p>
+          <p className="mt-1">Password: password123</p>
+        </div>
       </div>
     </div>
   );
