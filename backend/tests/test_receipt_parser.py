@@ -52,3 +52,44 @@ TOTAL 5.50
     assert result["items"][0]["name"] == "Chicken Rice"
     assert result["subtotal_amount"] == Decimal("5.50")
     assert result["total_amount"] == Decimal("5.50")
+
+
+def test_parse_multiline_receipt_table_with_thousand_style_amounts():
+    raw_text = """Product
+Qty
+Sub Total
+Sirloin Steak (Import)
+1
+125.000
+Green Pumpkin Juice
+1
+20.000
+Cumi Goreng Tepung
+1
+65.000
+Apple Juice
+1
+15.000
+Quantity: 4
+Sub Total
+225.000
+Tax(10%)
+22.500
+Grand Total
+247.500
+Payment
+300.000
+Refund
+52.500
+"""
+
+    result = parse_receipt_text(raw_text)
+
+    assert len(result["items"]) == 4
+    assert result["items"][0]["name"] == "Sirloin Steak (Import)"
+    assert result["items"][0]["total_price"] == Decimal("125000.00")
+    assert result["items"][1]["name"] == "Green Pumpkin Juice"
+    assert result["items"][1]["total_price"] == Decimal("20000.00")
+    assert result["subtotal_amount"] == Decimal("225000.00")
+    assert result["tax_amount"] == Decimal("22500.00")
+    assert result["total_amount"] == Decimal("247500.00")
