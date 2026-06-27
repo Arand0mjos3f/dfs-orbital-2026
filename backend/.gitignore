@@ -11,3 +11,23 @@ tmp/
 
 # OCR local virtual environment
 .venv-ocr/
+
+# Python cache
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Local virtual environments
+.venv/
+.venv-ocr/
+
+# Local uploads and temporary test files
+uploads/
+tmp/
+tmp_*.json
+tmp_paddleocr_logs.txt
+
+# Local OCR / receipt test images
+*.local.jpg
+*.local.jpeg
+*.local.png
