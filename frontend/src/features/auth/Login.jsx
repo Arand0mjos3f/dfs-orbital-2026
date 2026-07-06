@@ -24,8 +24,8 @@ export default function Login() {
   const location = useLocation();
   const { isAuthenticated, setAuth } = useAuthStore();
 
-  const [email, setEmail] = useState('sixian@example.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const from = location.state?.from?.pathname || '/dashboard';
@@ -128,12 +128,6 @@ export default function Login() {
             Sign In
           </button>
         </form>
-
-        <div className="mt-6 rounded-xl bg-gray-50 px-4 py-3 text-xs text-gray-400">
-          <p>Sixian: sixian@example.com</p>
-          <p className="mt-1">Jingyi: jingyi.demo@example.com</p>
-          <p className="mt-1">Password: password123</p>
-        </div>
       </div>
     </div>
   );
