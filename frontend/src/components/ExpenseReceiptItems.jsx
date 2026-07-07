@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createItem, getItems } from '../api/items';
 import { createItemShares, getItemShares } from '../api/itemShares';
-import { createReceipt, getReceipts } from '../api/receipts';
+import { createReceipt, getReceipts, uploadReceiptImage } from '../api/receipts';
 import ReceiptTotalStatus from './ReceiptTotalStatus';
 
 function formatCurrency(value) {
@@ -24,6 +24,14 @@ function splitAmount(total, count) {
   );
 }
 
+function normalizeOcrItem(item, index) {
+  return {
+    id: `${item.name || item.original_name || 'item'}-${index}`,
+    name: item.name || item.original_name || `Item ${index + 1}`,
+    total_price: Number(item.total_price || item.unit_price || 0).toFixed(2),
+  };
+}
+
 export default function ExpenseReceiptItems({ expense, members }) {
   const [receipts, setReceipts] = useState([]);
   const [itemsByReceipt, setItemsByReceipt] = useState({});
@@ -31,11 +39,15 @@ export default function ExpenseReceiptItems({ expense, members }) {
   const [selectedUsersByItem, setSelectedUsersByItem] = useState({});
   const [payerId, setPayerId] = useState('');
   const [receiptTotal, setReceiptTotal] = useState('');
+  const [receiptImageFile, setReceiptImageFile] = useState(null);
+  const [ocrReview, setOcrReview] = useState(null);
   const [itemName, setItemName] = useState('');
   const [itemPrice, setItemPrice] = useState('');
   const [activeReceiptId, setActiveReceiptId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingReceipt, setIsSavingReceipt] = useState(false);
+  const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
+  const [isSavingOcrItems, setIsSavingOcrItems] = useState(false);
   const [isSavingItem, setIsSavingItem] = useState(false);
   const [isSavingSharesByItem, setIsSavingSharesByItem] = useState({});
   const [error, setError] = useState('');
@@ -59,6 +71,12 @@ export default function ExpenseReceiptItems({ expense, members }) {
     () => (activeReceipt ? itemsByReceipt[activeReceipt.id] || [] : []),
     [activeReceipt, itemsByReceipt]
   );
+
+  const activeOcrReview = useMemo(() => {
+    if (!activeReceipt || !ocrReview) return null;
+    if (ocrReview.receiptId !== activeReceipt.id) return null;
+    return ocrReview;
+  }, [activeReceipt, ocrReview]);
 
   const buildReceiptItemState = useCallback(async (loadedReceipts) => {
     const itemEntries = await Promise.all(
@@ -172,6 +190,133 @@ export default function ExpenseReceiptItems({ expense, members }) {
       );
     } finally {
       setIsSavingReceipt(false);
+    }
+  };
+
+  const handleUploadReceiptImage = async (event) => {
+    event.preventDefault();
+
+    if (!payerId || !receiptImageFile) return;
+
+    const uploadForm = event.currentTarget;
+
+    setIsUploadingReceipt(true);
+    setError('');
+
+    try {
+      const response = await uploadReceiptImage(
+        expense.id,
+        payerId,
+        receiptImageFile
+      );
+      const uploadedReceipt = response.data.data.receipt;
+      const parsedItems = response.data.data.items || [];
+
+      setOcrReview({
+        receiptId: uploadedReceipt.id,
+        rawText: response.data.data.raw_ocr_text || '',
+        items: parsedItems.map(normalizeOcrItem),
+      });
+
+      setReceiptImageFile(null);
+      setReceiptTotal('');
+      setPayerId('');
+      uploadForm.reset();
+
+      await loadReceiptsAndItems();
+      setActiveReceiptId(uploadedReceipt.id);
+    } catch (requestError) {
+      console.error('Error uploading receipt image:', requestError);
+      setError(
+        requestError.response?.data?.detail?.message ||
+          'Failed to upload receipt image'
+      );
+    } finally {
+      setIsUploadingReceipt(false);
+    }
+  };
+
+  const handleUpdateOcrItem = (index, field, value) => {
+    setOcrReview((currentReview) => {
+      if (!currentReview) return currentReview;
+
+      return {
+        ...currentReview,
+        items: currentReview.items.map((item, itemIndex) =>
+          itemIndex === index ? { ...item, [field]: value } : item
+        ),
+      };
+    });
+  };
+
+  const handleAddOcrItem = () => {
+    setOcrReview((currentReview) => {
+      if (!currentReview) return currentReview;
+
+      return {
+        ...currentReview,
+        items: [
+          ...currentReview.items,
+          {
+            id: `manual-${Date.now()}`,
+            name: '',
+            total_price: '0.00',
+          },
+        ],
+      };
+    });
+  };
+
+  const handleRemoveOcrItem = (index) => {
+    setOcrReview((currentReview) => {
+      if (!currentReview) return currentReview;
+
+      return {
+        ...currentReview,
+        items: currentReview.items.filter((_, itemIndex) => itemIndex !== index),
+      };
+    });
+  };
+
+  const handleSaveOcrItems = async () => {
+    if (!activeReceipt || !activeOcrReview) return;
+
+    const reviewItems = activeOcrReview.items.filter(
+      (item) => item.name.trim() && Number(item.total_price) >= 0
+    );
+
+    if (reviewItems.length === 0) {
+      setError('Add at least one parsed item before saving');
+      return;
+    }
+
+    setIsSavingOcrItems(true);
+    setError('');
+
+    try {
+      await Promise.all(
+        reviewItems.map((item) => {
+          const amount = Number(item.total_price).toFixed(2);
+
+          return createItem(activeReceipt.id, {
+            name: item.name.trim(),
+            quantity: 1,
+            unit_price: amount,
+            total_price: amount,
+          });
+        })
+      );
+
+      setOcrReview(null);
+      await loadReceiptsAndItems();
+    } catch (requestError) {
+      console.error('Error saving OCR items:', requestError);
+      setError(
+        requestError.response?.data?.detail?.message ||
+          'Failed to save OCR items'
+      );
+    } finally {
+      setIsSavingOcrItems(false);
     }
   };
 
@@ -299,7 +444,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
       ) : (
         <>
           {receipts.length === 0 ? (
-            <form onSubmit={handleCreateReceipt} className="space-y-3">
+            <div className="space-y-4">
               <select
                 value={payerId}
                 onChange={(event) => setPayerId(event.target.value)}
@@ -315,25 +460,62 @@ export default function ExpenseReceiptItems({ expense, members }) {
                 ))}
               </select>
 
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={receiptTotal}
-                onChange={(event) => setReceiptTotal(event.target.value)}
-                className="w-full rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
-                placeholder="Receipt total"
-                required
-              />
+              <form onSubmit={handleUploadReceiptImage} className="space-y-3">
+                <label className="block rounded-2xl border border-dashed border-indigo-200 bg-indigo-50 px-4 py-4">
+                  <span className="block text-sm font-extrabold text-[#4F46E5]">
+                    Upload receipt image
+                  </span>
+                  <span className="mt-1 block text-xs font-semibold text-indigo-400">
+                    OCR will create a reviewable receipt draft.
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) =>
+                      setReceiptImageFile(event.target.files?.[0] || null)
+                    }
+                    className="mt-3 block w-full text-xs font-semibold text-slate-500 file:mr-3 file:rounded-full file:border-0 file:bg-white file:px-3 file:py-2 file:text-xs file:font-extrabold file:text-[#4F46E5]"
+                  />
+                </label>
 
-              <button
-                type="submit"
-                disabled={isSavingReceipt}
-                className="w-full rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
-              >
-                {isSavingReceipt ? 'Creating...' : 'Create Receipt'}
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={!payerId || !receiptImageFile || isUploadingReceipt}
+                  className="w-full rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+                >
+                  {isUploadingReceipt ? 'Uploading...' : 'Upload and Parse Receipt'}
+                </button>
+              </form>
+
+              <div className="flex items-center gap-3">
+                <div className="h-px flex-1 bg-slate-100" />
+                <span className="text-xs font-extrabold uppercase text-slate-300">
+                  or
+                </span>
+                <div className="h-px flex-1 bg-slate-100" />
+              </div>
+
+              <form onSubmit={handleCreateReceipt} className="space-y-3">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={receiptTotal}
+                  onChange={(event) => setReceiptTotal(event.target.value)}
+                  className="w-full rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+                  placeholder="Receipt total"
+                  required
+                />
+
+                <button
+                  type="submit"
+                  disabled={!payerId || isSavingReceipt}
+                  className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+                >
+                  {isSavingReceipt ? 'Creating...' : 'Create Manual Receipt'}
+                </button>
+              </form>
+            </div>
           ) : (
             <div className="space-y-4">
               {receipts.length > 1 && (
@@ -349,6 +531,87 @@ export default function ExpenseReceiptItems({ expense, members }) {
                     </option>
                   ))}
                 </select>
+              )}
+
+              {activeOcrReview && (
+                <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-extrabold text-slate-900">
+                        OCR review
+                      </p>
+                      <p className="mt-1 text-xs font-semibold text-indigo-400">
+                        Check the parsed items before saving them.
+                      </p>
+                    </div>
+
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[#4F46E5]">
+                      {activeOcrReview.items.length} items
+                    </span>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    {activeOcrReview.items.map((item, index) => (
+                      <div
+                        key={item.id}
+                        className="grid grid-cols-[1fr_96px_36px] gap-2"
+                      >
+                        <input
+                          type="text"
+                          value={item.name}
+                          onChange={(event) =>
+                            handleUpdateOcrItem(index, 'name', event.target.value)
+                          }
+                          className="min-w-0 rounded-2xl border border-white bg-white px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#4F46E5]"
+                          placeholder="Item name"
+                        />
+
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.total_price}
+                          onChange={(event) =>
+                            handleUpdateOcrItem(
+                              index,
+                              'total_price',
+                              event.target.value
+                            )
+                          }
+                          className="min-w-0 rounded-2xl border border-white bg-white px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#4F46E5]"
+                          placeholder="Price"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveOcrItem(index)}
+                          className="rounded-2xl bg-white text-xs font-extrabold text-red-400"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={handleAddOcrItem}
+                      className="rounded-2xl bg-white px-4 py-3 text-sm font-extrabold text-[#4F46E5]"
+                    >
+                      Add Row
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleSaveOcrItems}
+                      disabled={isSavingOcrItems}
+                      className="rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+                    >
+                      {isSavingOcrItems ? 'Saving...' : 'Save OCR Items'}
+                    </button>
+                  </div>
+                </div>
               )}
 
               <ReceiptTotalStatus

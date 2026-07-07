@@ -3,6 +3,19 @@ import api from './axios';
 export const createReceipt = (expenseId, payload) =>
   api.post(`/expenses/${expenseId}/receipts`, payload);
 
+export const uploadReceiptImage = (expenseId, payerId, file) => {
+  const formData = new FormData();
+
+  formData.append('payer_id', payerId);
+  formData.append('file', file);
+
+  return api.post(`/expenses/${expenseId}/receipts/upload`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
 export const getReceipts = (expenseId) => api.get(`/expenses/${expenseId}/receipts`);
 
 export const getReceiptDetail = (receiptId) => api.get(`/receipts/${receiptId}`);
