@@ -10,3 +10,6 @@ export const updateItemShare = (itemShareId, payload) =>
 
 export const deleteItemShare = (itemShareId) =>
   api.delete(`/item-shares/${itemShareId}`);
+
+export const allocateReceiptCharges = (receiptId) =>
+  api.post(`/receipts/${receiptId}/shares/allocate-charges`);
