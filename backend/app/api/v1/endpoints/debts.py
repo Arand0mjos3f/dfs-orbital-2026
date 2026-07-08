@@ -14,12 +14,17 @@ from app.crud.debt import (
     update_debt,
 )
 from app.crud.expense import get_expense
-from app.crud.group import get_group, get_group_member
+from app.crud.group import get_group, get_group_member, list_group_members
 from app.crud.item import list_items_by_receipt
 from app.crud.item_share import list_item_shares_by_item
 from app.crud.receipt import list_receipts_by_expense
 from app.db.database import get_db
-from app.schemas.debt import DebtMarkPaid, DebtRead
+from app.schemas.debt import (
+    DebtMarkPaid,
+    DebtRead,
+    GroupDebtSummaryRead,
+    GroupMemberDebtSummaryRead,
+)
 
 
 router = APIRouter(tags=["debts"])
@@ -211,6 +216,120 @@ def get_debts_in_group(
     }
 
 
+@router.get("/groups/{group_id}/debts/summary")
+def get_group_debt_summary(
+    group_id: uuid.UUID,
+    user_id: uuid.UUID = Query(...),
+    db: Session = Depends(get_db),
+):
+    group = get_group(db, group_id)
+
+    if group is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "GROUP_NOT_FOUND",
+                "message": "The group does not exist.",
+            },
+        )
+
+    member = get_group_member(db, group_id, user_id)
+
+    if member is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "NOT_GROUP_MEMBER",
+                "message": "The user is not a member of this group.",
+            },
+        )
+
+    debts = list_debts_by_group(db, group_id)
+    members = list_group_members(db, group_id)
+
+    member_balances = {
+        member.user_id: {
+            "owes_amount": Decimal("0.00"),
+            "owed_amount": Decimal("0.00"),
+            "net_amount": Decimal("0.00"),
+            "outstanding_transaction_count": 0,
+        }
+        for member in members
+    }
+
+    outstanding_debts = [
+        debt
+        for debt in debts
+        if debt.status not in {"cancelled", "confirmed_received"}
+    ]
+    settled_debt_count = len(
+        [debt for debt in debts if debt.status == "confirmed_received"]
+    )
+
+    for debt in outstanding_debts:
+        amount = _round_money(debt.amount)
+
+        member_balances.setdefault(
+            debt.from_user_id,
+            {
+                "owes_amount": Decimal("0.00"),
+                "owed_amount": Decimal("0.00"),
+                "net_amount": Decimal("0.00"),
+                "outstanding_transaction_count": 0,
+            },
+        )
+        member_balances.setdefault(
+            debt.to_user_id,
+            {
+                "owes_amount": Decimal("0.00"),
+                "owed_amount": Decimal("0.00"),
+                "net_amount": Decimal("0.00"),
+                "outstanding_transaction_count": 0,
+            },
+        )
+
+        member_balances[debt.from_user_id]["owes_amount"] += amount
+        member_balances[debt.from_user_id]["net_amount"] -= amount
+        member_balances[debt.from_user_id]["outstanding_transaction_count"] += 1
+
+        member_balances[debt.to_user_id]["owed_amount"] += amount
+        member_balances[debt.to_user_id]["net_amount"] += amount
+        member_balances[debt.to_user_id]["outstanding_transaction_count"] += 1
+
+    member_summaries = [
+        GroupMemberDebtSummaryRead(
+            user_id=member_id,
+            owes_amount=_round_money(summary["owes_amount"]),
+            owed_amount=_round_money(summary["owed_amount"]),
+            net_amount=_round_money(summary["net_amount"]),
+            outstanding_transaction_count=summary["outstanding_transaction_count"],
+        )
+        for member_id, summary in member_balances.items()
+    ]
+
+    member_summaries.sort(
+        key=lambda summary: (
+            abs(summary.net_amount),
+            summary.outstanding_transaction_count,
+            str(summary.user_id),
+        ),
+        reverse=True,
+    )
+
+    return {
+        "success": True,
+        "data": GroupDebtSummaryRead(
+            group_id=group_id,
+            outstanding_amount=_round_money(
+                sum((debt.amount for debt in outstanding_debts), Decimal("0.00"))
+            ),
+            outstanding_debt_count=len(outstanding_debts),
+            settled_debt_count=settled_debt_count,
+            member_summaries=member_summaries,
+        ),
+    }
+
+
 @router.patch("/debts/{debt_id}/mark-paid")
 def mark_debt_as_paid(
     debt_id: uuid.UUID,
@@ -363,4 +482,3 @@ def recalculate_debts_for_expense(
             ],
         },
     }
-

@@ -24,3 +24,19 @@ class DebtRead(BaseModel):
 
 class DebtMarkPaid(BaseModel):
     payment_proof_url: str | None = None
+
+
+class GroupMemberDebtSummaryRead(BaseModel):
+    user_id: uuid.UUID
+    owes_amount: Decimal
+    owed_amount: Decimal
+    net_amount: Decimal
+    outstanding_transaction_count: int
+
+
+class GroupDebtSummaryRead(BaseModel):
+    group_id: uuid.UUID
+    outstanding_amount: Decimal
+    outstanding_debt_count: int
+    settled_debt_count: int
+    member_summaries: list[GroupMemberDebtSummaryRead]
