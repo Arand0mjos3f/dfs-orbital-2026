@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createItem, getItems } from '../api/items';
-import { createItemShares, getItemShares } from '../api/itemShares';
+import {
+  allocateReceiptCharges,
+  createItemShares,
+  getItemShares,
+} from '../api/itemShares';
 import { createReceipt, getReceipts, uploadReceiptImage } from '../api/receipts';
 import ReceiptTotalStatus from './ReceiptTotalStatus';
 
@@ -32,6 +36,42 @@ function normalizeOcrItem(item, index) {
   };
 }
 
+function receiptHasCharges(receipt) {
+  if (!receipt) return false;
+
+  return (
+    Number(receipt.tax_amount || 0) > 0 ||
+    Number(receipt.service_charge_amount || 0) > 0
+  );
+}
+
+function getReceiptChargeTotal(receipt) {
+  if (!receipt) return 0;
+
+  return (
+    Number(receipt.tax_amount || 0) +
+    Number(receipt.service_charge_amount || 0)
+  );
+}
+
+function groupSharesByItem(shares) {
+  return shares.reduce((groupedShares, share) => {
+    const itemId = share.item_id;
+
+    return {
+      ...groupedShares,
+      [itemId]: [...(groupedShares[itemId] || []), share],
+    };
+  }, {});
+}
+
+function shareHasCharges(share) {
+  return (
+    Number(share.tax_share_amount || 0) > 0 ||
+    Number(share.service_charge_share_amount || 0) > 0
+  );
+}
+
 export default function ExpenseReceiptItems({ expense, members }) {
   const [receipts, setReceipts] = useState([]);
   const [itemsByReceipt, setItemsByReceipt] = useState({});
@@ -50,6 +90,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
   const [isSavingOcrItems, setIsSavingOcrItems] = useState(false);
   const [isSavingItem, setIsSavingItem] = useState(false);
   const [isSavingSharesByItem, setIsSavingSharesByItem] = useState({});
+  const [isAllocatingCharges, setIsAllocatingCharges] = useState(false);
   const [error, setError] = useState('');
 
   const memberMap = useMemo(
@@ -77,6 +118,18 @@ export default function ExpenseReceiptItems({ expense, members }) {
     if (ocrReview.receiptId !== activeReceipt.id) return null;
     return ocrReview;
   }, [activeReceipt, ocrReview]);
+
+  const activeReceiptHasCharges = useMemo(
+    () => receiptHasCharges(activeReceipt),
+    [activeReceipt]
+  );
+
+  const allActiveItemsAssigned = useMemo(
+    () =>
+      activeItems.length > 0 &&
+      activeItems.every((item) => (sharesByItem[item.id] || []).length > 0),
+    [activeItems, sharesByItem]
+  );
 
   const buildReceiptItemState = useCallback(async (loadedReceipts) => {
     const itemEntries = await Promise.all(
@@ -418,6 +471,32 @@ export default function ExpenseReceiptItems({ expense, members }) {
     }
   };
 
+  const handleAllocateReceiptCharges = async () => {
+    if (!activeReceipt || !allActiveItemsAssigned) return;
+
+    setIsAllocatingCharges(true);
+    setError('');
+
+    try {
+      const response = await allocateReceiptCharges(activeReceipt.id);
+      const updatedShares = response.data.data.shares || [];
+      const updatedSharesByItem = groupSharesByItem(updatedShares);
+
+      setSharesByItem((currentShares) => ({
+        ...currentShares,
+        ...updatedSharesByItem,
+      }));
+    } catch (requestError) {
+      console.error('Error allocating receipt charges:', requestError);
+      setError(
+        requestError.response?.data?.detail?.message ||
+          'Failed to allocate tax and service charge'
+      );
+    } finally {
+      setIsAllocatingCharges(false);
+    }
+  };
+
   return (
     <div className="mt-5 border-t border-slate-100 pt-5">
       <div className="mb-4 flex items-center justify-between gap-3">
@@ -619,6 +698,40 @@ export default function ExpenseReceiptItems({ expense, members }) {
                 items={activeItems}
               />
 
+              {activeReceiptHasCharges && (
+                <div className="rounded-2xl bg-slate-900 px-4 py-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-extrabold text-white">
+                        Tax and service allocation
+                      </p>
+                      <p className="mt-1 text-xs font-semibold text-slate-300">
+                        Add {formatCurrency(getReceiptChargeTotal(activeReceipt))}{' '}
+                        from the receipt into member final shares.
+                      </p>
+                    </div>
+
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-extrabold text-white">
+                      Tax {formatCurrency(activeReceipt.tax_amount)} · Service{' '}
+                      {formatCurrency(activeReceipt.service_charge_amount)}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAllocateReceiptCharges}
+                    disabled={!allActiveItemsAssigned || isAllocatingCharges}
+                    className="mt-4 w-full rounded-2xl bg-white px-4 py-3 text-sm font-extrabold text-slate-900 disabled:bg-slate-500 disabled:text-slate-300"
+                  >
+                    {isAllocatingCharges
+                      ? 'Applying...'
+                      : allActiveItemsAssigned
+                        ? 'Apply Tax and Service to Shares'
+                        : 'Assign All Items First'}
+                  </button>
+                </div>
+              )}
+
               <form
                 onSubmit={handleCreateItem}
                 className="grid grid-cols-[1fr_100px] gap-3"
@@ -663,6 +776,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                     const selectedUserIds =
                       selectedUsersByItem[item.id] || [];
                     const isAssigned = itemShares.length > 0;
+                    const itemShareHasCharges = itemShares.some(shareHasCharges);
 
                     return (
                       <div
@@ -693,7 +807,9 @@ export default function ExpenseReceiptItems({ expense, members }) {
                               </p>
 
                               <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-extrabold text-emerald-600">
-                                {itemShares.length} people
+                                {itemShareHasCharges
+                                  ? 'Final totals'
+                                  : `${itemShares.length} people`}
                               </span>
                             </div>
 
@@ -705,19 +821,44 @@ export default function ExpenseReceiptItems({ expense, members }) {
                                 return (
                                   <div
                                     key={share.id}
-                                    className="flex items-center justify-between rounded-xl bg-[#F8FAFC] px-3 py-2"
+                                    className="rounded-xl bg-[#F8FAFC] px-3 py-2"
                                   >
-                                    <span className="text-xs font-bold text-slate-500">
-                                      {member
-                                        ? formatMemberLabel(member)
-                                        : String(share.user_id).slice(0, 8)}
-                                    </span>
+                                    <div className="flex items-center justify-between gap-3">
+                                      <span className="text-xs font-bold text-slate-500">
+                                        {member
+                                          ? formatMemberLabel(member)
+                                          : String(share.user_id).slice(0, 8)}
+                                      </span>
 
-                                    <span className="text-xs font-extrabold text-slate-900">
-                                      {formatCurrency(
-                                        share.total_share_amount
-                                      )}
-                                    </span>
+                                      <span className="text-xs font-extrabold text-slate-900">
+                                        {formatCurrency(
+                                          share.total_share_amount
+                                        )}
+                                      </span>
+                                    </div>
+
+                                    {shareHasCharges(share) && (
+                                      <div className="mt-2 grid grid-cols-3 gap-2 text-[11px] font-bold text-slate-400">
+                                        <span>
+                                          Item{' '}
+                                          {formatCurrency(
+                                            share.item_share_amount
+                                          )}
+                                        </span>
+                                        <span>
+                                          Tax{' '}
+                                          {formatCurrency(
+                                            share.tax_share_amount
+                                          )}
+                                        </span>
+                                        <span>
+                                          Service{' '}
+                                          {formatCurrency(
+                                            share.service_charge_share_amount
+                                          )}
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
                                 );
                               })}
