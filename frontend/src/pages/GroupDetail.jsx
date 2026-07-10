@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { calculateExpenseDebts, getGroupDebts } from '../api/debts';
+import {
+  calculateExpenseDebts,
+  getGroupDebtSummary,
+  getGroupDebts,
+} from '../api/debts';
 import { createGroupExpense, getGroupExpenses } from '../api/expenses';
 import { getUsers } from '../api/users';
 import AddMemberForm from '../components/AddMemberForm';
@@ -63,6 +67,29 @@ function formatUser(userId, userById) {
   return userById[String(userId)]?.username || String(userId).slice(0, 8);
 }
 
+function getBalanceBadge(summary) {
+  const netAmount = Number(summary.net_amount || 0);
+
+  if (netAmount > 0) {
+    return {
+      label: `Owed ${formatCurrency(netAmount)}`,
+      className: 'bg-emerald-50 text-emerald-600',
+    };
+  }
+
+  if (netAmount < 0) {
+    return {
+      label: `Owes ${formatCurrency(Math.abs(netAmount))}`,
+      className: 'bg-rose-50 text-rose-600',
+    };
+  }
+
+  return {
+    label: 'Settled',
+    className: 'bg-slate-100 text-slate-500',
+  };
+}
+
 export default function GroupDetail() {
   const { groupId } = useParams();
   const currentUser = useAuthStore((state) => state.user);
@@ -80,9 +107,11 @@ export default function GroupDetail() {
 
   const [expenses, setExpenses] = useState([]);
   const [debts, setDebts] = useState([]);
+  const [debtSummary, setDebtSummary] = useState(null);
   const [users, setUsers] = useState([]);
   const [isExpensesLoading, setIsExpensesLoading] = useState(true);
   const [isDebtsLoading, setIsDebtsLoading] = useState(true);
+  const [isDebtSummaryLoading, setIsDebtSummaryLoading] = useState(true);
   const [expensesError, setExpensesError] = useState(null);
   const [debtsError, setDebtsError] = useState(null);
   const [isCreatingExpense, setIsCreatingExpense] = useState(false);
@@ -125,6 +154,18 @@ export default function GroupDetail() {
     [pendingDebts]
   );
 
+  const summaryOutstandingAmount = debtSummary
+    ? Number(debtSummary.outstanding_amount || 0)
+    : totalPendingDebt;
+  const summaryOutstandingCount = debtSummary
+    ? Number(debtSummary.outstanding_debt_count || 0)
+    : pendingDebts.length;
+  const summarySettledCount = debtSummary
+    ? Number(debtSummary.settled_debt_count || 0)
+    : debts.filter((debt) => debt.status === 'confirmed_received').length;
+  const memberSummaries = debtSummary?.member_summaries || [];
+  const isSettlementLoading = isDebtsLoading || isDebtSummaryLoading;
+
   const debtByExpenseId = useMemo(() => {
     const result = {};
 
@@ -159,6 +200,13 @@ export default function GroupDetail() {
 
     const response = await getGroupDebts(groupId, currentUserId);
     setDebts(response.data.data);
+  }, [currentUserId, groupId]);
+
+  const refreshDebtSummary = useCallback(async () => {
+    if (!currentUserId) return;
+
+    const response = await getGroupDebtSummary(groupId, currentUserId);
+    setDebtSummary(response.data.data);
   }, [currentUserId, groupId]);
 
   useEffect(() => {
@@ -223,6 +271,26 @@ export default function GroupDetail() {
         }
       });
 
+    getGroupDebtSummary(groupId, currentUserId)
+      .then((response) => {
+        if (isActive) {
+          setDebtSummary(response.data.data);
+          setDebtsError(null);
+        }
+      })
+      .catch((requestError) => {
+        console.error('Error fetching group debt summary:', requestError);
+
+        if (isActive) {
+          setDebtsError('Failed to fetch settlement summary');
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsDebtSummaryLoading(false);
+        }
+      });
+
     return () => {
       isActive = false;
       clearSelectedGroup();
@@ -268,7 +336,7 @@ export default function GroupDetail() {
 
     try {
       await calculateExpenseDebts(expenseId);
-      await refreshDebts();
+      await Promise.all([refreshDebts(), refreshDebtSummary()]);
     } catch (requestError) {
       console.error('Error calculating debts:', requestError);
       setDebtsError(
@@ -371,16 +439,12 @@ export default function GroupDetail() {
             groupId={groupId}
             ownerUserId={currentUserId}
             members={enrichedMembers}
-            onMemberAdded={() =>
-              fetchGroupMembers(groupId, currentUserId)
-            }
+            onMemberAdded={() => fetchGroupMembers(groupId, currentUserId)}
           />
         )}
       </section>
 
-      <section
-        className={`${cardClass} mb-5 bg-slate-900 text-white`}
-      >
+      <section className={`${cardClass} mb-5 bg-slate-900 text-white`}>
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-semibold text-slate-400">
@@ -388,13 +452,13 @@ export default function GroupDetail() {
             </p>
 
             <p className="mt-3 text-3xl font-extrabold text-[#10B981]">
-              {formatCurrency(totalPendingDebt)}
+              {formatCurrency(summaryOutstandingAmount)}
             </p>
 
             <p className="mt-2 text-sm font-semibold text-slate-400">
-              {pendingDebts.length === 0
+              {summaryOutstandingCount === 0
                 ? 'No outstanding settlement transactions.'
-                : `${pendingDebts.length} settlement transaction${pendingDebts.length === 1 ? '' : 's'} outstanding.`}
+                : `${summaryOutstandingCount} settlement transaction${summaryOutstandingCount === 1 ? '' : 's'} outstanding.`}
             </p>
           </div>
 
@@ -403,8 +467,24 @@ export default function GroupDetail() {
           </span>
         </div>
 
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-white/10 px-4 py-3">
+            <p className="text-xs font-bold text-slate-400">Outstanding</p>
+            <p className="mt-1 text-lg font-extrabold text-white">
+              {summaryOutstandingCount}
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-white/10 px-4 py-3">
+            <p className="text-xs font-bold text-slate-400">Settled</p>
+            <p className="mt-1 text-lg font-extrabold text-white">
+              {summarySettledCount}
+            </p>
+          </div>
+        </div>
+
         <div className="mt-5 space-y-3">
-          {isDebtsLoading ? (
+          {isSettlementLoading ? (
             <p className="rounded-2xl bg-white/10 px-4 py-3 text-sm font-semibold text-slate-300">
               Loading settlement summary...
             </p>
@@ -437,6 +517,45 @@ export default function GroupDetail() {
           )}
         </div>
 
+        {memberSummaries.length > 0 && (
+          <div className="mt-5 border-t border-white/10 pt-5">
+            <p className="text-sm font-extrabold text-white">
+              Member Balances
+            </p>
+
+            <div className="mt-3 space-y-3">
+              {memberSummaries.map((summary) => {
+                const badge = getBalanceBadge(summary);
+
+                return (
+                  <div
+                    key={summary.user_id}
+                    className="rounded-2xl bg-white px-4 py-3 text-slate-900"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-extrabold">
+                        {formatUser(summary.user_id, userById)}
+                      </p>
+
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-extrabold ${badge.className}`}
+                      >
+                        {badge.label}
+                      </span>
+                    </div>
+
+                    <p className="mt-2 text-xs font-semibold text-slate-400">
+                      Owes {formatCurrency(summary.owes_amount)} | Owed{' '}
+                      {formatCurrency(summary.owed_amount)} |{' '}
+                      {summary.outstanding_transaction_count} active
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {debtsError && (
           <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-[#EF4444]">
             {debtsError}
@@ -446,9 +565,7 @@ export default function GroupDetail() {
 
       <section>
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="text-xl font-extrabold text-slate-900">
-            Expenses
-          </h2>
+          <h2 className="text-xl font-extrabold text-slate-900">Expenses</h2>
 
           <button
             type="button"
