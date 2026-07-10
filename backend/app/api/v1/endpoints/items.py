@@ -11,9 +11,10 @@ from app.crud.item import (
     list_items_by_receipt,
     update_item,
 )
+from app.crud.item_share import delete_item_share, list_item_shares_by_item
 from app.crud.receipt import get_receipt
 from app.db.database import get_db
-from app.schemas.item import ItemCreate, ItemRead, ItemUpdate
+from app.schemas.item import ItemBatchCreate, ItemCreate, ItemRead, ItemUpdate
 
 
 router = APIRouter(tags=["items"])
@@ -36,6 +37,62 @@ def _validate_item_total(
         )
 
 
+def _get_existing_receipt_or_404(
+    db: Session,
+    receipt_id: uuid.UUID,
+):
+    receipt = get_receipt(db, receipt_id)
+
+    if receipt is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "RECEIPT_NOT_FOUND",
+                "message": "The receipt does not exist.",
+            },
+        )
+
+    return receipt
+
+
+def _delete_item_with_dependent_shares(
+    db: Session,
+    item,
+) -> None:
+    item_shares = list_item_shares_by_item(db, item.id)
+
+    for item_share in item_shares:
+        delete_item_share(db, item_share)
+
+    delete_item(db, item)
+
+
+def _create_item_from_payload(
+    db: Session,
+    *,
+    receipt_id: uuid.UUID,
+    item_in: ItemCreate,
+):
+    _validate_item_total(
+        item_in.quantity,
+        item_in.unit_price,
+        item_in.total_price,
+    )
+
+    return create_item(
+        db,
+        receipt_id=receipt_id,
+        name=item_in.name,
+        quantity=item_in.quantity,
+        unit_price=item_in.unit_price,
+        total_price=item_in.total_price,
+        original_name=item_in.original_name,
+        original_unit_price=item_in.original_unit_price,
+        original_total_price=item_in.original_total_price,
+        is_manually_edited=item_in.is_manually_edited,
+    )
+
+
 @router.post(
     "/receipts/{receipt_id}/items",
     status_code=status.HTTP_201_CREATED,
@@ -45,30 +102,12 @@ def create_receipt_item(
     item_in: ItemCreate,
     db: Session = Depends(get_db),
 ):
-    receipt = get_receipt(db, receipt_id)
+    _get_existing_receipt_or_404(db, receipt_id)
 
-    if receipt is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "code": "RECEIPT_NOT_FOUND",
-                "message": "The receipt does not exist.",
-            },
-        )
-
-    _validate_item_total(
-        item_in.quantity,
-        item_in.unit_price,
-        item_in.total_price,
-    )
-
-    item = create_item(
+    item = _create_item_from_payload(
         db,
         receipt_id=receipt_id,
-        name=item_in.name,
-        quantity=item_in.quantity,
-        unit_price=item_in.unit_price,
-        total_price=item_in.total_price,
+        item_in=item_in,
     )
 
     return {
@@ -77,21 +116,48 @@ def create_receipt_item(
     }
 
 
+@router.post(
+    "/receipts/{receipt_id}/items/batch",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_receipt_items_batch(
+    receipt_id: uuid.UUID,
+    batch_in: ItemBatchCreate,
+    db: Session = Depends(get_db),
+):
+    _get_existing_receipt_or_404(db, receipt_id)
+
+    if batch_in.replace_existing:
+        existing_items = list_items_by_receipt(db, receipt_id)
+
+        for item in existing_items:
+            _delete_item_with_dependent_shares(db, item)
+
+    created_items = [
+        _create_item_from_payload(
+            db,
+            receipt_id=receipt_id,
+            item_in=item_in,
+        )
+        for item_in in batch_in.items
+    ]
+
+    return {
+        "success": True,
+        "data": {
+            "receipt_id": receipt_id,
+            "created_item_count": len(created_items),
+            "items": [ItemRead.model_validate(item) for item in created_items],
+        },
+    }
+
+
 @router.get("/receipts/{receipt_id}/items")
 def get_items_in_receipt(
     receipt_id: uuid.UUID,
     db: Session = Depends(get_db),
 ):
-    receipt = get_receipt(db, receipt_id)
-
-    if receipt is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "code": "RECEIPT_NOT_FOUND",
-                "message": "The receipt does not exist.",
-            },
-        )
+    _get_existing_receipt_or_404(db, receipt_id)
 
     items = list_items_by_receipt(db, receipt_id)
 
