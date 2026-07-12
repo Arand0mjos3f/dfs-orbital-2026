@@ -7,9 +7,45 @@
 | Project | O(n) Debtor |
 | Team | 6634 |
 | Level of Achievement | Apollo 11 |
-| Milestone | Milestone 2 - Prototyping |
+| Milestone | Milestone 3 - Extensions |
 | Team Members | Chen Sixian, Sun Jingyi |
-| Last Updated | 22 June 2026 |
+| Last Updated | 12 July 2026 |
+
+## Milestone 3 Update
+
+Milestone 3 extends the Milestone 2 prototype with more complete receipt review, fairer settlement calculation, stronger backend summary support, and automated CI checks.
+
+New Milestone 3 testing evidence includes:
+
+- OCR-assisted receipt upload and review flow.
+- Editable OCR item confirmation before saving items.
+- Tax and service charge allocation into final member shares.
+- Group debt summary endpoint and frontend member balance display.
+- GitHub Actions CI for frontend and backend checks.
+- Backend tests for charge allocation and group debt summary.
+- User testing plan in `docs/user_testing_ms3.md`.
+
+Current automated verification commands:
+
+```bash
+cd frontend
+npm run lint
+npm test
+npm run build
+
+cd ../backend
+python -m pytest -v
+```
+
+Current automated test result after Milestone 3 additions:
+
+```text
+Frontend: 4 passed
+Backend: 11 passed, 1 skipped
+CI: frontend and backend checks run automatically on pull requests
+```
+
+The optional PaddleOCR integration test remains skipped by default because it depends on local PaddleOCR installation and a real receipt image. Mock OCR remains the default test mode so that CI and local development are reproducible.
 
 ## 1. Testing Objectives
 
@@ -20,6 +56,9 @@ The testing strategy verifies that O(n) Debtor:
 - Enforces group-owner and settlement permissions.
 - Integrates the React frontend, FastAPI backend, and database correctly.
 - Handles matching and mismatching receipt totals clearly.
+- Supports OCR-assisted receipt review.
+- Allocates tax and service charges into final member shares.
+- Summarises group-level balances and settlement status.
 - Supports the complete settlement lifecycle.
 - Remains stable when used through the primary mobile-first workflow.
 
@@ -27,22 +66,26 @@ The testing strategy verifies that O(n) Debtor:
 
 ### In Scope
 
-- User selection through prototype authentication.
+- Prototype authentication and demo-user login.
 - Group creation, listing, editing, deletion, and membership.
 - Expense creation.
 - Manual receipt and item entry.
+- OCR-assisted receipt upload and item review.
 - Receipt and item-total validation.
 - Item assignment and equal splitting.
+- Tax and service charge allocation.
 - Debt calculation.
+- Group debt summary and member balance display.
 - Mark-paid and confirm-received settlement states.
 - Dashboard and Debts page data.
 - Persistence after browser refresh.
 - Backend API and database integration.
+- CI checks for frontend and backend test commands.
 
-### Out of Scope for Milestone 2
+### Out of Scope for Milestone 3
 
 - Production token authentication.
-- Production PaddleOCR accuracy.
+- Production PaddleOCR accuracy benchmarking.
 - Cloud deployment.
 - Payment-provider integration.
 - CSV or PDF export.
@@ -80,30 +123,25 @@ Current result:
 0 tests failed
 ```
 
-### 3.2 Integration Testing
+### 3.2 Backend Integration Testing
 
-Integration testing verifies cooperation between backend models, CRUD functions, settlement calculation, and settlement status transitions.
+Backend tests verify cooperation between models, CRUD functions, settlement calculation, OCR parsing, charge allocation, and group summary logic.
 
-The backend integration test uses an isolated in-memory SQLite database. It does not read from or write to the development PostgreSQL database.
+The backend tests use an isolated in-memory SQLite database where appropriate. They do not read from or write to the development PostgreSQL database.
 
-Covered workflow:
+Covered behaviour:
 
-1. Create two users.
-2. Create a group.
-3. Add owner and member records.
-4. Create an expense.
-5. Create a receipt.
-6. Create an item.
-7. Create equal item shares.
-8. Calculate the resulting debt.
-9. Mark the debt as paid.
-10. Confirm that payment was received.
+- Mock OCR text extraction.
+- Receipt parser extraction of items, subtotal, tax, service charge, and total.
+- Optional PaddleOCR integration test, skipped by default.
+- Settlement calculation and payment lifecycle.
+- Proportional tax and service charge allocation.
+- Group debt summary calculation across pending, marked-paid, confirmed, and cancelled debt states.
 
 Runner:
 
 ```bash
 cd backend
-export DYLD_LIBRARY_PATH=/opt/homebrew/opt/expat/lib
 source .venv/bin/activate
 python -m pytest -v
 ```
@@ -111,7 +149,8 @@ python -m pytest -v
 Current result:
 
 ```text
-1 integration test passed
+11 tests passed
+1 test skipped
 0 tests failed
 ```
 
@@ -123,7 +162,6 @@ Backend:
 
 ```bash
 cd backend
-export DYLD_LIBRARY_PATH=/opt/homebrew/opt/expat/lib
 source .venv/bin/activate
 python -m uvicorn main:app --reload
 ```
@@ -146,30 +184,52 @@ Swagger: http://127.0.0.1:8000/docs
 
 User testing will be conducted with 2-3 NUS students who were not involved in implementation.
 
+The Milestone 3 user testing plan is documented in:
+
+```text
+docs/user_testing_ms3.md
+```
+
 User testing results must only be added after real participants complete the tasks.
+
+### 3.5 Continuous Integration
+
+GitHub Actions runs automated checks on pull requests and milestone branch pushes.
+
+CI checks include:
+
+- Frontend dependency installation.
+- Frontend lint.
+- Frontend unit tests.
+- Frontend production build.
+- Backend dependency installation.
+- Backend pytest suite.
+
+This reduces reliance on manual-only testing and provides visible pass/fail evidence for pull requests.
 
 ## 4. Test Environment
 
 | Component | Environment |
 |---|---|
-| Operating System | macOS |
+| Operating System | macOS for local testing, Ubuntu for CI |
 | Browser | Google Chrome |
 | Frontend | React 19, Vite 8 |
 | Backend | FastAPI |
-| Development Database | PostgreSQL 18 |
+| Development Database | PostgreSQL |
 | Integration-Test Database | In-memory SQLite |
 | Frontend Unit Runner | Node test runner |
 | Backend Integration Runner | Pytest |
 | API Inspection | Swagger/OpenAPI |
+| CI | GitHub Actions |
 
 ## 5. Test Data
 
 Prototype users:
 
-| Username | User ID | Role |
-|---|---|---|
-| Sixian | `16ab9e31-56f1-4afc-8d2f-09f45dfd57da` | Group owner |
-| Jingyi | `facda849-579e-48d6-a589-b160f0533bf5` | Group member |
+| Username | Role |
+|---|---|
+| Sixian | Group owner |
+| Jingyi | Group member |
 
 Prototype login credentials:
 
@@ -189,28 +249,30 @@ These accounts are for local prototype testing only.
 
 Testing can begin when:
 
-- PostgreSQL is running.
+- PostgreSQL is running for local system testing.
 - Database migrations have been applied.
 - Required dependencies are installed.
 - Backend Swagger loads.
 - Frontend loads on port 5173.
 - Test users exist.
-- Lint and build commands complete successfully.
+- Lint, test, and build commands complete successfully.
 
 ## 7. Exit Criteria
 
-Milestone 2 testing is complete when:
+Milestone 3 testing is complete when:
 
-- All automated unit tests pass.
-- All automated integration tests pass.
+- All frontend unit tests pass.
+- All backend automated tests pass, except intentionally skipped optional PaddleOCR tests.
 - Frontend lint passes.
 - Frontend production build passes.
-- All critical system test cases pass.
-- No unresolved P0 or P1 defects remain.
+- GitHub Actions CI passes on pull requests.
+- Critical system test cases pass.
+- OCR review, tax/service allocation, and group summary workflows are manually verified.
 - User testing has been performed or formally scheduled.
+- No unresolved P0 or P1 defects remain.
 - Known limitations are documented.
 
-## 8. Automated Unit Test Cases
+## 8. Automated Frontend Test Cases
 
 | ID | Test | Expected Result | Status |
 |---|---|---|---|
@@ -219,15 +281,20 @@ Milestone 2 testing is complete when:
 | UT-03 | Compare receipt 11.94 with items 12.00 | Difference equals 0.06 | Passed |
 | UT-04 | Compare receipt 10.00 with items 10.00 | Difference equals 0.00 | Passed |
 
-## 9. Automated Integration Test Cases
+## 9. Automated Backend Test Cases
 
 | ID | Test | Expected Result | Status |
 |---|---|---|---|
-| IT-01 | Create users, group, expense, receipt, item, and equal shares | All records persist in isolated database | Passed |
-| IT-02 | Calculate debt for a 10.00 item shared equally | Jingyi owes Sixian 5.00 | Passed |
-| IT-03 | Mark calculated debt as paid | Status becomes `marked_paid` | Passed |
-| IT-04 | Confirm that payment was received | Status becomes `confirmed_received` | Passed |
-| IT-05 | Complete settlement lifecycle | Settlement timestamps are populated | Passed |
+| BT-01 | Mock OCR extracts raw receipt text | Mock receipt text is returned | Passed |
+| BT-02 | Mock OCR service returns parsed items and totals | Items, subtotal, tax, service charge, and total are returned | Passed |
+| BT-03 | Receipt parser handles tax, service, and total | Parsed values match expected Decimal amounts | Passed |
+| BT-04 | Receipt parser handles missing explicit total | Total is derived from subtotal and charges | Passed |
+| BT-05 | Receipt parser ignores non-item lines | Only valid item lines are extracted | Passed |
+| BT-06 | Receipt parser handles multiline table-style receipts | Items and totals are extracted | Passed |
+| BT-07 | Settlement lifecycle integration | Debt is calculated, marked paid, and confirmed received | Passed |
+| BT-08 | Charge allocation | Tax and service charges are allocated proportionally into final share totals | Passed |
+| BT-09 | Group debt summary | Outstanding, settled, and member balance summaries are calculated correctly | Passed |
+| BT-10 | PaddleOCR real image integration | Runs only when enabled with local dependencies | Skipped by default |
 
 ## 10. System Test Cases
 
@@ -237,19 +304,23 @@ Milestone 2 testing is complete when:
 | ST-02 | Open Swagger | API documentation loads | Passed |
 | ST-03 | Log in as Sixian | Sixian dashboard and groups load | Passed |
 | ST-04 | Log in as Jingyi | Jingyi dashboard and groups load | Passed |
-| ST-05 | View owner group as Sixian | Edit, delete, and member controls are visible | Passed |
+| ST-05 | View owner group as Sixian | Member and expense controls are visible | Passed |
 | ST-06 | View Sixian-owned group as Jingyi | Owner-only controls are hidden | Passed |
 | ST-07 | Create group | Group appears and persists after refresh | Passed |
 | ST-08 | Add group member | Member count and list update | Passed |
-| ST-09 | Create expense, receipt, and item | Records appear and persist | Passed |
-| ST-10 | Assign 12.00 item equally to two users | Each user receives a 6.00 share | Passed |
-| ST-11 | Calculate settlement | Correct payment direction and amount appear | Passed |
-| ST-12 | Mark debt paid | Status becomes awaiting confirmation | Passed |
-| ST-13 | Confirm receipt as receiver | Status becomes settled | Passed |
-| ST-14 | Refresh Debts page | Settlement status and group selection persist | Passed |
-| ST-15 | Compare receipt 11.94 with items 12.00 | Mismatch warning shows difference 0.06 | Passed |
-| ST-16 | Compare receipt 10.00 with items 10.00 | Matching-total confirmation appears | Passed |
-| ST-17 | Open dashboard | Real balances replace placeholder data | Passed |
+| ST-09 | Create expense | Expense appears in the group page | Passed |
+| ST-10 | Upload receipt image with mock OCR | Reviewable OCR item draft appears | Passed |
+| ST-11 | Edit and save OCR items | Items appear in the normal bill section | Passed |
+| ST-12 | Assign item shares | Split preview updates with assigned members | Passed |
+| ST-13 | Apply tax and service charge | Final totals include item, tax, and service breakdown | Passed |
+| ST-14 | Calculate settlement | Correct payment direction and amount appear | Passed |
+| ST-15 | View group debt summary | Outstanding and settled counts appear | Passed |
+| ST-16 | View member balances | Member balance badges show who owes and who is owed | Passed |
+| ST-17 | Mark debt paid | Status becomes awaiting confirmation | Passed |
+| ST-18 | Confirm receipt as receiver | Status becomes settled | Passed |
+| ST-19 | Refresh Debts page | Settlement status and group selection persist | Passed |
+| ST-20 | Compare receipt subtotal with items | Matching subtotal confirmation appears | Passed |
+| ST-21 | Compare mismatching totals | Mismatch warning shows the difference | Passed |
 
 ## 11. User Testing Protocol
 
@@ -259,30 +330,30 @@ Milestone 2 testing is complete when:
 - Participants should not have contributed to implementation.
 - No real financial or sensitive data should be entered.
 
-### Tasks
+### Main Tasks
 
 1. Log in with a supplied prototype account.
-2. Create a group.
-3. Add another user to the group.
-4. Create an expense.
-5. Create a receipt with a payer and total.
-6. Add receipt items.
-7. Assign an item to two users.
-8. Interpret the split preview.
+2. Open a test group.
+3. Create an expense.
+4. Upload a receipt image.
+5. Review and save OCR-detected items.
+6. Assign items to group members.
+7. Apply tax and service charge allocation.
+8. Interpret the final split preview.
 9. Calculate the settlement.
-10. Mark the settlement as paid.
-11. Switch account and confirm receipt.
+10. Interpret the settlement summary.
+11. Interpret the member balance summary.
 12. Explain any confusing parts.
 
 ### Questions
 
 1. Was the purpose of the application clear?
-2. Could you find Groups, Debts, and Profile without assistance?
-3. Was creating an expense intuitive?
-4. Was choosing a receipt payer clear?
-5. Did you understand item assignment?
-6. Did you understand the receipt-total warning?
-7. Was the settlement direction clear?
+2. Could you find the group and expense workflow without assistance?
+3. Was the OCR upload and review step clear?
+4. Did you understand that OCR items could be edited before saving?
+5. Did the tax and service charge allocation make sense?
+6. Was the settlement direction clear?
+7. Did the group member balance summary help explain who owes money?
 8. Did any button or label feel misleading?
 9. What step required the most thought?
 10. What is the most important improvement?
@@ -324,33 +395,40 @@ Record:
 | Usernames appeared as UUIDs | Group membership API returned IDs | Loaded users and mapped IDs to usernames |
 | Debts page reset group after refresh | Selection existed only in React state | Persisted selected group in local storage |
 | Receipt and item totals differed silently | Values were stored independently | Added matching and mismatch feedback |
-| React effect lint error | State-changing loader was invoked directly in an effect | Moved updates into asynchronous callbacks |
-| Missing multipart dependency | Receipt upload introduced form-data handling | Installed requirements from `requirements.txt` |
-| Tests were initially placed in the wrong directory | Backend tests were created under frontend tests | Moved tests to `backend/tests` |
+| OCR was backend-only in Milestone 2 | No user-facing OCR review flow existed | Added frontend upload, review, edit, and save flow |
+| Tax and service were not visible in split preview | Preview showed item shares only | Added proportional charge allocation and final breakdown |
+| Group settlement summary was frontend-derived only | Backend did not provide structured group analytics | Added group debt summary endpoint and frontend member balances |
+| No CI/CD checks existed | Tests were run manually | Added GitHub Actions workflow for frontend and backend checks |
 
 ## 14. Traceability Matrix
 
-| Feature | Unit | Integration | System | User |
+| Feature | Unit | Backend | System | User |
 |---|---|---|---|---|
-| Groups and membership | Not applicable | Covered by settlement setup | ST-05 to ST-08 | Planned |
-| Receipt totals | UT-01 to UT-04 | Covered by receipt setup | ST-15 to ST-16 | Planned |
-| Item assignment | Calculation utility | IT-01 | ST-10 | Planned |
-| Debt calculation | Not applicable | IT-02 | ST-11 | Planned |
-| Mark paid | Not applicable | IT-03 | ST-12 | Planned |
-| Confirm received | Not applicable | IT-04 to IT-05 | ST-13 | Planned |
-| Persistence | Not applicable | Database-backed workflow | ST-07, ST-09, ST-14 | Planned |
-| Dashboard balances | Not applicable | Debt data integration | ST-17 | Planned |
+| Groups and membership | Not applicable | Covered by settlement and summary setup | ST-05 to ST-08 | Planned |
+| Receipt totals | UT-01 to UT-04 | Receipt parser tests | ST-20 to ST-21 | Planned |
+| OCR review flow | Not applicable | OCR service tests | ST-10 to ST-11 | Planned |
+| Item assignment | Calculation utility | Settlement setup | ST-12 | Planned |
+| Tax and service allocation | Not applicable | BT-08 | ST-13 | Planned |
+| Debt calculation | Not applicable | BT-07 | ST-14 | Planned |
+| Group debt summary | Not applicable | BT-09 | ST-15 to ST-16 | Planned |
+| Mark paid | Not applicable | BT-07 | ST-17 | Planned |
+| Confirm received | Not applicable | BT-07 | ST-18 | Planned |
+| Persistence | Not applicable | Database-backed workflow | ST-07, ST-09, ST-19 | Planned |
+| CI | Not applicable | Backend pytest in CI | Pull request checks | Not applicable |
 
 ## 15. Evidence Collection
 
 Retain the following evidence:
 
 - Terminal output from `npm test`.
-- Terminal output from `python -m pytest -v`.
 - Terminal output from `npm run lint`.
 - Terminal output from `npm run build`.
-- Screenshots of matching and mismatching receipt totals.
-- Screenshots of pending, marked-paid, and settled debt states.
-- GitHub issues linked to commits.
+- Terminal output from `python -m pytest -v`.
+- Screenshot of OCR receipt review.
+- Screenshot of tax and service charge allocation.
+- Screenshot of final split preview with item, tax, service, and total amounts.
+- Screenshot of settlement summary.
+- Screenshot of member balance summary.
+- Screenshot of GitHub Actions passing checks.
 - Pull requests showing review and merge history.
-- Completed user-testing forms.
+- Completed user-testing forms after real user testing is performed.
