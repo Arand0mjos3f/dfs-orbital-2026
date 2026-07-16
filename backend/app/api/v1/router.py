@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     item_shares,
     items,
     receipts,
+    split_preview,
     users,
 )
 
@@ -18,6 +19,7 @@ api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(groups.router)
 api_router.include_router(expenses.router)
 api_router.include_router(receipts.router)
+api_router.include_router(split_preview.router)
 api_router.include_router(items.router)
 api_router.include_router(item_shares.router)
 api_router.include_router(debts.router)
