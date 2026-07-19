@@ -3,6 +3,12 @@ import api from './axios';
 export const createItemShares = (itemId, payload) =>
   api.post(`/items/${itemId}/shares`, payload);
 
+export const createEqualItemShares = (itemId, userIds) =>
+  api.post(`/items/${itemId}/shares/equal`, {
+    user_ids: userIds,
+    replace_existing: true,
+  });
+
 export const getItemShares = (itemId) => api.get(`/items/${itemId}/shares`);
 
 export const updateItemShare = (itemShareId, payload) =>
