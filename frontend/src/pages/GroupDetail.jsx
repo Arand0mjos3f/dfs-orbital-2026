@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
-  calculateExpenseDebts,
   getGroupDebtSummary,
   getGroupDebts,
+  recalculateExpenseDebts,
 } from '../api/debts';
 import { createGroupExpense, getGroupExpenses } from '../api/expenses';
 import { getUsers } from '../api/users';
@@ -335,7 +335,7 @@ export default function GroupDetail() {
     setDebtsError(null);
 
     try {
-      await calculateExpenseDebts(expenseId);
+      await recalculateExpenseDebts(expenseId);
       await Promise.all([refreshDebts(), refreshDebtSummary()]);
     } catch (requestError) {
       console.error('Error calculating debts:', requestError);

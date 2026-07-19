@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createItem, getItems } from '../api/items';
 import {
   allocateReceiptCharges,
-  createItemShares,
+  createEqualItemShares,
   getItemShares,
 } from '../api/itemShares';
 import { createReceipt, getReceipts, uploadReceiptImage } from '../api/receipts';
@@ -14,18 +14,6 @@ function formatCurrency(value) {
 
 function formatMemberLabel(member) {
   return `${member.username || String(member.user_id).slice(0, 8)} (${member.role})`;
-}
-
-function splitAmount(total, count) {
-  if (count <= 0) return [];
-
-  const cents = Math.round(Number(total || 0) * 100);
-  const base = Math.floor(cents / count);
-  const remainder = cents % count;
-
-  return Array.from({ length: count }, (_, index) =>
-    ((base + (index < remainder ? 1 : 0)) / 100).toFixed(2)
-  );
 }
 
 function normalizeOcrItem(item, index) {
@@ -432,26 +420,11 @@ export default function ExpenseReceiptItems({ expense, members }) {
     setError('');
 
     try {
-      const shareAmounts = splitAmount(
-        item.total_price,
-        selectedUserIds.length
-      );
-
-      await createItemShares(item.id, {
-        shares: selectedUserIds.map((userId, index) => ({
-          user_id: userId,
-          item_share_amount: shareAmounts[index],
-          tax_share_amount: '0.00',
-          service_charge_share_amount: '0.00',
-          total_share_amount: shareAmounts[index],
-        })),
-      });
-
-      const sharesResponse = await getItemShares(item.id);
+      const response = await createEqualItemShares(item.id, selectedUserIds);
 
       setSharesByItem((currentShares) => ({
         ...currentShares,
-        [item.id]: sharesResponse.data.data,
+        [item.id]: response.data.data,
       }));
 
       setSelectedUsersByItem((currentSelections) => ({
@@ -693,10 +666,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                 </div>
               )}
 
-              <ReceiptTotalStatus
-                receipt={activeReceipt}
-                items={activeItems}
-              />
+              <ReceiptTotalStatus receipt={activeReceipt} items={activeItems} />
 
               {activeReceiptHasCharges && (
                 <div className="rounded-2xl bg-slate-900 px-4 py-4">
@@ -773,8 +743,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                 <div className="space-y-3">
                   {activeItems.map((item) => {
                     const itemShares = sharesByItem[item.id] || [];
-                    const selectedUserIds =
-                      selectedUsersByItem[item.id] || [];
+                    const selectedUserIds = selectedUsersByItem[item.id] || [];
                     const isAssigned = itemShares.length > 0;
                     const itemShareHasCharges = itemShares.some(shareHasCharges);
 
@@ -815,8 +784,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
 
                             <div className="mt-3 space-y-2">
                               {itemShares.map((share) => {
-                                const member =
-                                  memberMap[String(share.user_id)];
+                                const member = memberMap[String(share.user_id)];
 
                                 return (
                                   <div
@@ -899,9 +867,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                                         className="h-4 w-4 accent-[#4F46E5]"
                                       />
 
-                                      <span>
-                                        {formatMemberLabel(member)}
-                                      </span>
+                                      <span>{formatMemberLabel(member)}</span>
                                     </label>
                                   );
                                 })}
@@ -936,9 +902,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
       )}
 
       {error && (
-        <p className="mt-3 text-sm font-semibold text-[#EF4444]">
-          {error}
-        </p>
+        <p className="mt-3 text-sm font-semibold text-[#EF4444]">{error}</p>
       )}
     </div>
   );

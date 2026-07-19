@@ -1,7 +1,7 @@
 import api from './axios';
 
-export const calculateExpenseDebts = (expenseId) =>
-  api.post(`/expenses/${expenseId}/debts/calculate`);
+export const recalculateExpenseDebts = (expenseId) =>
+  api.post(`/expenses/${expenseId}/debts/recalculate`);
 
 export const getGroupDebts = (groupId, userId) =>
   api.get(`/groups/${groupId}/debts`, {
