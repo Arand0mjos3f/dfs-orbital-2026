@@ -1,10 +1,10 @@
 # O(n) Debtor
 
-**O(n) Debtor** is a mobile-first shared-expense web application developed for **NUS Orbital 2026**. It helps small groups split receipt items fairly, assign items to members, calculate debts, and track settlement status from payment to confirmation.
+**O(n) Debtor** is a mobile-first shared-expense web application developed for **NUS Orbital 2026**. It helps small groups split receipt items fairly, assign items to individual members, allocate tax and service charges, calculate debts, and track settlement statuses from payment to confirmation.
 
-The project focuses on item-level expense splitting rather than only equal splitting. This makes it better suited for real group meals where different people order different items, some dishes are shared, and one person may pay for the whole receipt first.
+The project focuses on **item-level expense splitting** rather than relying solely on equal splitting. This makes it more suitable for real-world group meals, where different people may order different items, certain dishes may be shared by only a subset of the group, and one person may pay for the bill upfront.
 
-> **Milestone:** Milestone 2 - Prototyping
+> **Milestone:** Milestone 3 – Extensions
 > **Team:** 6634
 > **Project Name:** O(n) Debtor
 > **Target Level of Achievement:** Apollo 11
@@ -12,159 +12,242 @@ The project focuses on item-level expense splitting rather than only equal split
 
 ---
 
+## Deployed Links
+
+> Deployment is currently in progress for the Milestone 3 submission. These links will be updated before the final submission.
+
+| Component                 | Link | Status  |
+| ------------------------- | ---- | ------- |
+| Frontend Application      | TODO | Pending |
+| Backend API               | TODO | Pending |
+| Backend API Documentation | TODO | Pending |
+
+---
+
+## Table of Contents
+
+1. [Project Description](#1-project-description)
+2. [Team Information](#2-team-information)
+3. [Milestone 3 Status Summary](#3-milestone-3-status-summary)
+4. [Problem Motivation](#4-problem-motivation)
+5. [Target Users](#5-target-users)
+6. [Core Features](#6-core-features)
+7. [User Stories](#7-user-stories)
+8. [Tech Stack](#8-tech-stack)
+9. [System Architecture](#9-system-architecture)
+10. [Data Model](#10-data-model)
+11. [Backend Features](#11-backend-features)
+12. [Frontend Features](#12-frontend-features)
+13. [OCR-Assisted Receipt Review](#13-ocr-assisted-receipt-review)
+14. [Fair Split and Settlement Workflow](#14-fair-split-and-settlement-workflow)
+15. [Design Principles and Patterns](#15-design-principles-and-patterns)
+16. [Testing Strategy](#16-testing-strategy)
+17. [Automated Test Evidence](#17-automated-test-evidence)
+18. [Manual and System Testing](#18-manual-and-system-testing)
+19. [User Testing](#19-user-testing)
+20. [Deployment Plan](#20-deployment-plan)
+21. [Setup Instructions](#21-setup-instructions)
+22. [How to Run the Backend](#22-how-to-run-the-backend)
+23. [How to Run the Frontend](#23-how-to-run-the-frontend)
+24. [How to Run Tests](#24-how-to-run-tests)
+25. [Screenshots and Evidence Placeholders](#25-screenshots-and-evidence-placeholders)
+26. [Team Contributions](#26-team-contributions)
+27. [Project Log and Hours](#27-project-log-and-hours)
+28. [Known Limitations](#28-known-limitations)
+29. [Future Work](#29-future-work)
+30. [Conclusion](#30-conclusion)
+
+---
+
 ## 1. Project Description
 
-O(n) Debtor is a shared-expense management application for small groups such as friends, roommates, project groups, classmates, and dining groups.
+O(n) Debtor is a shared-expense management application designed for small groups such as friends, roommates, classmates, project teams, and dining groups.
 
-The current Milestone 2 prototype supports the following main user flow:
+The application supports the following realistic shared-meal workflow:
 
 ```text
 Login
 -> Create group
--> Add member
+-> Add members
 -> Create expense
--> Create receipt
--> Add receipt items
+-> Upload or create receipt
+-> Review receipt items
 -> Assign items to members
--> Calculate settlement
+-> Allocate tax and service charges
+-> Preview split
+-> Calculate or recalculate settlement
 -> Mark paid
 -> Confirm received
 ```
 
-At this stage, the application is a working prototype. The frontend focuses on a manual receipt-entry workflow, while the backend includes additional OCR infrastructure for future receipt-upload features.
+The main design goal is to make group expense splitting more accurate and less tedious. Instead of assuming that every bill should be divided equally among all members, O(n) Debtor allows users to assign each receipt item to the people who actually shared it.
 
 ---
 
 ## 2. Team Information
 
-| Field        | Details                                                       |
-| ------------ | ------------------------------------------------------------- |
-| Project Name | O(n) Debtor                                                   |
-| Team Number  | 6634                                                          |
-| Target Level | Apollo 11                                                     |
-| Milestone    | Milestone 2 - Prototyping                                     |
-| Team Members | Chen Sixian, Sun Jingyi                                       |
-| Main Focus   | Mobile-first shared-expense splitting and settlement tracking |
+| Field        | Details                                                                   |
+| ------------ | ------------------------------------------------------------------------- |
+| Project Name | O(n) Debtor                                                               |
+| Team Number  | 6634                                                                      |
+| Target Level | Apollo 11                                                                 |
+| Milestone    | Milestone 3 – Extensions                                                  |
+| Team Members | Chen Sixian, Sun Jingyi                                                   |
+| Main Focus   | Mobile-first, item-level shared-expense splitting and settlement tracking |
 
 ---
 
-## 3. Milestone 2 Status Summary
+## 3. Milestone 3 Status Summary
 
-For Milestone 2, we moved from the planning and design stage into a functional prototype. The main goal was to implement a realistic end-to-end expense-splitting workflow and establish a stable technical foundation for Milestone 3.
+For Milestone 3, we extended the Milestone 2 prototype into a more complete and practical shared-expense management system.
 
-Current prototype progress includes:
+### Milestone 3 Improvements
 
-* Mobile-first frontend prototype built with React, Vite, Tailwind CSS, Zustand, Axios, and React Router.
-* FastAPI backend with PostgreSQL-backed models, SQLAlchemy ORM, Alembic migrations, Pydantic schemas, CRUD helpers, and service modules.
-* Manual receipt creation and manual item entry.
-* Item assignment to selected group members.
-* Receipt total validation feedback.
-* Settlement calculation and debt lifecycle workflow.
-* Backend OCR infrastructure with mock OCR by default and optional PaddleOCR integration.
-* Automated frontend and backend tests for key logic and workflow behavior.
-* API-level smoke-test script for validating the Milestone 2 workflow.
+* Added an OCR-assisted receipt upload and review workflow to the frontend.
+* Enabled users to review and edit OCR-parsed items before saving them into the standard bill workflow.
+* Added backend-supported equal item sharing to keep financial calculation logic centralized.
+* Added proportional tax and service charge allocation across item shares.
+* Added a receipt-level split preview displaying item subtotals, tax shares, service charge shares, and final member totals.
+* Added a debt recalculation workflow for updated expense data.
+* Added a group debt summary endpoint and frontend member balance display.
+* Added GitHub Actions CI for frontend and backend checks.
+* Expanded backend tests for charge allocation and group debt summaries.
+* Documented the testing strategy and user testing plan.
+* Prepared the project for public Milestone 3 deployment.
 
-The prototype is not yet a production system. Authentication is currently simplified for demonstration, OCR is not yet the main polished frontend flow, and the project has not yet been deployed to the cloud.
+### Remaining Milestone 3 Submission Tasks
+
+* Add final deployment links.
+* Add final screenshots.
+* Complete the poster.
+* Complete the video.
+* Conduct final README polishing.
+* Update the final project log and cumulative hours.
 
 ---
 
 ## 4. Problem Motivation
 
-Group dining and shared expenses are common, but splitting them fairly can be difficult.
+Group dining and shared expenses are common, but dividing them fairly can be difficult.
 
-In real group meals:
+During real group meals:
 
 * Different people order different items.
-* Some dishes are shared by only a subset of the group.
-* Tax and service charges may need to be distributed.
-* One person may pay first, while others settle later.
-* People may forget who has paid and who has confirmed receipt.
+* Some dishes are shared only by a subset of the group.
+* Tax and service charges must be distributed fairly.
+* One person may pay for the bill upfront.
+* Other members may settle their debts later.
+* Group members may forget who has paid and whether the payment has been confirmed.
 
-Existing split apps often focus on equal splitting. However, equal splitting is not always fair for group meals because people may consume different items or share only selected dishes.
+Existing expense-splitting applications often focus on equal splitting. Although equal splitting is simple, it is not always fair when group members consume different items.
 
-O(n) Debtor aims to make shared-expense calculation more accurate by supporting item-level receipt splitting, member assignment, and settlement status tracking.
+O(n) Debtor aims to make shared-expense calculations more accurate by supporting item-level receipt splitting, member assignment, tax and service charge allocation, and settlement status tracking.
 
 ---
 
 ## 5. Target Users
 
-The proposed users are small groups who frequently share expenses, especially meals and receipts.
+The intended users are small groups that frequently share expenses, particularly meals and receipt-based purchases.
 
-Examples include:
+| User Group          | Example Use Case                                      |
+| ------------------- | ----------------------------------------------------- |
+| Friends             | Splitting dinner, drinks, snacks, or group activities |
+| Roommates           | Splitting groceries or shared household purchases     |
+| Classmates          | Splitting project expenses or group meals             |
+| Project Groups      | Tracking shared meeting or material costs             |
+| Small Social Groups | Managing repeated informal shared expenses            |
 
-| User Group          | Example Use Case                                             |
-| ------------------- | ------------------------------------------------------------ |
-| Friends             | Splitting dinner, drinks, shared snacks, or group activities |
-| Roommates           | Splitting household purchases or shared groceries            |
-| Classmates          | Splitting project expenses or group meals                    |
-| Project Groups      | Tracking shared costs for materials or meetings              |
-| Small Social Groups | Handling repeated shared expenses over time                  |
-
-The current prototype is designed for small-group use rather than large-scale enterprise accounting.
+The current application is designed for small-group use rather than enterprise accounting.
 
 ---
 
 ## 6. Core Features
 
-The core features of O(n) Debtor are:
+### 6.1 Group Management
 
-1. **Group Management**
+* Create groups.
+* View existing groups.
+* Edit or delete groups.
+* Add members to a group.
+* Restrict member-management actions to group owners.
 
-   * Create groups.
-   * View groups.
-   * Edit or delete groups.
-   * Add members to a group.
+### 6.2 Expense Management
 
-2. **Expense Management**
+* Create expenses within groups.
+* View expenses associated with each group.
+* Connect expenses to receipts, items, and debts.
 
-   * Create expenses within groups.
-   * View expense lists.
+### 6.3 Receipt Management
 
-3. **Receipt Management**
+* Create receipts manually.
+* Upload receipt images.
+* Store receipt subtotals, tax, service charges, and total amounts.
+* Validate receipt totals against item totals.
 
-   * Create receipts manually.
-   * Add receipt items manually.
-   * Validate receipt totals against item totals.
+### 6.4 OCR-Assisted Receipt Review
 
-4. **Item Assignment**
+* Upload a receipt image.
+* Send the receipt image to the backend OCR endpoint.
+* Display parsed receipt items.
+* Allow users to review and edit parsed items.
+* Allow users to add or delete rows before saving.
+* Save reviewed items into the standard bill-splitting workflow.
 
-   * Assign each receipt item to one or more group members.
-   * Preview how item costs are split.
+### 6.5 Item Assignment
 
-5. **Debt Calculation**
+* Assign each receipt item to one or more group members.
+* Use backend equal-share logic to divide shared items.
+* Preview item-sharing results.
 
-   * Calculate debts based on item assignments.
-   * Recalculate debts when needed.
+### 6.6 Tax and Service Charge Allocation
 
-6. **Settlement Tracking**
+* Allocate receipt-level tax and service charges across item shares.
+* Display each member’s item subtotal, tax share, service charge share, and final total.
+* Keep the backend as the source of truth for financial calculations.
 
-   * Mark debts as paid.
-   * Confirm received payments.
-   * Track debt status through a state-based workflow.
+### 6.7 Debt Calculation and Recalculation
 
-7. **OCR Infrastructure**
+* Calculate debts based on item shares.
+* Recalculate debts when expense data changes.
+* Cancel previous debts during recalculation to prevent stale settlement records.
 
-   * Backend-supported receipt image upload endpoint.
-   * OCR service abstraction.
-   * Mock OCR engine for stable local development.
-   * Optional PaddleOCR integration for future OCR-based receipt extraction.
+### 6.8 Settlement Tracking
+
+* Mark debts as paid.
+* Confirm received payments.
+* Track each debt through a controlled settlement lifecycle.
+
+### 6.9 Group Debt Summary
+
+* Display the total outstanding amount.
+* Display outstanding and settled transaction counts.
+* Display per-member balances.
+* Help users understand who owes money and who is owed money.
+
+### 6.10 Continuous Integration and Testing
+
+* Run GitHub Actions workflows for frontend and backend checks.
+* Run frontend linting, tests, and production builds.
+* Run the backend `pytest` suite.
+* Include focused tests for OCR, parsing, settlement lifecycles, charge allocation, and group summaries.
 
 ---
 
 ## 7. User Stories
 
-The following user stories were identified in Milestone 1 and continue to guide the Milestone 2 prototype.
-
-| Role        | User Story                                                                                    |
-| ----------- | --------------------------------------------------------------------------------------------- |
-| User        | As a user, I want to create a group so that I can manage shared expenses.                     |
-| Group Owner | As a group owner, I want to add members so that everyone involved can be included.            |
-| User        | As a user, I want to create an expense so that I can record a shared bill.                    |
-| User        | As a user, I want to enter receipt items so that the bill can be split by actual consumption. |
-| User        | As a user, I want to assign items to members so that shared items can be divided fairly.      |
-| User        | As a user, I want the system to calculate debts so that I know who should pay whom.           |
-| Debtor      | As a debtor, I want to mark a debt as paid.                                                   |
-| Receiver    | As a receiver, I want to confirm that payment was received.                                   |
+| Role        | User Story                                                                                          |
+| ----------- | --------------------------------------------------------------------------------------------------- |
+| User        | As a user, I want to create a group so that I can manage shared expenses with others.               |
+| Group Owner | As a group owner, I want to add members so that everyone involved can be included.                  |
+| User        | As a user, I want to create an expense so that I can record a shared bill.                          |
+| User        | As a user, I want to upload a receipt image so that the system can help extract receipt items.      |
+| User        | As a user, I want to review OCR-parsed items so that I can correct mistakes before saving them.     |
+| User        | As a user, I want to assign items to members so that shared items can be divided fairly.            |
+| User        | As a user, I want tax and service charges to be allocated fairly so that final totals are accurate. |
+| User        | As a user, I want to preview the split before settlement so that I can verify the result.           |
+| User        | As a user, I want the system to calculate debts so that I know who should pay whom.                 |
+| Debtor      | As a debtor, I want to mark a debt as paid so that others know the payment has been made.           |
+| Receiver    | As a receiver, I want to confirm that payment was received so that the debt can be settled.         |
 
 ---
 
@@ -172,15 +255,15 @@ The following user stories were identified in Milestone 1 and continue to guide 
 
 ### Frontend
 
-| Technology       | Purpose                                       |
-| ---------------- | --------------------------------------------- |
-| React            | Component-based frontend UI                   |
-| Vite             | Fast frontend development and build tooling   |
-| Tailwind CSS     | Utility-first styling and mobile-first layout |
-| Zustand          | Lightweight client-side state management      |
-| Axios            | API requests to backend                       |
-| React Router     | Page routing and protected routes             |
-| Node Test Runner | Frontend unit testing                         |
+| Technology       | Purpose                                     |
+| ---------------- | ------------------------------------------- |
+| React            | Component-based frontend user interface     |
+| Vite             | Fast frontend development and build tooling |
+| Tailwind CSS     | Utility-first, mobile-first styling         |
+| Zustand          | Lightweight client-side state management    |
+| Axios            | API communication with the backend          |
+| React Router     | Page routing and protected routes           |
+| Node Test Runner | Frontend unit testing                       |
 
 ### Backend
 
@@ -192,6 +275,17 @@ The following user stories were identified in Milestone 1 and continue to guide 
 | PostgreSQL | Relational database                  |
 | Pydantic   | Request and response validation      |
 | pytest     | Backend unit and integration testing |
+| Uvicorn    | ASGI server for FastAPI              |
+
+### Deployment
+
+| Component              | Planned Platform   |
+| ---------------------- | ------------------ |
+| Backend API            | Render Web Service |
+| Backend Database       | Render PostgreSQL  |
+| Frontend               | Vercel or Netlify  |
+| Source Control         | GitHub             |
+| Continuous Integration | GitHub Actions     |
 
 ---
 
@@ -211,65 +305,24 @@ Backend: FastAPI
 Database: PostgreSQL
 ```
 
-### Frontend Architecture
-
-The frontend is organized around reusable components, pages, API modules, and shared state.
-
-```text
-frontend/
-├── src/
-│   ├── api/              # Axios API modules
-│   ├── assets/           # Static frontend assets
-│   ├── components/       # Reusable UI components
-│   ├── features/         # Feature-specific modules such as auth
-│   ├── layouts/          # Shared page layouts
-│   ├── pages/            # Route-level pages
-│   ├── store/            # Zustand stores
-│   ├── utils/            # Shared utility functions
-│   ├── App.jsx           # React Router configuration
-│   └── main.jsx          # React entry point
-└── tests/                # Frontend unit tests
-```
-
-The frontend uses an API module pattern so that page components do not directly contain raw request logic. This helps separate UI behavior from backend communication.
-
-### Backend Architecture
-
-The backend is organized into models, schemas, CRUD helpers, API endpoints, and service modules.
-
-```text
-backend/
-├── app/
-│   ├── api/              # FastAPI route handlers
-│   ├── core/             # Configuration and shared settings
-│   ├── crud/             # Database access helpers
-│   ├── models/           # SQLAlchemy models
-│   ├── schemas/          # Pydantic schemas
-│   ├── services/         # Business logic and OCR service layer
-│   └── main.py           # FastAPI application entry point
-├── alembic/              # Database migrations
-├── tests/                # Backend tests
-└── scripts/              # Smoke-test scripts
-```
-
-This layered structure is intended to keep endpoint handling, validation, persistence, and business logic separate.
+The frontend handles user interactions and visual workflows. The backend handles validation, data persistence, OCR-related processing, financial calculations, and settlement state transitions.
 
 ---
 
 ## 10. Data Model
 
-The main database entities are:
+The main database entities are listed below.
 
-| Entity      | Purpose                                                   |
-| ----------- | --------------------------------------------------------- |
-| User        | Represents an application user                            |
-| Group       | Represents a shared-expense group                         |
-| GroupMember | Connects users to groups and supports membership logic    |
-| Expense     | Represents a shared bill or expense event                 |
-| Receipt     | Represents a receipt attached to an expense               |
-| Item        | Represents an individual receipt item                     |
-| ItemShare   | Represents which members share which items                |
-| Debt        | Represents calculated money owed from one user to another |
+| Entity      | Purpose                                                |
+| ----------- | ------------------------------------------------------ |
+| User        | Represents an application user                         |
+| Group       | Represents a shared-expense group                      |
+| GroupMember | Connects users to groups and supports membership logic |
+| Expense     | Represents a shared bill or expense event              |
+| Receipt     | Represents a receipt attached to an expense            |
+| Item        | Represents an individual receipt item                  |
+| ItemShare   | Represents how an item is shared among users           |
+| Debt        | Represents money owed from one user to another         |
 
 ### Simplified Relationship Overview
 
@@ -300,194 +353,135 @@ Debt
  └── belongs to Group
 ```
 
-The data model is designed to support item-level splitting first, then debt calculation based on the resulting item shares.
+The data model is designed to support item-level splitting first, followed by debt calculation based on the resulting item shares.
 
 ---
 
-## 11. Implemented Backend Features
+## 11. Backend Features
 
-The backend currently includes the following implemented features.
+The backend currently includes:
 
-### User APIs
-
-* User registration.
-* User listing.
-
-### Group APIs
-
-* Group creation.
-* Group listing.
-* Group editing.
-* Group deletion.
+* User APIs.
+* Group APIs.
 * Group membership APIs.
-* Owner-only member management logic.
-
-### Expense APIs
-
-* Expense creation.
-* Expense listing.
-* Expense retrieval for group workflows.
-
-### Receipt APIs
-
-* Manual receipt creation.
-* Receipt image upload endpoint.
-* Receipt total fields for validation and calculation.
-* Receipt-related item workflows.
-
-### OCR and Parsing APIs
-
-* OCR service abstraction.
-* Mock OCR engine for stable local development and tests.
-* Optional PaddleOCR engine using:
-
-```bash
-OCR_ENGINE=paddleocr
-```
-
-* Receipt text parser for extracting items, tax, service charge, and totals from OCR-like text.
-
-### Item APIs
-
-* Manual item creation.
-* Item listing.
+* Expense APIs.
+* Receipt APIs.
+* A receipt image upload endpoint.
+* An OCR service abstraction.
+* A mock OCR engine.
+* An optional PaddleOCR engine.
+* A receipt text parser.
+* Item APIs.
 * Item share APIs.
-* Equal item split endpoint.
+* An equal item share endpoint.
+* A receipt tax and service charge allocation endpoint.
+* Debt calculation and recalculation endpoints.
+* Debt lifecycle endpoints.
+* A group debt summary endpoint.
+* Alembic migration support.
+* Backend `pytest` coverage.
 
-### Financial Calculation APIs
+### Backend Financial Logic
 
-* Receipt tax/service-charge allocation endpoint.
-* Debt calculation endpoint.
-* Debt recalculation endpoint.
-* Debt payment lifecycle endpoints.
+The backend is treated as the source of truth for financial results.
 
-### Debt Lifecycle APIs
+Important backend responsibilities include:
 
-* Mark pending debt as paid.
-* Confirm marked payment as received.
-* Maintain debt status through a controlled workflow.
+* Splitting item amounts equally among selected members.
+* Allocating tax and service charges proportionally.
+* Rounding monetary values to two decimal places.
+* Creating debt records from member balances.
+* Recalculating debt records when data changes.
+* Preventing invalid debt state transitions.
 
 ---
 
-## 12. Implemented Frontend Features
+## 12. Frontend Features
 
-The frontend currently includes the following implemented features.
+The frontend currently includes:
 
-### Authentication and Routing
-
-* Prototype login for Sixian and Jingyi demo users.
+* A prototype login flow.
 * Protected routes.
-* Logged-in user context used for dashboard and settlement actions.
-
-> Current authentication is for prototype demonstration only. It is not production authentication.
-
-### Dashboard
-
-* Shows amounts owed by the logged-in user.
-* Shows amounts owed to the logged-in user.
-* Provides a quick overview of the user’s current settlement state.
-
-### Group Management
-
-* Create groups.
-* List groups.
-* Edit groups.
-* Delete groups.
-* View group detail page.
-* View group member list.
-* Owner-only add member control.
-
-### Expense Management
-
-* Create expenses.
-* List expenses under relevant group workflows.
-
-### Receipt and Item Workflow
-
-* Manual receipt creation.
+* A dashboard.
+* A group list.
+* A group detail page.
+* Member display and owner-only add-member controls.
+* Expense creation.
+* Receipt creation.
+* OCR receipt uploads.
+* An OCR review interface.
 * Manual item creation.
-* Receipt total validation feedback.
-* Item assignment to selected group members.
-* Split preview before settlement calculation.
+* Item assignment.
+* A split preview.
+* Tax and service charge allocation displays.
+* A settlement summary.
+* A group debt summary.
+* A debts page.
+* Mark-paid and confirm-received actions.
 
-### Settlement Workflow
-
-* Settlement calculation button.
-* Debts page with group selector.
-* Selected debt group persists after browser refresh.
-* Mark paid action for debtor.
-* Confirm received action for receiver.
+Current authentication is intended for prototype demonstration only. It is not production-grade authentication.
 
 ---
 
-## 13. OCR and Receipt Parsing
+## 13. OCR-Assisted Receipt Review
 
-The backend includes OCR infrastructure, but the Milestone 2 frontend mainly focuses on manual receipt entry.
+Milestone 3 transforms OCR from a backend-only capability into a user-facing workflow.
 
-### Current OCR Status
+The OCR-assisted process is as follows:
 
-| Area                                  | Status                            |
-| ------------------------------------- | --------------------------------- |
-| Backend receipt image upload endpoint | Implemented                       |
-| OCR service abstraction               | Implemented                       |
-| Mock OCR engine                       | Implemented and used by default   |
-| Optional PaddleOCR engine             | Implemented behind configuration  |
-| Receipt text parser                   | Implemented                       |
-| Polished frontend OCR upload flow     | Not yet the main Milestone 2 flow |
-
-The default local OCR engine is mock OCR. This makes local development and automated tests more stable because tests do not depend on external OCR behavior or local machine OCR setup.
-
-The optional PaddleOCR engine can be enabled with:
-
-```bash
-OCR_ENGINE=paddleocr
+```text
+Choose payer
+-> Upload receipt image
+-> Backend creates receipt draft
+-> Backend parses OCR item candidates
+-> Frontend displays OCR review rows
+-> User edits item names and prices
+-> User adds or deletes rows if needed
+-> User saves reviewed items
+-> Items enter the normal assignment workflow
 ```
 
-However, OCR upload should be understood as backend-supported and prototype-supported at this stage, not as a fully polished user-facing Milestone 2 flow.
+This improves the project by making receipt splitting less manual. Users no longer need to enter every item from scratch when OCR can provide a useful starting point.
 
-### Receipt Parser Coverage
-
-The receipt parser is tested for:
-
-* Item extraction.
-* Tax parsing.
-* Service-charge parsing.
-* Total parsing.
-* Cases where there is no explicit total.
-* Ignored non-item lines.
-* Multiline table parsing.
+The current OCR system uses a mock OCR engine by default for stability. Optional PaddleOCR support is available for more realistic OCR testing.
 
 ---
 
-## 14. Settlement Workflow
+## 14. Fair Split and Settlement Workflow
 
-The settlement workflow uses a state-based debt lifecycle:
+The settlement workflow is designed around item-level fairness.
+
+### Item Assignment
+
+Users select the members who shared each item. The backend equal-share endpoint then creates item shares for the selected users.
+
+### Tax and Service Charge Allocation
+
+Receipt-level charges are allocated across item shares. The frontend displays each member’s final total after item subtotals, tax shares, and service charge shares have been included.
+
+### Debt Lifecycle
+
+Debt settlement follows a controlled status workflow:
 
 ```text
 pending -> marked_paid -> confirmed_received
 ```
 
-### Debt Statuses
-
-| Status             | Meaning                                                                       |
-| ------------------ | ----------------------------------------------------------------------------- |
-| pending            | A calculated debt exists, but the debtor has not marked it as paid.           |
-| marked_paid        | The debtor says the payment has been made.                                    |
-| confirmed_received | The receiver confirms that payment was received.                              |
-| cancelled          | A previous debt has been cancelled, usually because settlement was recalculated. |
+| Status               | Meaning                                                                              |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| `pending`            | A calculated debt exists, but the debtor has not marked it as paid.                  |
+| `marked_paid`        | The debtor indicates that the payment has been made.                                 |
+| `confirmed_received` | The receiver confirms that the payment was received.                                 |
+| `cancelled`          | A previous debt has been cancelled, usually because the settlement was recalculated. |
 
 ### Permission Rules
 
-The workflow includes role-based restrictions.
-
-| Action                   | Permission Rule                                    |
-| ------------------------ | -------------------------------------------------- |
-| Add group member         | Only group owners can add members.                 |
-| View group-specific data | Non-members should not access group-specific data. |
-| Mark debt as paid        | Only the debtor can mark a pending debt as paid.   |
-| Confirm payment received | Only the receiver can confirm a marked payment.    |
-
-This prevents one user from incorrectly completing another user’s payment step.
+| Action                   | Permission Rule                                  |
+| ------------------------ | ------------------------------------------------ |
+| Add group member         | Only group owners can add members.               |
+| View group-specific data | The user should be a member of the group.        |
+| Mark debt as paid        | Only the debtor can mark a pending debt as paid. |
+| Confirm payment received | Only the receiver can confirm a marked payment.  |
 
 ---
 
@@ -495,17 +489,15 @@ This prevents one user from incorrectly completing another user’s payment step
 
 ### Separation of Concerns
 
-The project separates frontend UI, API communication, backend endpoints, data validation, database persistence, and service-level logic.
-
-This makes the codebase easier to test and modify because different layers have clearer responsibilities.
+The project separates the frontend interface, API communication, backend endpoints, data validation, database persistence, and service-level logic.
 
 ### Component-Based Frontend Design
 
-The frontend uses React components to organize reusable UI behavior. Page-level components handle route-level workflows, while smaller components handle repeated interface patterns.
+The frontend uses React components to organize reusable interface behavior. Page-level components manage route workflows, while smaller components manage repeated interface patterns.
 
 ### API Module Pattern
 
-Frontend API calls are organized into API modules rather than being written directly inside UI components. This reduces duplication and makes backend communication easier to update.
+Frontend API calls are organized into dedicated API modules rather than being written directly inside UI components. This makes backend communication easier to maintain and update.
 
 ### Layered Backend Architecture
 
@@ -515,65 +507,49 @@ The backend follows a layered structure:
 Endpoints -> Schemas -> CRUD Helpers -> Models -> Services
 ```
 
-This supports clearer responsibilities:
+### Backend as the Source of Truth
 
-* Endpoints handle HTTP requests and responses.
-* Schemas validate request and response data.
-* CRUD helpers manage database access.
-* Models define database tables and relationships.
-* Services handle business logic such as OCR and calculation behavior.
+Financial calculations are performed by backend endpoints. The frontend displays previews and feedback, but the backend logic remains authoritative.
 
-### State-Based Workflow for Debts
+### Controlled State Transitions
 
-Debt settlement is represented as a controlled state transition:
+Debt settlement uses explicit status transitions so that payment states remain clear and auditable.
 
-```text
-pending -> marked_paid -> confirmed_received
-```
+### Testable OCR Design
 
-This makes settlement status explicit and prevents unclear payment states.
-
-### Role-Based Access Control
-
-The prototype includes permission rules based on user role and relationship to the data:
-
-* Group owner.
-* Group member.
-* Debtor.
-* Receiver.
-
-These permission checks are important because financial data should only be changed by the relevant users.
-
-### Single Source of Truth for Financial Calculations
-
-Financial calculations are handled on the backend. The frontend may show previews and validation feedback, but the backend remains the source of truth for settlement calculation.
-
-This reduces the risk of inconsistent financial results between client and server.
-
-### Validation Before Settlement
-
-The receipt workflow includes validation before settlement calculation. For example, receipt item totals can be compared against the expected receipt total so that users can catch mistakes before debts are calculated.
+The OCR engine is abstracted so that a stable mock engine can be used during testing, while optional PaddleOCR support remains available.
 
 ---
 
 ## 16. Testing Strategy
 
-The testing strategy combines frontend unit tests, backend unit tests, backend integration tests, parser tests, OCR service tests, and manual workflow testing.
+The testing strategy combines:
 
-The goal is to test both isolated logic and full workflow behavior.
+* Frontend linting.
+* Frontend unit tests.
+* Frontend production builds.
+* Backend unit tests.
+* Backend integration tests.
+* OCR service tests.
+* Receipt parser tests.
+* Financial logic tests.
+* Manual workflow testing.
+* A user testing plan.
 
 ### Testing Goals
 
-| Area                         | Testing Goal                                                         |
-| ---------------------------- | -------------------------------------------------------------------- |
-| Frontend calculation helpers | Ensure displayed receipt total differences are calculated correctly. |
-| Frontend build               | Ensure the React app builds successfully.                            |
-| Frontend linting             | Catch code quality and formatting issues.                            |
-| Backend APIs                 | Ensure core API workflows behave correctly.                          |
-| Debt lifecycle               | Ensure mark-paid and confirm-received transitions work correctly.    |
-| OCR service                  | Ensure mock OCR and parsed OCR output work in stable local tests.    |
-| Receipt parser               | Ensure receipt text parsing handles common receipt patterns.         |
-| Full workflow                | Validate API-level Milestone 2 flow with smoke-test script.          |
+| Area                   | Testing Goal                                                      |
+| ---------------------- | ----------------------------------------------------------------- |
+| Frontend helpers       | Ensure receipt total and difference calculations are correct.     |
+| Frontend build         | Ensure the React application builds successfully.                 |
+| Frontend linting       | Identify code quality issues.                                     |
+| Backend APIs           | Ensure core API workflows behave correctly.                       |
+| OCR service            | Ensure mock OCR and parsed output remain stable.                  |
+| Receipt parser         | Ensure receipt text parsing handles common receipt patterns.      |
+| Charge allocation      | Ensure tax and service charges are allocated correctly.           |
+| Settlement lifecycle   | Ensure mark-paid and confirm-received transitions work correctly. |
+| Group debt summary     | Ensure group-level balances and transaction counts are correct.   |
+| Continuous integration | Ensure checks run automatically on pull requests.                 |
 
 ---
 
@@ -582,284 +558,184 @@ The goal is to test both isolated logic and full workflow behavior.
 ### Frontend Commands
 
 ```bash
-npm test
+cd frontend
 npm run lint
+npm test
 npm run build
 ```
 
-### Frontend Test Coverage
+Current frontend verification results:
 
-Frontend unit tests currently cover:
+```text
+npm run lint: passed
+npm test: 4 passed
+npm run build: passed
+```
+
+Frontend unit tests cover:
 
 * Receipt item total calculation.
+* Empty receipt item totals.
 * Receipt difference calculation.
-
-These tests support the receipt validation workflow, where the application compares entered item totals against the receipt total.
+* Matching receipt and item totals.
 
 ### Backend Commands
 
 ```bash
+cd backend
 python -m pytest -v
 ```
 
-### Backend Test Coverage
+Current backend verification results:
 
-Backend tests currently cover:
+```text
+11 passed, 1 skipped
+```
 
-* User creation as part of the settlement integration workflow.
-* Group creation and membership.
-* Expense creation.
-* Receipt creation.
-* Item creation.
-* Item-share creation.
-* Debt calculation.
-* Mark-paid lifecycle transition.
-* Confirm-received lifecycle transition.
+Backend tests cover:
 
-### OCR Service Tests
-
-OCR service tests cover:
-
+* OCR service behavior.
 * Mock OCR engine behavior.
-* Parsed OCR result behavior.
+* Receipt parser behavior.
+* Tax and service charge parsing.
+* Multiline receipt parsing.
+* Settlement calculation.
+* Debt payment lifecycle.
+* Receipt charge allocation.
+* Group debt summaries.
 
-The mock engine is used by default to keep local development and automated testing stable.
+### Continuous Integration
 
-### Receipt Parser Tests
+The project includes GitHub Actions CI for:
 
-Receipt parser tests cover:
-
-* Item extraction.
-* Tax parsing.
-* Service charge parsing.
-* Total parsing.
-* Missing explicit total.
-* Ignored non-item lines.
-* Multiline table parsing.
-
-### PaddleOCR Integration Test
-
-A PaddleOCR integration test exists but is disabled by default. It can be enabled with:
-
-```bash
-RUN_PADDLEOCR_TESTS=1
-```
-
-This avoids requiring all local development environments to install and configure PaddleOCR.
-
-### Full Workflow Smoke Test
-
-A full workflow smoke-test script exists for API-level Milestone 2 validation.
-
-The smoke test is intended to verify the newer backend receipt/OCR workflow:
-
-```text
-Upload receipt image
--> Extract OCR items
--> Confirm parsed items
--> Create equal item shares
--> Allocate receipt tax and service charges
--> Recalculate debts
--> List group debts
-```
-
----
-
-## 18. Manual and System Testing Checklist
-
-The following checklist summarizes the manual testing performed or intended for Milestone 2 prototype validation.
-
-| Test Area              | Manual Test Case                              | Expected Result                                   | Status                                    |
-| ---------------------- | --------------------------------------------- | ------------------------------------------------- | ----------------------------------------- |
-| Login                  | Log in as Sixian demo user                    | User enters protected app pages                   | Implemented                               |
-| Login                  | Log in as Jingyi demo user                    | User enters protected app pages                   | Implemented                               |
-| Protected Routes       | Access app page without login                 | User should be redirected or blocked              | Implemented                               |
-| Group Creation         | Create a new group                            | Group appears in group list                       | Implemented                               |
-| Group Editing          | Edit group details                            | Updated group information is shown                | Implemented                               |
-| Group Deletion         | Delete group                                  | Group is removed from list                        | Implemented                               |
-| Add Member             | Owner adds group member                       | Member appears in group detail page               | Implemented                               |
-| Add Member Permission  | Non-owner attempts owner-only action          | Action should be restricted                       | Implemented / under continued testing     |
-| Expense Creation       | Create expense inside group workflow          | Expense appears in relevant list                  | Implemented                               |
-| Receipt Creation       | Create manual receipt                         | Receipt is stored and shown                       | Implemented                               |
-| Item Creation          | Add receipt items manually                    | Items appear under receipt                        | Implemented                               |
-| Receipt Validation     | Item total differs from receipt total         | Difference feedback is shown                      | Implemented                               |
-| Item Assignment        | Assign item to selected members               | Split preview updates                             | Implemented                               |
-| Settlement Calculation | Click settlement calculation button           | Debts are calculated                              | Implemented                               |
-| Debt Group Persistence | Refresh browser on selected debt group        | Selected group remains selected                   | Implemented                               |
-| Mark Paid              | Debtor marks debt as paid                     | Debt status becomes marked_paid                   | Implemented                               |
-| Confirm Received       | Receiver confirms payment                     | Debt status becomes confirmed_received            | Implemented                               |
-| Non-member Access      | Non-member accesses group-specific data       | Access should be denied                           | Backend rule included / continued testing |
-| OCR Upload             | Upload receipt image through backend endpoint | Backend can process through configured OCR engine | Backend-supported prototype               |
-
----
-
-## 19. Problems Encountered and Solutions
-
-### Problem 1: Financial Logic Can Become Inconsistent Across Frontend and Backend
-
-**Issue:**
-Receipt splitting involves item prices, shared items, tax, service charge, and settlement calculation. If the frontend and backend both independently calculate final debt amounts, inconsistencies may occur.
-
-**Solution:**
-We treat the backend as the single source of truth for financial calculations. The frontend can provide validation feedback and previews, but final settlement calculation is performed by backend endpoints.
-
----
-
-### Problem 2: OCR Can Be Unstable During Local Development
-
-**Issue:**
-OCR engines may require heavy dependencies and can behave differently across machines. This can make testing unstable and difficult for team members.
-
-**Solution:**
-We implemented an OCR service abstraction. The default local OCR engine is a mock engine, which allows stable development and testing. PaddleOCR is available as an optional engine through configuration.
-
-```bash
-OCR_ENGINE=paddleocr
-```
-
-PaddleOCR integration tests are disabled by default and only run when explicitly enabled.
-
----
-
-### Problem 3: Receipt Parsing Has Many Edge Cases
-
-**Issue:**
-Real receipts can contain item lines, totals, tax, service charge, table formatting, and irrelevant non-item lines. A simple parser may incorrectly treat non-item lines as receipt items.
-
-**Solution:**
-We added parser tests for common cases including item extraction, tax/service/total parsing, missing explicit total, ignored non-item lines, and multiline table parsing. The parser remains a prototype component and will need more real receipt testing in Milestone 3.
-
----
-
-### Problem 4: Debt Settlement Requires Clear User Permissions
-
-**Issue:**
-Without permission rules, the wrong user could mark another person’s debt as paid or confirm a payment that they did not receive.
-
-**Solution:**
-We implemented role-based rules for the debt lifecycle:
-
-* Only the debtor can mark a pending debt as paid.
-* Only the receiver can confirm a marked payment.
-* Only group owners can add members.
-* Non-members should not access group-specific data.
-
----
-
-### Problem 5: Maintaining Frontend State Across Refreshes
-
-**Issue:**
-The Debts page includes a group selector. Without persistence, refreshing the browser could lose the selected group and interrupt the user flow.
-
-**Solution:**
-The selected debt group persists after browser refresh, improving continuity in the prototype workflow.
-
----
-
-### Problem 6: Building a Mobile-First Workflow with Many Steps
-
-**Issue:**
-The main workflow contains many steps: group creation, member management, expense creation, receipt creation, item creation, item assignment, settlement calculation, and payment confirmation. On a small screen, this can become confusing.
-
-**Solution:**
-We designed the frontend as a mobile-first prototype with route-based pages and focused workflows. The UI is still a prototype, but the current structure helps separate each major user task.
-
----
-
-## 20. Software Engineering Evidence
-
-The project includes several forms of software engineering evidence for Milestone 2.
-
-### 1. Requirements and User Stories
-
-The project is guided by user stories from Milestone 1, including group creation, member management, receipt item entry, item assignment, debt calculation, and settlement tracking.
-
-### 2. Modular Architecture
-
-The codebase is organized into separate frontend and backend layers. Within each layer, responsibilities are separated further.
-
-Frontend evidence:
-
-* Component-based React structure.
-* API modules for backend communication.
-* Zustand store for shared state.
-* React Router for page-level navigation.
-* Protected route handling.
-
-Backend evidence:
-
-* FastAPI endpoints.
-* Pydantic schemas.
-* SQLAlchemy models.
-* CRUD helper modules.
-* Service modules for OCR and business logic.
-* Alembic migrations for database evolution.
-
-### 3. Testing
-
-The project includes automated tests for both frontend and backend behavior.
-
-Evidence includes:
-
-* Frontend unit tests.
 * Frontend linting.
-* Frontend production build.
-* Backend pytest suite.
-* Backend integration workflow test.
-* OCR service tests.
-* Receipt parser tests.
-* Optional PaddleOCR integration test.
-* Full workflow smoke-test script.
+* Frontend tests.
+* Frontend builds.
+* The backend `pytest` suite.
 
-### 4. Validation and Error Feedback
+This addresses the Milestone 2 feedback that tests were previously executed manually without continuous integration.
 
-The frontend provides receipt total validation feedback before settlement calculation. This supports the principle of validating financial data before producing final debts.
+---
 
-### 5. Controlled State Transitions
+## 18. Manual and System Testing
 
-Debt settlement follows a controlled lifecycle:
+Manual testing focuses on validating end-to-end user workflows.
+
+| Test Area              | Manual Test Case                        | Expected Result                                      | Status      |
+| ---------------------- | --------------------------------------- | ---------------------------------------------------- | ----------- |
+| Login                  | Log in as a demo user                   | The user enters protected application pages          | Implemented |
+| Group Creation         | Create a new group                      | The group appears in the group list                  | Implemented |
+| Add Member             | Owner adds a group member               | The member appears on the group detail page          | Implemented |
+| Expense Creation       | Create an expense inside a group        | The expense appears under the group                  | Implemented |
+| Manual Receipt         | Create a manual receipt                 | The receipt is stored and displayed                  | Implemented |
+| OCR Upload             | Upload a receipt image                  | An OCR review draft appears                          | Implemented |
+| OCR Review             | Edit parsed item rows                   | Edited values are saved                              | Implemented |
+| Add/Delete OCR Row     | Add and remove review rows              | The review table updates correctly                   | Implemented |
+| Item Assignment        | Assign an item to members               | The split preview updates                            | Implemented |
+| Tax/Service Allocation | Apply charges to item shares            | Final totals include the allocated charges           | Implemented |
+| Settlement Calculation | Calculate the settlement                | Debts are generated                                  | Implemented |
+| Debt Summary           | View the group summary                  | Outstanding totals and member balances are displayed | Implemented |
+| Mark Paid              | Debtor marks a debt as paid             | The status becomes `marked_paid`                     | Implemented |
+| Confirm Received       | Receiver confirms the payment           | The status becomes `confirmed_received`              | Implemented |
+| Deployment             | Open the public application link        | The application loads publicly                       | TODO        |
+| User Testing           | External user completes the task script | Observations are recorded                            | TODO        |
+
+---
+
+## 19. User Testing
+
+User testing is planned for Milestone 3.
+
+The user testing plan is documented in:
 
 ```text
-pending -> marked_paid -> confirmed_received
+docs/user_testing_ms3.md
 ```
 
-This avoids ambiguous settlement status and supports clearer payment tracking.
+### Planned User Testing Tasks
 
-### 6. Access Control
+1. Create or enter a group.
+2. Add members.
+3. Create an expense.
+4. Upload or create a receipt.
+5. Review OCR-parsed items.
+6. Assign items to members.
+7. Apply tax and service charge allocation.
+8. Calculate the settlement.
+9. Interpret the group debt summary.
+10. Mark and confirm a payment.
 
-The project includes role-based access-control examples:
+### Metrics to Record
 
-* Group owner permissions for member management.
-* Debtor-only permission for marking debts as paid.
-* Receiver-only permission for confirming payments.
-* Group member restrictions for group-specific data.
+* Whether the user can complete each task.
+* Where the user hesitates.
+* Whether interface labels are clear.
+* Whether the split preview is understandable.
+* Whether the user trusts the settlement results.
+* Suggestions for improvement.
 
-### 7. Development Practicality
+> **TODO:** Add completed user testing observations before the final Milestone 3 submission.
 
-Mock OCR is used by default so that development and testing remain stable across machines. Optional PaddleOCR support is kept behind configuration rather than required for all environments.
+---
+
+## 20. Deployment Plan
+
+Milestone 3 requires the product to be deployed and linked from this README.
+
+### Planned Deployment Setup
+
+| Component           | Platform           | Status                |
+| ------------------- | ------------------ | --------------------- |
+| Backend API         | Render Web Service | In progress           |
+| Backend Database    | Render PostgreSQL  | Created / in progress |
+| Frontend            | Vercel or Netlify  | TODO                  |
+| README Public Links | GitHub README      | TODO                  |
+
+### Backend Deployment Configuration
+
+```bash
+pip install -r requirements.txt && alembic upgrade head
+uvicorn main:app --host 0.0.0.0 --port $PORT
+```
+
+### Backend Environment Variables
+
+```text
+DATABASE_URL=<Render PostgreSQL internal database URL>
+PYTHON_VERSION=3.12.13
+```
+
+The frontend deployment will use an environment variable to communicate with the deployed backend API.
+
+Example:
+
+```text
+VITE_API_BASE_URL=<deployed backend API URL>
+```
+
+> **TODO:** Replace this section with the final deployed URLs after deployment is complete.
 
 ---
 
 ## 21. Setup Instructions
 
-> The commands below assume separate frontend and backend directories. Adjust folder names if your local repository structure differs.
-
 ### Prerequisites
 
 Install the following:
 
-* Python 3.10 or later recommended
-* Node.js 18 or later recommended
-* PostgreSQL
-* npm
-* Git
+* Python 3.12 recommended.
+* Node.js 18 or later.
+* PostgreSQL.
+* npm.
+* Git.
 
-Clone the repository:
+### Clone the Repository
 
 ```bash
 git clone https://github.com/Arand0mjos3f/dfs-orbital-2026.git
 cd dfs-orbital-2026
 ```
+
 ---
 
 ## 22. How to Run the Backend
@@ -877,33 +753,26 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-For Windows PowerShell:
-
-```bash
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-```
-
-Install dependencies:
+Install the required dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Create a `.env` file if required by the local setup. Example:
+Create a `.env` file if needed:
 
 ```env
 DATABASE_URL=postgresql://<username>:<password>@localhost:5432/<database_name>
 OCR_ENGINE=mock
 ```
 
-Run database migrations:
+Run the database migrations:
 
 ```bash
 alembic upgrade head
 ```
 
-Start the FastAPI development server:
+Start the backend server:
 
 ```bash
 python -m uvicorn main:app --reload
@@ -915,10 +784,16 @@ The backend should be available at:
 http://localhost:8000
 ```
 
-FastAPI Swagger documentation should be available at:
+FastAPI documentation:
 
 ```text
 http://localhost:8000/docs
+```
+
+Health endpoint:
+
+```text
+http://localhost:8000/api/v1/health
 ```
 
 ---
@@ -931,16 +806,10 @@ Navigate to the frontend directory:
 cd frontend
 ```
 
-Install dependencies:
+Install the required dependencies:
 
 ```bash
 npm install
-```
-
-Create a frontend environment file if required. Example:
-
-```env
-VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1
 ```
 
 Start the frontend development server:
@@ -949,7 +818,7 @@ Start the frontend development server:
 npm run dev
 ```
 
-The frontend should be available at the local Vite development URL shown in the terminal, commonly:
+The frontend should be available at:
 
 ```text
 http://localhost:5173
@@ -959,208 +828,178 @@ http://localhost:5173
 
 ## 24. How to Run Tests
 
-### Frontend Tests
-
-From the frontend directory:
+### Frontend
 
 ```bash
-npm test
+cd frontend
 npm run lint
+npm test
 npm run build
 ```
 
-These commands check frontend unit tests, linting, and production build readiness.
-
-### Backend Tests
-
-From the backend directory:
+### Backend
 
 ```bash
+cd backend
 python -m pytest -v
 ```
 
-### Optional PaddleOCR Tests
-
-PaddleOCR tests are disabled by default. To run them:
+### Optional PaddleOCR Test
 
 ```bash
-RUN_PADDLEOCR_TESTS=1 python -m pytest -v
+cd backend
+RUN_PADDLEOCR_TESTS=1 python -m pytest -v tests/test_paddleocr_engine.py
 ```
 
-Only run these tests in an environment where PaddleOCR and its dependencies are properly installed.
-
-### Smoke Test
-
-A full workflow smoke-test script exists for API-level validation of the Milestone 2 workflow:
-
-From the backend directory:
-
-```bash
-python scripts/ms2_full_workflow_smoke_test.py
-```
-
-The script expects an existing expense, group, payer, participant users, and receipt image path through environment variables:
-
-```bash
-API_BASE_URL=http://127.0.0.1:8000/api/v1 \
-EXPENSE_ID=<expense_id> \
-GROUP_ID=<group_id> \
-PAYER_ID=<payer_user_id> \
-PARTICIPANT_USER_IDS=<user_id_1>,<user_id_2> \
-RECEIPT_IMAGE_PATH=tmp/test_receipts/real_receipt.jpg \
-python scripts/ms2_full_workflow_smoke_test.py
-```
-
-The smoke test checks receipt upload, OCR item extraction, item confirmation, equal item shares, receipt charge allocation, debt recalculation, and group debt listing.
-
 ---
 
-## 25. Known Limitations
+## 25. Screenshots and Evidence Placeholders
 
-The current prototype has the following limitations:
+> **TODO:** Replace the placeholders with final screenshots after deployment and final manual testing.
 
-1. **Prototype Authentication**
+| Screenshot                        | Purpose                                                       | Status |
+| --------------------------------- | ------------------------------------------------------------- | ------ |
+| Login Page                        | Show the application entry point and prototype authentication | TODO   |
+| Groups Dashboard                  | Show the group overview workflow                              | TODO   |
+| Group Detail Page                 | Show members, expenses, and the settlement summary            | TODO   |
+| OCR Receipt Upload                | Show OCR-assisted receipt intake                              | TODO   |
+| OCR Review Table                  | Show editable parsed receipt items                            | TODO   |
+| Item Assignment                   | Show selected users for shared items                          | TODO   |
+| Tax and Service Charge Allocation | Show the fair-allocation preview                              | TODO   |
+| Group Debt Summary                | Show member balances and outstanding settlements              | TODO   |
+| Debts Page                        | Show settlement lifecycle actions                             | TODO   |
+| GitHub Actions                    | Show passing CI checks                                        | TODO   |
+| Deployed Application              | Show the working public deployment link                       | TODO   |
 
-   * Login is currently based on prototype/demo users.
-   * It is not production-ready authentication.
-
-2. **OCR Frontend Flow Not Fully Polished**
-
-   * The backend supports OCR infrastructure and optional PaddleOCR integration.
-   * The Milestone 2 frontend mainly focuses on manual receipt entry.
-   * OCR upload should be treated as backend-supported/prototype-supported rather than a polished user-facing feature.
-
-3. **No Cloud Deployment Yet**
-
-   * The project currently runs locally.
-   * Cloud deployment is planned for a later stage.
-
-4. **No Payment Provider Integration**
-
-   * The app tracks payment status.
-   * It does not process real payments through PayNow, Stripe, bank transfer APIs, or other payment providers.
-
-5. **No Offline Mode**
-
-   * The application currently assumes an active backend connection.
-
-6. **Mobile-First Prototype UI**
-
-   * The interface is designed as a mobile-first prototype.
-   * More UI polish and usability testing are planned.
-
-7. **Limited Real-World Receipt Testing**
-
-   * The parser has automated test coverage for several cases.
-   * More testing with real receipt formats is needed.
-
-8. **More Edge Cases Needed for Milestone 3**
-
-   * Future work should include more edge-case testing for rounding, partial settlement, deleted members, edited receipts, and recalculation behavior.
-
----
-
-## 26. Milestone 3 Plan
-
-For Milestone 3, we plan to improve the prototype in the following areas.
-
-### 1. Improve OCR User Flow
-
-* Build a clearer frontend OCR upload flow.
-* Connect uploaded receipt images to parsed item suggestions.
-* Allow users to review and correct OCR-parsed items before saving.
-* Test with more real receipt formats.
-
-### 2. Improve UI and User Experience
-
-* Refine mobile-first page layout.
-* Improve navigation between group, expense, receipt, assignment, and debt pages.
-* Add clearer loading, empty, and error states.
-* Improve visual feedback for validation and settlement status.
-
-### 3. Strengthen Authentication and Authorization
-
-* Replace prototype login with a more realistic authentication flow if time permits.
-* Continue strengthening group-level and debt-level permission checks.
-* Add more tests for unauthorized access.
-
-### 4. Expand Testing
-
-* Add more frontend tests for page workflows.
-* Add more backend tests for edge cases.
-* Add tests for tax/service-charge allocation and rounding behavior.
-* Expand smoke testing for full user journeys.
-
-### 5. Prepare Deployment
-
-* Prepare deployment configuration.
-* Set up environment variables for production-like settings.
-* Deploy frontend and backend if feasible within the Milestone 3 timeline.
-
-### 6. Improve Settlement Features
-
-* Improve debt visualization.
-* Add clearer settlement history.
-* Improve recalculation behavior after receipt or item changes.
-* Consider export features such as CSV or PDF if time permits.
-
----
-
-## 27. Project Log Summary
-
-The project log is maintained separately in the required Orbital format. A condensed summary is included here for README context.
-
-| Stage                   | Focus                                   | Summary                                                                                                                                                   |
-| ----------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Milestone 1 Planning    | Problem definition and feature planning | Defined target users, problem motivation, core user stories, proposed workflow, and initial technical direction.                                          |
-| Early Prototype Setup   | Frontend and backend foundation         | Set up React/Vite frontend, FastAPI backend, routing, API communication, and database-backed backend structure.                                           |
-| UI/UX Prototyping       | Mobile-first workflow                   | Designed mobile-first screens for dashboard, group management, receipt workflows, item assignment, and debts.                                             |
-| Backend Development     | Core API implementation                 | Implemented users, groups, memberships, expenses, receipts, items, item shares, debts, OCR abstraction, parser, and settlement endpoints.                 |
-| Frontend Development    | End-to-end prototype flow               | Implemented prototype login, protected routes, dashboard, group workflows, expense and receipt workflows, item assignment, split preview, and debts page. |
-| Testing and Validation  | Automated and manual testing            | Added frontend unit tests, backend integration tests, OCR tests, parser tests, and workflow smoke-test script.                                            |
-| Milestone 2 Preparation | Documentation and evidence              | Prepared README, screenshots/evidence placeholders, testing evidence, and summary of limitations and Milestone 3 plan.                                    |
-
----
-
-## 28. Screenshots and Evidence Placeholders
-
-Screenshots should be added under `docs/images/` before final submission.
-
-| Evidence | Suggested File | Purpose |
-| --- | --- | --- |
-| Login page | `docs/images/login.png` | Shows prototype demo login. |
-| Group detail workflow | `docs/images/group-detail.png` | Shows member list, expenses, and add member control. |
-| Receipt item assignment | `docs/images/item-assignment.png` | Shows receipt items, assignment, split preview, and validation feedback. |
-| Debts page | `docs/images/debts.png` | Shows group selector, settlement list, mark-paid, and confirm-received actions. |
-| Swagger API documentation | `docs/images/swagger.png` | Shows backend API endpoints. |
-| Test results | `docs/images/test-results.png` | Shows frontend and backend test commands passing. |
-
-## 29. Current Milestone 2 Prototype Flow
-
-The current prototype supports the main intended workflow:
+### Suggested Image Paths
 
 ```text
-1. User logs in with prototype demo account.
-2. User creates or selects a group.
-3. Group owner adds members.
-4. User creates an expense.
-5. User creates a manual receipt.
-6. User adds receipt items manually.
-7. User assigns items to selected group members.
-8. User checks receipt total validation feedback.
-9. User calculates settlement.
-10. Debtor marks debt as paid.
-11. Receiver confirms payment as received.
+docs/images/ms3-login.png
+docs/images/ms3-groups.png
+docs/images/ms3-ocr-review.png
+docs/images/ms3-tax-service-preview.png
+docs/images/ms3-group-summary.png
+docs/images/ms3-ci-green.png
+docs/images/ms3-deployed-app.png
 ```
 
-This completes the core Milestone 2 prototype goal of demonstrating item-level splitting and settlement tracking.
+---
+
+## 26. Team Contributions
+
+The team followed a vertical-slicing approach rather than using a strict frontend/backend division.
+
+### Chen Sixian
+
+**Primary vertical slice:**
+
+```text
+OCR-assisted receipt review user flow
+```
+
+**Contribution areas:**
+
+* Frontend OCR upload and review workflow.
+* Receipt review interface.
+* Item assignment integration.
+* Tax and service charge allocation display.
+* Group summary UI integration.
+* Testing and verification.
+* Documentation and user testing preparation.
+* Deployment coordination.
+
+### Sun Jingyi
+
+**Primary vertical slice:**
+
+```text
+Fair split and settlement accuracy user flow
+```
+
+**Contribution areas:**
+
+* Backend financial calculation logic.
+* Equal item share logic.
+* Tax and service charge allocation.
+* Debt calculation and recalculation.
+* Split preview and suggested debt logic.
+* Backend tests for financial correctness.
+* Backend API and database support.
+
+### Shared Contributions
+
+* System testing.
+* Pull request reviews.
+* CI verification.
+* Milestone report preparation.
+* Poster preparation.
+* Video preparation.
+* Final deployment and submission readiness.
+
+---
+
+## 27. Project Log and Hours
+
+Milestone 3 requires approximately 140 cumulative hours per person by the end of the milestone.
+
+> **TODO:** Insert the final confirmed cumulative hours before submission.
+
+### Planned Log Categories
+
+| Category                | Examples                                                      |
+| ----------------------- | ------------------------------------------------------------- |
+| Planning                | Milestone planning, task slicing, and feedback analysis       |
+| Frontend Implementation | OCR review UI, split preview UI, and group summary UI         |
+| Backend Implementation  | OCR API, item shares, charge allocation, debts, and summaries |
+| Testing                 | Unit tests, integration tests, CI, and manual testing         |
+| Documentation           | README, testing documentation, and user testing documentation |
+| Deployment              | Render backend, frontend deployment, and environment setup    |
+| Presentation            | Poster and video preparation                                  |
+
+---
+
+## 28. Known Limitations
+
+Current limitations include:
+
+* Authentication is prototype-only and is not production-grade.
+* OCR behavior depends on the configured OCR engine and receipt image quality.
+* Mock OCR is used by default for stability.
+* The frontend is mobile-first and may require additional desktop layout polishing.
+* Deployment is still in progress.
+* User testing results have not yet been finalized.
+* Free hosting services may enter sleep mode after periods of inactivity.
+* Payment proof is represented using URL or string fields rather than actual file storage.
+* Advanced notification and reminder features have not been implemented.
+
+---
+
+## 29. Future Work
+
+Potential future improvements include:
+
+* Production-grade authentication.
+* More robust OCR using real receipt datasets.
+* Improved OCR confidence displays.
+* Batch item-save endpoint integration.
+* Dedicated split-preview endpoint integration.
+* Richer payment proof uploads.
+* Email or in-app payment reminders.
+* Improved desktop-responsive layouts.
+* More extensive user testing.
+* Exportable settlement reports.
+* Multi-currency support.
+* More advanced permission management.
+* Long-term persistent deployment.
 
 ---
 
 ## 30. Conclusion
 
-For Milestone 2, O(n) Debtor has progressed from a planned shared-expense idea into a working mobile-first prototype with both frontend and backend implementation.
+O(n) Debtor has progressed from a basic prototype into a more complete shared-expense splitting system for Milestone 3.
 
-The prototype demonstrates the core value of the project: splitting real group expenses by receipt items, assigning those items to the correct members, calculating debts, and tracking whether debts have been paid and confirmed.
+The project now supports a realistic workflow for creating groups, managing expenses, uploading or manually entering receipts, reviewing OCR-parsed items, assigning items to members, allocating tax and service charges, calculating settlements, and tracking payment statuses.
 
-The current version is still a prototype. Authentication, OCR user experience, deployment, payment integration, UI polish, and wider edge-case handling remain future work. For Milestone 3, the main focus will be improving reliability, usability, OCR flow, testing coverage, and deployment readiness.
+The main Milestone 3 improvements address earlier feedback by making OCR user-facing, strengthening backend financial logic, expanding automated tests, adding continuous integration, improving settlement visibility, and preparing the project for deployment and final submission.
+
+The remaining work before the final Milestone 3 submission focuses on deployment, final screenshots, user testing evidence, poster preparation, video preparation, and final README polishing.
