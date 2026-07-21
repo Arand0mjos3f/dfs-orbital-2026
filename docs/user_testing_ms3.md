@@ -1,192 +1,295 @@
-# Milestone 3 User Testing Plan
+# Milestone 3 User Testing Plan and Results Template
 
 ## Purpose
 
-This user testing plan verifies whether O(n) Debtor is understandable and usable for the main Milestone 3 workflows:
+This document records the planned and completed user testing activities for **O(n) Debtor** during Milestone 3.
 
-- Creating a group expense.
-- Uploading and reviewing OCR receipt items.
-- Assigning receipt items to group members.
-- Applying tax and service charge allocation.
-- Calculating settlement transactions.
-- Understanding the group settlement summary and member balances.
+The goal of user testing is to determine whether users can understand and complete the application's main shared-expense workflow:
+
+```text
+Create group
+-> Create expense
+-> Upload or create receipt
+-> Review receipt items
+-> Assign items to members
+-> Apply tax and service charge allocation
+-> Calculate settlement
+-> Interpret group balances
+```
+
+This document is intentionally structured as a template before testing is completed. Result fields should only be filled in after real testing sessions have been conducted.
+
+---
+
+## Test Scope
+
+The testing process focuses on the main Milestone 3 extensions:
+
+| Area                        | What We Are Testing                                                                                |
+| --------------------------- | -------------------------------------------------------------------------------------------------- |
+| OCR-assisted receipt review | Whether users understand how to upload a receipt and review, edit, add, delete, and save item rows |
+| Item assignment             | Whether users can assign receipt items to one or more group members                                |
+| Fair split preview          | Whether users understand item subtotals, tax shares, service charge shares, and final totals       |
+| Settlement calculation      | Whether users can calculate a settlement and understand who should pay whom                        |
+| Group debt summary          | Whether users understand the outstanding amount and individual member balances                     |
+| Overall usability           | Whether the complete workflow feels understandable and realistic for a shared group meal           |
+
+---
 
 ## Participants
 
-Target participants:
+### Planned Participants
 
-| Participant | Profile | Status |
-|---|---|---|
-| P1 | NUS student, not involved in implementation | Scheduled |
-| P2 | NUS student, not involved in implementation | Scheduled |
-| P3 | NUS student, not involved in implementation | Optional |
+| Participant | Profile                    | Relationship to Project        | Status       |
+| ----------- | -------------------------- | ------------------------------ | ------------ |
+| P1          | NUS student or peer user   | Not involved in implementation | To be tested |
+| P2          | NUS student or peer user   | Not involved in implementation | To be tested |
+| P3          | Optional additional tester | Not involved in implementation | Optional     |
 
-Testing should be performed with 2-3 participants before Milestone 3 submission.
+### Testing Target
+
+```text
+Minimum: 1 real external tester
+Preferred: 2 real external testers
+Optional: 1 additional tester
+```
+
+Internal team testing may be recorded separately as system testing, but it should not be presented as external user testing.
+
+---
 
 ## Test Environment
 
-| Item | Value |
-|---|---|
-| Frontend | `http://localhost:5173` |
-| Backend | `http://127.0.0.1:8000` |
-| Browser | Google Chrome |
-| OCR mode | Mock OCR |
-| Test group | `MS3 User Testing Dinner` |
-| Test users | Sixian and Jingyi demo users |
+| Item       | Value                                            |
+| ---------- | ------------------------------------------------ |
+| Frontend   | `http://localhost:5173` or deployed frontend URL |
+| Backend    | `http://127.0.0.1:8000` or deployed backend URL  |
+| Browser    | Google Chrome                                    |
+| Device     | Laptop or mobile browser                         |
+| OCR Mode   | Mock OCR or deployed OCR configuration           |
+| Test Group | `MS3 User Testing Dinner`                        |
+| Test Users | Sixian and Jingyi demo users                     |
+| Test Date  | To be filled                                     |
+
+---
 
 ## Pre-Test Setup
 
-Before each session:
+Before each testing session:
 
-1. Start the backend server.
-2. Start the frontend server.
-3. Log in with a demo user.
-4. Prepare a test group with at least two members.
-5. Prepare any image file for OCR upload.
-6. Confirm the app loads without console or terminal errors.
+1. Start the backend or open the deployed backend.
+2. Start the frontend or open the deployed frontend.
+3. Confirm that the login flow works.
+4. Prepare a group containing at least two members.
+5. Prepare a test expense, or allow the participant to create one.
+6. Prepare a receipt image or another image accepted by the OCR upload flow.
+7. Confirm that the application loads without obvious errors.
+8. Prepare a timer or note-taking document.
 
-## User Tasks
+---
 
-### Task 1: Open Group and Review Members
+## Task Script
 
-Instruction to participant:
+### Task 1: Open the Group and Review Its Members
+
+**Instruction to participant:**
 
 > Open the test group and explain who is in the group.
 
-Expected success:
+**Success criteria:**
 
-- Participant can find the group.
-- Participant can identify the group members.
+* The participant can find the group.
+* The participant can identify the group members.
+* The participant understands the context and purpose of the group.
+
+---
 
 ### Task 2: Create an Expense
 
-Instruction to participant:
+**Instruction to participant:**
 
 > Create a new dinner expense with a short description.
 
-Expected success:
+**Success criteria:**
 
-- Participant can create an expense.
-- The expense appears in the group page.
+* The participant can create an expense.
+* The expense appears on the group detail page.
+* The participant understands that the expense represents a shared bill.
 
-### Task 3: Upload and Review OCR Receipt
+---
 
-Instruction to participant:
+### Task 3: Upload and Review an OCR Receipt
 
-> Upload the receipt image, review the detected items, and save them.
+**Instruction to participant:**
 
-Expected success:
+> Upload the receipt image, review the detected items, edit anything that looks incorrect, and save the items.
 
-- Participant selects a payer.
-- Participant uploads an image.
-- Participant understands that OCR results can be edited before saving.
-- Saved items appear in the normal bill section.
+**Success criteria:**
+
+* The participant selects a payer.
+* The participant uploads an image.
+* The participant understands that the OCR results are editable.
+* The participant can edit item names or prices.
+* The participant can add or delete a row when needed.
+* The saved items appear in the standard bill section.
+
+---
 
 ### Task 4: Assign Items to Members
 
-Instruction to participant:
+**Instruction to participant:**
 
-> Assign one item to yourself and one shared item to both members.
+> Assign one item to one person and one shared item to both members.
 
-Expected success:
+**Success criteria:**
 
-- Participant can assign item shares.
-- Split preview updates with the correct people and amounts.
+* The participant can select members for an item.
+* The participant can complete the item assignment.
+* The split preview updates with the correct members.
+* The participant understands that shared items are divided among the selected members.
 
-### Task 5: Apply Tax and Service Charge
+---
 
-Instruction to participant:
+### Task 5: Apply Tax and Service Charge Allocation
+
+**Instruction to participant:**
 
 > Apply tax and service charge allocation and explain the final split preview.
 
-Expected success:
+**Success criteria:**
 
-- Participant can find the tax/service allocation action.
-- Participant understands why final totals are larger than item-only totals.
-- Split preview shows item, tax, service, and final total amounts.
+* The participant can find the tax and service charge allocation action.
+* The participant understands why final totals may be higher than item-only totals.
+* The participant can identify the item amount, tax share, service charge share, and final total.
 
-### Task 6: Calculate Settlement
+---
 
-Instruction to participant:
+### Task 6: Calculate the Settlement
+
+**Instruction to participant:**
 
 > Calculate the settlement and explain who should pay whom.
 
-Expected success:
+**Success criteria:**
 
-- Participant can calculate settlement.
-- Settlement summary displays the payer, receiver, amount, and status.
+* The participant can trigger the settlement calculation.
+* The settlement summary updates successfully.
+* The participant can identify the payer, receiver, amount, and status.
 
-### Task 7: Interpret Group Balance Summary
+---
 
-Instruction to participant:
+### Task 7: Interpret the Group Balance Summary
+
+**Instruction to participant:**
 
 > Look at the settlement summary and member balances. Explain who owes money and who is owed money.
 
-Expected success:
+**Success criteria:**
 
-- Participant understands outstanding amount.
-- Participant understands member balance badges.
-- Participant can identify who owes and who is owed.
+* The participant understands the outstanding amount.
+* The participant understands the member balance badges.
+* The participant can identify who owes money and who is owed money.
 
-## Observation Template
+---
 
-Use this table during each test session.
+## Observation Sheet
 
-| Participant | Task | Completed? | Time Taken | Notes |
-|---|---|---:|---:|---|
-| P1 | Task 1 |  |  |  |
-| P1 | Task 2 |  |  |  |
-| P1 | Task 3 |  |  |  |
-| P1 | Task 4 |  |  |  |
-| P1 | Task 5 |  |  |  |
-| P1 | Task 6 |  |  |  |
-| P1 | Task 7 |  |  |  |
-| P2 | Task 1 |  |  |  |
-| P2 | Task 2 |  |  |  |
-| P2 | Task 3 |  |  |  |
-| P2 | Task 4 |  |  |  |
-| P2 | Task 5 |  |  |  |
-| P2 | Task 6 |  |  |  |
-| P2 | Task 7 |  |  |  |
+Use the following table during each testing session.
 
-## Feedback Questions
+| Participant | Task   | Completed?   | Time Taken   | Notes        |
+| ----------- | ------ | ------------ | ------------ | ------------ |
+| P1          | Task 1 | To be filled | To be filled | To be filled |
+| P1          | Task 2 | To be filled | To be filled | To be filled |
+| P1          | Task 3 | To be filled | To be filled | To be filled |
+| P1          | Task 4 | To be filled | To be filled | To be filled |
+| P1          | Task 5 | To be filled | To be filled | To be filled |
+| P1          | Task 6 | To be filled | To be filled | To be filled |
+| P1          | Task 7 | To be filled | To be filled | To be filled |
+| P2          | Task 1 | To be filled | To be filled | To be filled |
+| P2          | Task 2 | To be filled | To be filled | To be filled |
+| P2          | Task 3 | To be filled | To be filled | To be filled |
+| P2          | Task 4 | To be filled | To be filled | To be filled |
+| P2          | Task 5 | To be filled | To be filled | To be filled |
+| P2          | Task 6 | To be filled | To be filled | To be filled |
+| P2          | Task 7 | To be filled | To be filled | To be filled |
 
-Ask each participant after the tasks:
+---
 
-1. Which part of the flow was easiest?
-2. Which part was confusing?
+## Post-Test Questions
+
+Ask each participant the following questions after the testing session:
+
+1. Which part of the workflow was the easiest?
+2. Which part of the workflow was confusing?
 3. Did the OCR review step feel clear?
-4. Did the tax and service charge allocation make sense?
-5. Did the settlement summary clearly show who should pay whom?
-6. What would you improve before final submission?
+4. Did editing, adding, and deleting receipt rows feel understandable?
+5. Did the item assignment step make sense?
+6. Did the tax and service charge allocation make sense?
+7. Did the settlement summary clearly show who should pay whom?
+8. Did the member balance summary help you understand the group's settlement status?
+9. What would you improve before the final submission?
 
-## Result Summary
+---
 
-Fill this section only after real user testing is completed.
+## Results Summary
 
-| Area | Result |
-|---|---|
-| Participants completed | To be updated |
-| Major usability issues | To be updated |
-| Minor usability issues | To be updated |
-| Changes made after testing | To be updated |
-| Remaining limitations | To be updated |
+Complete this section only after real user testing has been conducted.
+
+| Area                          | Result       |
+| ----------------------------- | ------------ |
+| Number of participants tested | To be filled |
+| Overall task completion       | To be filled |
+| Major usability issues        | To be filled |
+| Minor usability issues        | To be filled |
+| Positive feedback             | To be filled |
+| Changes made after testing    | To be filled |
+| Remaining limitations         | To be filled |
+
+---
 
 ## Issues Found
 
-Fill this table after testing.
+Complete this table after testing.
 
-| ID | Issue | Severity | Action |
-|---|---|---|---|
-| UT-MS3-01 | To be updated | To be updated | To be updated |
+| ID        | Issue        | Severity     | Evidence     | Action       |
+| --------- | ------------ | ------------ | ------------ | ------------ |
+| UT-MS3-01 | To be filled | To be filled | To be filled | To be filled |
+| UT-MS3-02 | To be filled | To be filled | To be filled | To be filled |
+| UT-MS3-03 | To be filled | To be filled | To be filled | To be filled |
 
-## Evidence To Capture
+### Severity Guide
 
-For Milestone 3 documentation, capture:
+| Severity | Meaning                                       |
+| -------- | --------------------------------------------- |
+| High     | Prevents the user from completing a key task  |
+| Medium   | Causes confusion, but the user can continue   |
+| Low      | Minor wording, layout, or visual polish issue |
 
-- Screenshot of OCR receipt review.
-- Screenshot of tax/service split preview.
-- Screenshot of settlement summary.
-- Screenshot of member balance summary.
-- Screenshot of GitHub Actions passing.
-- Terminal output showing frontend and backend tests passing.
+---
+
+## Evidence to Capture
+
+Capture the following evidence for the Milestone 3 documentation:
+
+* Screenshot of the group detail page.
+* Screenshot of the OCR receipt upload flow.
+* Screenshot of the OCR review table.
+* Screenshot of the item assignment interface.
+* Screenshot of the tax and service charge split preview.
+* Screenshot of the settlement summary.
+* Screenshot of the member balance summary.
+* Screenshot of passing GitHub Actions checks.
+* Terminal output showing that the frontend checks passed.
+* Terminal output showing that the backend tests passed.
+
+---
+
+## Notes for the Final Report
+
+When finalizing the README or Milestone 3 report:
+
+* Do not claim that user testing has been completed until at least one real external tester has been observed.
+* Keep internal developer testing separate from external user testing.
+* Report both successfully completed tasks and moments of confusion.
+* Include at least one concrete improvement, or planned improvement, based on the testing results.
+* Use screenshots that do not expose secrets, passwords, or private database URLs.
