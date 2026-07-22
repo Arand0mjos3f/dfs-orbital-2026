@@ -14,13 +14,11 @@ The project focuses on **item-level expense splitting** rather than relying sole
 
 ## Deployed Links
 
-> Deployment is currently in progress for the Milestone 3 submission. These links will be updated before the final submission.
-
-| Component                 | Link | Status  |
-| ------------------------- | ---- | ------- |
-| Frontend Application      | TODO | Pending |
-| Backend API               | TODO | Pending |
-| Backend API Documentation | TODO | Pending |
+| Component                 | Link                                       | Status |
+| ------------------------- | ------------------------------------------ | ------ |
+| Frontend Application      | https://dfs-orbital-frontend.onrender.com  | Live   |
+| Backend API               | https://dfs-orbital-2026.onrender.com      | Live   |
+| Backend API Documentation | https://dfs-orbital-2026.onrender.com/docs | Live   |
 
 ---
 
@@ -682,14 +680,14 @@ docs/user_testing_ms3.md
 
 Milestone 3 requires the product to be deployed and linked from this README.
 
-### Planned Deployment Setup
+### Deployment Setup
 
-| Component           | Platform           | Status                |
-| ------------------- | ------------------ | --------------------- |
-| Backend API         | Render Web Service | In progress           |
-| Backend Database    | Render PostgreSQL  | Created / in progress |
-| Frontend            | Vercel or Netlify  | TODO                  |
-| README Public Links | GitHub README      | TODO                  |
+| Component           | Platform           | Status |
+| ------------------- | ------------------ | ------ |
+| Backend API         | Render Web Service | Live   |
+| Backend Database    | Render PostgreSQL  | Live   |
+| Frontend            | Render Static Site | Live   |
+| README Public Links | GitHub README      | Added  |
 
 ### Backend Deployment Configuration
 
@@ -705,15 +703,11 @@ DATABASE_URL=<Render PostgreSQL internal database URL>
 PYTHON_VERSION=3.12.13
 ```
 
-The frontend deployment will use an environment variable to communicate with the deployed backend API.
-
-Example:
+Frontend environment variable used in deployment:
 
 ```text
-VITE_API_BASE_URL=<deployed backend API URL>
+VITE_API_BASE_URL=https://dfs-orbital-2026.onrender.com/api/v1
 ```
-
-> **TODO:** Replace this section with the final deployed URLs after deployment is complete.
 
 ---
 
