@@ -58,12 +58,20 @@ const navItems = [
 
 export default function BottomNav() {
   const location = useLocation();
+  const isCreateRoute =
+    location.pathname === '/groups' &&
+    new URLSearchParams(location.search).get('create') === '1';
 
   return (
     <nav className="fixed bottom-3 left-1/2 z-50 w-[calc(100%-28px)] max-w-[402px] -translate-x-1/2 rounded-[24px] border border-white/80 bg-white/85 shadow-[0_8px_30px_rgba(15,23,42,0.05)] backdrop-blur-2xl">
       <div className="flex h-[58px] items-center justify-around px-2">
         {navItems.map((item) => {
-          const active = location.pathname === item.path && item.id !== 'add';
+          const active =
+            item.id === 'add'
+              ? isCreateRoute
+              : item.id === 'groups'
+                ? location.pathname.startsWith('/groups') && !isCreateRoute
+                : location.pathname === item.path;
 
           return (
             <Link
@@ -71,7 +79,7 @@ export default function BottomNav() {
               to={item.path}
               className="flex h-full flex-1 flex-col items-center justify-center gap-1"
             >
-              <NavIcon type={item.id} active={active || item.id === 'add'} />
+              <NavIcon type={item.id} active={active} />
               <span
                 className={`text-[10px] font-semibold leading-none ${
                   active ? 'text-[#4F46E5]' : 'text-slate-400'
