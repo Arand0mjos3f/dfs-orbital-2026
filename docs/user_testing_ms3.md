@@ -32,6 +32,8 @@ The testing process focuses on the main Milestone 3 extensions:
 | Fair split preview          | Whether users understand item subtotals, tax shares, service charge shares, and final totals       |
 | Settlement calculation      | Whether users can calculate a settlement and understand who should pay whom                        |
 | Group debt summary          | Whether users understand the outstanding amount and individual member balances                     |
+| Navigation                  | Whether users understand the bottom navigation states and the purpose of the `Add` action          |
+| Deployment reliability      | Whether deployed pages, API requests, and refreshed frontend routes work correctly                 |
 | Overall usability           | Whether the complete workflow feels understandable and realistic for a shared group meal           |
 
 ---
@@ -40,11 +42,11 @@ The testing process focuses on the main Milestone 3 extensions:
 
 ### Planned and Completed Participants
 
-| Participant | Profile                    | Relationship to Project        | Status                    |
-| ----------- | -------------------------- | ------------------------------ | ------------------------- |
-| P1          | NUS student or peer user   | Not involved in implementation | Completed on 23 July 2026 |
-| P2          | NUS student or peer user   | Not involved in implementation | To be tested              |
-| P3          | Optional additional tester | Not involved in implementation | Optional                  |
+| Participant | Name            | Profile                    | Relationship to Project | Status                    |
+| ----------- | --------------- | -------------------------- | ----------------------- | ------------------------- |
+| P1          | Not recorded    | NUS student or peer user   | Testing participant     | Completed on 23 July 2026 |
+| P2          | Chen Sihan      | NUS student or peer user   | Testing participant     | Completed on 23 July 2026 |
+| P3          | To be confirmed | Optional additional tester | Testing participant     | Optional                  |
 
 ### Testing Target
 
@@ -54,9 +56,9 @@ Preferred: 2 real external testers
 Optional: 1 additional tester
 ```
 
-The minimum testing target has been met through the completed Participant 1 session.
+Two participant testing sessions have been completed.
 
-Internal team testing may be recorded separately as system testing, but it should not be presented as external user testing.
+Internal team testing may be recorded separately as system testing, but it should not be presented as external user testing. Participants should only be described as external testers if their lack of involvement in the project implementation has been confirmed.
 
 ---
 
@@ -74,6 +76,19 @@ Internal team testing may be recorded separately as system testing, but it shoul
 | Test Group | Dinner expense group or demo group        |
 | Test Users | Sixian and Jingyi demo users              |
 | Test Date  | 23 July 2026                              |
+
+### Participant 2 Environment
+
+| Item        | Value                                     |
+| ----------- | ----------------------------------------- |
+| Participant | Chen Sihan                                |
+| Frontend    | https://dfs-orbital-frontend.onrender.com |
+| Backend     | https://dfs-orbital-2026.onrender.com     |
+| Browser     | Google Chrome                             |
+| Device      | MacBook Pro 14-inch                       |
+| OCR Mode    | Deployed OCR configuration                |
+| Test User   | Sixian demo account                       |
+| Test Date   | 23 July 2026                              |
 
 For future local testing sessions, the following development URLs may also be used:
 
@@ -99,7 +114,7 @@ Before each testing session:
 
 ---
 
-## Task Script
+## Core Workflow Task Script
 
 ### Task 1: Open the Group and Review Its Members
 
@@ -203,24 +218,32 @@ Before each testing session:
 
 ---
 
-## Observation Sheet
+## Observation Sheets
 
-| Participant | Task   | Completed?              | Time Taken   | Notes                                                                                                                                   |
-| ----------- | ------ | ----------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| P1          | Task 1 | Yes                     | Not recorded | Opened the group page and used an existing demo group or created a group.                                                               |
-| P1          | Task 2 | Yes                     | Not recorded | Created a dinner expense successfully. The participant was occasionally unsure about the correct first action on the group detail page. |
-| P1          | Task 3 | Yes                     | Not recorded | Uploaded a receipt image and successfully reviewed and edited OCR-detected items.                                                       |
-| P1          | Task 4 | Yes                     | Not recorded | Assigned one item to Sixian and one shared item to both Sixian and Jingyi.                                                              |
-| P1          | Task 5 | Not separately recorded | Not recorded | The completed session notes did not separately record the tax and service charge allocation step.                                       |
-| P1          | Task 6 | Yes                     | Not recorded | Calculated the settlement successfully.                                                                                                 |
-| P1          | Task 7 | Yes                     | Not recorded | Correctly identified who should pay whom, although the settlement result was not immediately noticeable after calculation.              |
-| P2          | Task 1 | To be filled            | To be filled | To be filled                                                                                                                            |
-| P2          | Task 2 | To be filled            | To be filled | To be filled                                                                                                                            |
-| P2          | Task 3 | To be filled            | To be filled | To be filled                                                                                                                            |
-| P2          | Task 4 | To be filled            | To be filled | To be filled                                                                                                                            |
-| P2          | Task 5 | To be filled            | To be filled | To be filled                                                                                                                            |
-| P2          | Task 6 | To be filled            | To be filled | To be filled                                                                                                                            |
-| P2          | Task 7 | To be filled            | To be filled | To be filled                                                                                                                            |
+### Participant 1 Core Workflow Observations
+
+| Task   | Completed?              | Time Taken   | Notes                                                                                                                                   |
+| ------ | ----------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Task 1 | Yes                     | Not recorded | Opened the group page and used an existing demo group or created a group.                                                               |
+| Task 2 | Yes                     | Not recorded | Created a dinner expense successfully. The participant was occasionally unsure about the correct first action on the group detail page. |
+| Task 3 | Yes                     | Not recorded | Uploaded a receipt image and successfully reviewed and edited OCR-detected items.                                                       |
+| Task 4 | Yes                     | Not recorded | Assigned one item to Sixian and one shared item to both Sixian and Jingyi.                                                              |
+| Task 5 | Not separately recorded | Not recorded | The completed session notes did not separately record the tax and service charge allocation step.                                       |
+| Task 6 | Yes                     | Not recorded | Calculated the settlement successfully.                                                                                                 |
+| Task 7 | Yes                     | Not recorded | Correctly identified who should pay whom, although the settlement result was not immediately noticeable after calculation.              |
+
+### Participant 2 Navigation and Deployment Retest Observations
+
+| Task                               | Completed? | Time Taken   | Notes                                                                                                           |
+| ---------------------------------- | ---------- | ------------ | --------------------------------------------------------------------------------------------------------------- |
+| Open deployed application          | Yes        | Not recorded | The deployed frontend loaded successfully.                                                                      |
+| Log in with Sixian demo account    | Yes        | Not recorded | The participant successfully entered the application.                                                           |
+| Use the bottom `Add` button        | Yes        | Not recorded | The button opened the create-group form, but the participant still expected a broader creation menu.            |
+| Create or open a group             | Yes        | Not recorded | The participant successfully accessed the group workflow.                                                       |
+| Check Groups page navigation state | Yes        | Not recorded | The `Add` button active-state issue was identified and fixed.                                                   |
+| Open the Debts page                | Yes        | Not recorded | The participant opened the Debts page during the navigation retest.                                             |
+| Refresh deployed routes            | Yes        | Not recorded | Dashboard, Groups, and Debts routes refreshed successfully after the Render rewrite rule was added.             |
+| Retest group loading               | Yes        | Not recorded | Group fetching initially experienced deployment delays but worked after the frontend API timeout was increased. |
 
 ---
 
@@ -260,12 +283,56 @@ The participant found group creation straightforward. The OCR review and item-ed
 
 #### Improvements Planned
 
-Based on this testing session, we will prioritise the following improvements:
+Based on this testing session, we prioritised the following improvements:
 
 1. Make the bottom navigation `Add` button useful.
-2. Improve the Debts page empty-state behaviour.
+2. Improve the Debts page loading, error, and empty-state behaviour.
 3. Clarify the expense workflow on the group detail page.
 4. Make the settlement result easier to notice after calculation.
+
+---
+
+### Participant 2 – Navigation and Deployment Retest
+
+**Date:** 23 July 2026
+**Participant:** Chen Sihan
+**Device and browser:** Google Chrome on MacBook Pro 14-inch
+**Environment:** Deployed Render frontend and backend
+
+#### Tasks Tested
+
+1. Opened the deployed application.
+2. Logged in using the demo Sixian account.
+3. Used the bottom `Add` button.
+4. Created or opened a group.
+5. Checked the Groups page navigation state.
+6. Opened the Debts page.
+7. Refreshed deployed frontend routes such as Groups, Debts, and Dashboard.
+
+#### Findings
+
+The participant expected the `Add` button to open a clearer creation flow, possibly a separate page where users could choose between creating a group and adding an expense to an existing group. The current `Add` button was somewhat improved after the first round of feedback because it opened the create-group form, but it still felt similar to the Groups page.
+
+The participant also observed that the `Add` button being constantly highlighted in blue was confusing because it clashed with other bottom navigation states. This was fixed by updating the navigation active-state logic so that `Add` is highlighted only when the create-group route is active.
+
+During testing, the Groups page occasionally failed to fetch groups. Follow-up API checks indicated that the deployed backend, database, CORS configuration, and group data were healthy at the time of investigation. The likely cause was the Render free-tier backend cold start combined with the frontend API timeout. We increased the frontend API timeout from 10 seconds to 75 seconds so that the deployed frontend can wait longer for the backend to wake up.
+
+The participant also noted that uploading a receipt and assigning items still required some manual work. In particular, the tax and service charge allocation panel was visible before all items were assigned, which made the workflow feel slightly unclear.
+
+#### Fixes Made After Testing
+
+1. Increased the frontend API timeout from 10 seconds to 75 seconds.
+2. Updated the bottom navigation active state so that `Add` is no longer always highlighted in blue.
+3. Improved the Debts page loading, error, and empty-state behaviour.
+4. Confirmed that the deployed frontend was rebuilt using the latest `milestone-3` commit.
+5. Confirmed that frontend route refreshing works after adding the Render rewrite rule.
+6. Retested the deployed application successfully after the fixes.
+
+#### Retest Result
+
+After redeploying the frontend on commit `eb07970`, the `Add` button behaviour was correct, route refreshing worked, and the deployed application loaded correctly.
+
+The remaining improvements are to redesign the `Add` action into a fuller creation menu and make the receipt assignment workflow clearer.
 
 ---
 
@@ -287,27 +354,31 @@ Ask each participant the following questions after the testing session:
 
 ## Results Summary
 
-| Area                          | Result                                                                                                                                                                                                                  |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Number of participants tested | 1 external participant                                                                                                                                                                                                  |
-| Overall task completion       | The participant completed the core group, expense, OCR review, item assignment, settlement calculation, and settlement interpretation workflow. The tax and service charge allocation step was not separately recorded. |
-| Major usability issues        | The Debts page displayed an incorrect empty state stating that the user was not a member of any group.                                                                                                                  |
-| Minor usability issues        | The group detail workflow order was unclear, the bottom navigation `Add` button was confusing, and the settlement result was not immediately noticeable after calculation.                                              |
-| Positive feedback             | Group creation was straightforward. OCR review and item editing were understandable. Item assignment and settlement calculation were completed successfully.                                                            |
-| Changes made after testing    | No changes have been recorded as completed yet. Four interface and workflow improvements have been prioritised.                                                                                                         |
-| Remaining limitations         | The observed navigation, empty-state, workflow guidance, and settlement visibility issues remain pending improvement.                                                                                                   |
+| Area                          | Result                                                                                                                                                                                                                                                                                                                                               |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Number of participants tested | 2 participants                                                                                                                                                                                                                                                                                                                                       |
+| Overall task completion       | Participant 1 completed the core group, expense, OCR review, item assignment, settlement calculation, and settlement interpretation workflow. Participant 2 completed the navigation and deployed-route retest successfully after the fixes.                                                                                                         |
+| Major usability issues        | During initial testing, the Debts page displayed an incorrect empty state stating that the user was not a member of any group. The deployed Groups page also experienced API request delays during backend cold starts before the frontend timeout was increased.                                                                                    |
+| Minor usability issues        | The group detail workflow order was unclear, the `Add` action still resembled the Groups page, the settlement result was not immediately noticeable, and the tax and service charge panel appeared before all items were assigned.                                                                                                                   |
+| Positive feedback             | Group creation was straightforward. OCR review and item editing were understandable. Item assignment and settlement calculation were completed successfully. Route refreshing and deployed application loading worked correctly after the deployment fixes.                                                                                          |
+| Changes made after testing    | The frontend API timeout was increased from 10 seconds to 75 seconds. The bottom navigation active-state logic was corrected. The Debts page loading, error, and empty-state behaviour was improved. The frontend was rebuilt from the latest `milestone-3` commit. A Render rewrite rule was added, and route refreshing was successfully retested. |
+| Remaining limitations         | The `Add` action does not yet provide a full creation menu. The receipt assignment sequence, tax and service charge panel timing, group detail workflow guidance, and settlement visibility still require improvement. The Debts page handling has been improved, but further investigation may be needed if the issue reappears.                    |
 
 ---
 
 ## Issues Found
 
-| ID        | Issue                                                                                         | Severity | Evidence                                                                                                                                   | Action                                                                               |
-| --------- | --------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| UT-MS3-01 | The group detail page did not make the first step of the expense workflow sufficiently clear. | Medium   | The participant was not always sure what to do first when creating an expense.                                                             | Clarify the starting action and improve workflow guidance on the group detail page.  |
-| UT-MS3-02 | The expense workflow did not clearly communicate the expected sequence of actions.            | Medium   | The participant was not clearly guided through expense creation, receipt upload, item review, item assignment, and settlement calculation. | Add clearer visual sequencing, labels, or step-based guidance.                       |
-| UT-MS3-03 | The bottom navigation `Add` button behaved like another Groups button.                        | Medium   | The participant expected the button to open a creation action but was taken to group-related navigation instead.                           | Make the button open a meaningful creation action or revise its label and icon.      |
-| UT-MS3-04 | The Debts page incorrectly stated that the user was not a member of any group.                | High     | The participant had already joined groups, but the Debts page displayed an incorrect membership empty state.                               | Fix the membership or debt-loading logic and improve the empty-state behaviour.      |
-| UT-MS3-05 | The settlement result was difficult to notice after calculation.                              | Medium   | The participant had to scroll upward to locate the settlement summary and was not immediately sure where to look.                          | Scroll to, highlight, or reposition the updated settlement result after calculation. |
+| ID        | Issue                                                                                           | Severity | Evidence                                                                                                                                                                                               | Action                                                                                                                                              | Status             |
+| --------- | ----------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| UT-MS3-01 | The group detail page did not make the first step of the expense workflow sufficiently clear.   | Medium   | Participant 1 was not always sure what to do first when creating an expense.                                                                                                                           | Clarify the starting action and improve workflow guidance on the group detail page.                                                                 | Planned            |
+| UT-MS3-02 | The expense workflow did not clearly communicate the expected sequence of actions.              | Medium   | Participant 1 was not clearly guided through expense creation, receipt upload, item review, item assignment, and settlement calculation.                                                               | Add clearer visual sequencing, labels, or step-based guidance.                                                                                      | Planned            |
+| UT-MS3-03 | The bottom navigation `Add` button behaved too similarly to the Groups page.                    | Medium   | Participant 1 found the action confusing, while Participant 2 expected a broader creation menu.                                                                                                        | The button now opens the create-group route. A fuller creation menu remains planned.                                                                | Partially resolved |
+| UT-MS3-04 | The Debts page incorrectly stated that the user was not a member of any group.                  | High     | Participant 1 had already joined groups, but the Debts page displayed an incorrect membership empty state.                                                                                             | Improved Debts page loading, error, and empty-state behaviour. Further backend/user-state investigation may still be needed if the issue reappears. | Partially resolved |
+| UT-MS3-05 | The settlement result was difficult to notice after calculation.                                | Medium   | Participant 1 had to scroll upward to locate the settlement summary and was not immediately sure where to look.                                                                                        | Scroll to, highlight, or reposition the updated settlement result after calculation.                                                                | Planned            |
+| UT-MS3-06 | The `Add` button remained highlighted even when another bottom navigation page was active.      | Medium   | Participant 2 found the constant blue active state confusing.                                                                                                                                          | Updated the active-state logic so that `Add` is highlighted only on the create-group route.                                                         | Resolved           |
+| UT-MS3-07 | Group fetching could fail while the Render backend was waking from a cold start.                | Medium   | Follow-up API checks indicated that the deployed services and data were healthy at the time of investigation, but the frontend request could time out before the free-tier backend finished waking up. | Increased the frontend API timeout from 10 seconds to 75 seconds.                                                                                   | Resolved           |
+| UT-MS3-08 | Refreshing deployed frontend routes required correct rewrite handling.                          | Medium   | Direct refreshes of Dashboard, Groups, or Debts required the Render rewrite rule.                                                                                                                      | Added the Render rewrite rule and successfully retested direct route refreshing.                                                                    | Resolved           |
+| UT-MS3-09 | The tax and service charge allocation panel appeared before all item assignments were complete. | Medium   | Participant 2 found the sequence slightly unclear because charge allocation was visible too early.                                                                                                     | Delay, disable, or visually separate the panel until item assignment is complete.                                                                   | Planned            |
 
 ### Severity Guide
 
@@ -330,6 +401,9 @@ Capture the following evidence for the Milestone 3 documentation:
 * Screenshot of the tax and service charge split preview.
 * Screenshot of the settlement summary.
 * Screenshot of the member balance summary.
+* Screenshot of the improved Debts page states.
+* Screenshot of the corrected bottom navigation active state.
+* Screenshot of refreshed deployed routes working.
 * Screenshot of passing GitHub Actions checks.
 * Terminal output showing that the frontend checks passed.
 * Terminal output showing that the backend tests passed.
@@ -340,9 +414,12 @@ Capture the following evidence for the Milestone 3 documentation:
 
 When finalizing the README or Milestone 3 report:
 
-* State clearly that one real external participant completed a user testing session on 23 July 2026.
-* Keep internal developer testing separate from external user testing.
+* State clearly that two participants completed testing sessions on 23 July 2026.
+* Only describe participants as external testers if their lack of involvement in the project implementation has been confirmed.
+* Keep internal developer testing separate from confirmed external user testing.
 * Report both successfully completed tasks and moments of confusion.
-* Include the planned improvements arising from the completed session.
+* Distinguish between fixes that have been completed and improvements that remain planned.
+* Mention that the deployment retest was completed successfully after commit `eb07970`.
+* Include the frontend timeout, navigation active-state, Debts page state-handling, and Render rewrite fixes.
 * Do not claim that an improvement has been implemented unless the corresponding change has actually been completed.
 * Use screenshots that do not expose secrets, passwords, or private database URLs.
