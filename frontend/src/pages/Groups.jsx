@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import { useGroupStore } from '../store/groupStore';
 
@@ -8,6 +8,7 @@ const cardClass =
 
 export default function Groups() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const currentUser = useAuthStore((state) => state.user);
   const currentUserId = currentUser?.id;
 
@@ -29,18 +30,35 @@ export default function Groups() {
   const [savingGroupId, setSavingGroupId] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
 
+  const isCreateQueryActive = searchParams.get('create') === '1';
+  const showCreateForm = isCreating || isCreateQueryActive;
+
   useEffect(() => {
     if (currentUserId) {
       fetchGroups(currentUserId);
     }
   }, [currentUserId, fetchGroups]);
 
+  const handleToggleCreate = () => {
+    if (showCreateForm) {
+      setIsCreating(false);
+
+      if (isCreateQueryActive) {
+        navigate('/groups', { replace: true });
+      }
+
+      return;
+    }
+
+    setIsCreating(true);
+  };
+
   const handleCreateGroup = async (event) => {
     event.preventDefault();
 
     if (!newGroupName.trim() || !currentUserId) return;
 
-    await createGroup(
+    const createdGroup = await createGroup(
       {
         name: newGroupName.trim(),
         description: newGroupDesc.trim(),
@@ -51,6 +69,7 @@ export default function Groups() {
     setNewGroupName('');
     setNewGroupDesc('');
     setIsCreating(false);
+    navigate(`/groups/${createdGroup.id}`);
   };
 
   const startEditing = (group) => {
@@ -107,14 +126,14 @@ export default function Groups() {
 
         <button
           type="button"
-          onClick={() => setIsCreating((value) => !value)}
+          onClick={handleToggleCreate}
           className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#4F46E5] text-2xl font-light leading-none text-white"
         >
           +
         </button>
       </header>
 
-      {isCreating && (
+      {showCreateForm && (
         <form
           onSubmit={handleCreateGroup}
           className={`${cardClass} mb-5 space-y-3`}

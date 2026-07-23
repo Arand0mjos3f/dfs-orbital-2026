@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   confirmDebtReceived,
   getGroupDebts,
@@ -55,7 +56,8 @@ export default function Debts() {
   const [isLoadingPage, setIsLoadingPage] = useState(true);
   const [isLoadingDebts, setIsLoadingDebts] = useState(false);
   const [actionDebtId, setActionDebtId] = useState('');
-  const [error, setError] = useState('');
+  const [pageError, setPageError] = useState('');
+  const [debtError, setDebtError] = useState('');
 
   const userById = useMemo(
     () => Object.fromEntries(users.map((user) => [String(user.id), user])),
@@ -94,6 +96,10 @@ export default function Debts() {
     [groups, selectedGroupId]
   );
 
+  const authError = !currentUserId
+    ? 'Please sign in again to view settlements.'
+    : '';
+
   useEffect(() => {
     let isActive = true;
 
@@ -103,15 +109,26 @@ export default function Debts() {
       };
     }
 
-    Promise.all([getGroups(currentUserId), getUsers()])
-      .then(([groupsResponse, usersResponse]) => {
+    Promise.allSettled([getGroups(currentUserId), getUsers()])
+      .then(([groupsResult, usersResult]) => {
         if (!isActive) return;
 
-        const loadedGroups = groupsResponse.data.data;
+        if (groupsResult.status === 'rejected') {
+          throw groupsResult.reason;
+        }
+
+        const loadedGroups = groupsResult.value.data.data;
 
         setGroups(loadedGroups);
-        setUsers(usersResponse.data);
-        setError('');
+        setUsers(
+          usersResult.status === 'fulfilled' ? usersResult.value.data : []
+        );
+        setDebtError('');
+        setPageError(
+          usersResult.status === 'rejected'
+            ? 'Groups loaded, but member names could not be loaded.'
+            : ''
+        );
 
         if (loadedGroups.length > 0) {
           const storedGroupId = window.localStorage.getItem(
@@ -130,13 +147,22 @@ export default function Debts() {
           );
           setIsLoadingDebts(true);
           setSelectedGroupId(initialGroupId);
+        } else {
+          setDebts([]);
+          setSelectedGroupId('');
         }
       })
       .catch((requestError) => {
         console.error('Error loading debts page:', requestError);
 
         if (isActive) {
-          setError('Failed to load groups and users');
+          setGroups([]);
+          setDebts([]);
+          setSelectedGroupId('');
+          setPageError(
+            requestError.response?.data?.detail?.message ||
+              'Failed to load your groups. Try refreshing the page.'
+          );
         }
       })
       .finally(() => {
@@ -163,14 +189,15 @@ export default function Debts() {
       .then((response) => {
         if (isActive) {
           setDebts(response.data.data);
-          setError('');
+          setDebtError('');
         }
       })
       .catch((requestError) => {
         console.error('Error loading group debts:', requestError);
 
         if (isActive) {
-          setError(
+          setDebts([]);
+          setDebtError(
             requestError.response?.data?.detail?.message ||
               'Failed to load group debts'
           );
@@ -200,14 +227,14 @@ export default function Debts() {
 
     window.localStorage.setItem(selectedGroupStorageKey, groupId);
     setDebts([]);
-    setError('');
+    setDebtError('');
     setIsLoadingDebts(true);
     setSelectedGroupId(groupId);
   };
 
   const handleMarkPaid = async (debtId) => {
     setActionDebtId(debtId);
-    setError('');
+    setDebtError('');
 
     try {
       await markDebtPaid(debtId, currentUserId, {
@@ -216,7 +243,7 @@ export default function Debts() {
       await refreshDebts();
     } catch (requestError) {
       console.error('Error marking debt paid:', requestError);
-      setError(
+      setDebtError(
         requestError.response?.data?.detail?.message ||
           'Failed to mark debt as paid'
       );
@@ -227,14 +254,14 @@ export default function Debts() {
 
   const handleConfirmReceived = async (debtId) => {
     setActionDebtId(debtId);
-    setError('');
+    setDebtError('');
 
     try {
       await confirmDebtReceived(debtId, currentUserId);
       await refreshDebts();
     } catch (requestError) {
       console.error('Error confirming payment:', requestError);
-      setError(
+      setDebtError(
         requestError.response?.data?.detail?.message ||
           'Failed to confirm payment'
       );
@@ -242,6 +269,18 @@ export default function Debts() {
       setActionDebtId('');
     }
   };
+
+  if (authError) {
+    return (
+      <div className="min-h-dvh bg-[#F8FAFC] px-5 pb-8 pt-5">
+        <div className={cardClass}>
+          <p className="text-center text-sm font-semibold text-[#EF4444]">
+            {authError}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoadingPage) {
     return (
@@ -266,11 +305,24 @@ export default function Debts() {
         </h1>
       </header>
 
-      {groups.length === 0 ? (
+      {pageError ? (
         <section className={cardClass}>
-          <p className="text-center text-sm font-semibold text-slate-400">
-            You are not a member of any groups.
+          <p className="text-center text-sm font-semibold text-[#EF4444]">
+            {pageError}
           </p>
+        </section>
+      ) : groups.length === 0 ? (
+        <section className={`${cardClass} text-center`}>
+          <p className="text-sm font-semibold text-slate-400">
+            No groups found for this account.
+          </p>
+
+          <Link
+            to="/groups?create=1"
+            className="mt-4 inline-flex rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white"
+          >
+            Create Group
+          </Link>
         </section>
       ) : (
         <>
@@ -420,9 +472,9 @@ export default function Debts() {
               </div>
             )}
 
-            {error && (
+            {debtError && (
               <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-[#EF4444]">
-                {error}
+                {debtError}
               </p>
             )}
           </section>
