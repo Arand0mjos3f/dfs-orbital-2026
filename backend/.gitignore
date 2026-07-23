@@ -3,6 +3,9 @@
 __pycache__/
 *.pyc
 
+# Node dependency folders accidentally created during local setup
+node_modules/
+
 # Uploaded receipt files
 uploads/
 
