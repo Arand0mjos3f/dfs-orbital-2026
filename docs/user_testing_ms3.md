@@ -1,4 +1,4 @@
-# Milestone 3 User Testing Plan and Results Template
+# Milestone 3 User Testing Plan and Results
 
 ## Purpose
 
@@ -17,7 +17,7 @@ Create group
 -> Interpret group balances
 ```
 
-This document is intentionally structured as a template before testing is completed. Result fields should only be filled in after real testing sessions have been conducted.
+This document contains both the original testing plan and the results of completed testing sessions. Fields relating to future participants should only be filled in after those sessions have been conducted.
 
 ---
 
@@ -38,13 +38,13 @@ The testing process focuses on the main Milestone 3 extensions:
 
 ## Participants
 
-### Planned Participants
+### Planned and Completed Participants
 
-| Participant | Profile                    | Relationship to Project        | Status       |
-| ----------- | -------------------------- | ------------------------------ | ------------ |
-| P1          | NUS student or peer user   | Not involved in implementation | To be tested |
-| P2          | NUS student or peer user   | Not involved in implementation | To be tested |
-| P3          | Optional additional tester | Not involved in implementation | Optional     |
+| Participant | Profile                    | Relationship to Project        | Status                    |
+| ----------- | -------------------------- | ------------------------------ | ------------------------- |
+| P1          | NUS student or peer user   | Not involved in implementation | Completed on 23 July 2026 |
+| P2          | NUS student or peer user   | Not involved in implementation | To be tested              |
+| P3          | Optional additional tester | Not involved in implementation | Optional                  |
 
 ### Testing Target
 
@@ -54,22 +54,33 @@ Preferred: 2 real external testers
 Optional: 1 additional tester
 ```
 
+The minimum testing target has been met through the completed Participant 1 session.
+
 Internal team testing may be recorded separately as system testing, but it should not be presented as external user testing.
 
 ---
 
 ## Test Environment
 
-| Item       | Value                                            |
-| ---------- | ------------------------------------------------ |
-| Frontend   | `http://localhost:5173` or deployed frontend URL |
-| Backend    | `http://127.0.0.1:8000` or deployed backend URL  |
-| Browser    | Google Chrome                                    |
-| Device     | Laptop or mobile browser                         |
-| OCR Mode   | Mock OCR or deployed OCR configuration           |
-| Test Group | `MS3 User Testing Dinner`                        |
-| Test Users | Sixian and Jingyi demo users                     |
-| Test Date  | To be filled                                     |
+### Participant 1 Environment
+
+| Item       | Value                                     |
+| ---------- | ----------------------------------------- |
+| Frontend   | https://dfs-orbital-frontend.onrender.com |
+| Backend    | https://dfs-orbital-2026.onrender.com     |
+| Browser    | Not recorded                              |
+| Device     | Not recorded                              |
+| OCR Mode   | Deployed OCR configuration                |
+| Test Group | Dinner expense group or demo group        |
+| Test Users | Sixian and Jingyi demo users              |
+| Test Date  | 23 July 2026                              |
+
+For future local testing sessions, the following development URLs may also be used:
+
+```text
+Frontend: http://localhost:5173
+Backend: http://127.0.0.1:8000
+```
 
 ---
 
@@ -194,24 +205,67 @@ Before each testing session:
 
 ## Observation Sheet
 
-Use the following table during each testing session.
+| Participant | Task   | Completed?              | Time Taken   | Notes                                                                                                                                   |
+| ----------- | ------ | ----------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| P1          | Task 1 | Yes                     | Not recorded | Opened the group page and used an existing demo group or created a group.                                                               |
+| P1          | Task 2 | Yes                     | Not recorded | Created a dinner expense successfully. The participant was occasionally unsure about the correct first action on the group detail page. |
+| P1          | Task 3 | Yes                     | Not recorded | Uploaded a receipt image and successfully reviewed and edited OCR-detected items.                                                       |
+| P1          | Task 4 | Yes                     | Not recorded | Assigned one item to Sixian and one shared item to both Sixian and Jingyi.                                                              |
+| P1          | Task 5 | Not separately recorded | Not recorded | The completed session notes did not separately record the tax and service charge allocation step.                                       |
+| P1          | Task 6 | Yes                     | Not recorded | Calculated the settlement successfully.                                                                                                 |
+| P1          | Task 7 | Yes                     | Not recorded | Correctly identified who should pay whom, although the settlement result was not immediately noticeable after calculation.              |
+| P2          | Task 1 | To be filled            | To be filled | To be filled                                                                                                                            |
+| P2          | Task 2 | To be filled            | To be filled | To be filled                                                                                                                            |
+| P2          | Task 3 | To be filled            | To be filled | To be filled                                                                                                                            |
+| P2          | Task 4 | To be filled            | To be filled | To be filled                                                                                                                            |
+| P2          | Task 5 | To be filled            | To be filled | To be filled                                                                                                                            |
+| P2          | Task 6 | To be filled            | To be filled | To be filled                                                                                                                            |
+| P2          | Task 7 | To be filled            | To be filled | To be filled                                                                                                                            |
 
-| Participant | Task   | Completed?   | Time Taken   | Notes        |
-| ----------- | ------ | ------------ | ------------ | ------------ |
-| P1          | Task 1 | To be filled | To be filled | To be filled |
-| P1          | Task 2 | To be filled | To be filled | To be filled |
-| P1          | Task 3 | To be filled | To be filled | To be filled |
-| P1          | Task 4 | To be filled | To be filled | To be filled |
-| P1          | Task 5 | To be filled | To be filled | To be filled |
-| P1          | Task 6 | To be filled | To be filled | To be filled |
-| P1          | Task 7 | To be filled | To be filled | To be filled |
-| P2          | Task 1 | To be filled | To be filled | To be filled |
-| P2          | Task 2 | To be filled | To be filled | To be filled |
-| P2          | Task 3 | To be filled | To be filled | To be filled |
-| P2          | Task 4 | To be filled | To be filled | To be filled |
-| P2          | Task 5 | To be filled | To be filled | To be filled |
-| P2          | Task 6 | To be filled | To be filled | To be filled |
-| P2          | Task 7 | To be filled | To be filled | To be filled |
+---
+
+## Completed User Testing Sessions
+
+### Participant 1 – OCR Dinner Split Flow
+
+**Date:** 23 July 2026
+**Environment:** Deployed Render frontend and backend
+**Scenario:** The participant tested the full OCR-assisted dinner expense flow.
+
+#### Tasks Completed
+
+The participant successfully completed the core workflow:
+
+1. Opened the group page.
+2. Created a group or opened the demo group.
+3. Added Jingyi as a member where needed.
+4. Created a dinner expense.
+5. Uploaded the receipt image.
+6. Reviewed and edited OCR-detected receipt items.
+7. Assigned one item to Sixian and one shared item to both Sixian and Jingyi.
+8. Calculated the settlement.
+9. Identified who should pay whom.
+
+#### What Worked Well
+
+The participant found group creation straightforward. The OCR review and item-editing workflow was understandable, and the participant was able to assign items and calculate the final settlement successfully.
+
+#### Issues Observed
+
+1. The group detail page was confusing because the participant was not always sure what to do first when creating an expense.
+2. The expense creation flow did not clearly guide the participant through the expected order of actions: create the expense, upload the receipt, review the items, assign the shares, and calculate the settlement.
+3. The bottom navigation `Add` button was confusing because it behaved like another Groups button instead of opening a genuine creation action.
+4. The Debts page displayed a message stating that the participant was not a member of any group, even though the participant had already joined groups.
+5. After calculating the settlement, the participant had to scroll back up to find the settlement summary and was not immediately sure where to look.
+
+#### Improvements Planned
+
+Based on this testing session, we will prioritise the following improvements:
+
+1. Make the bottom navigation `Add` button useful.
+2. Improve the Debts page empty-state behaviour.
+3. Clarify the expense workflow on the group detail page.
+4. Make the settlement result easier to notice after calculation.
 
 ---
 
@@ -233,29 +287,27 @@ Ask each participant the following questions after the testing session:
 
 ## Results Summary
 
-Complete this section only after real user testing has been conducted.
-
-| Area                          | Result       |
-| ----------------------------- | ------------ |
-| Number of participants tested | To be filled |
-| Overall task completion       | To be filled |
-| Major usability issues        | To be filled |
-| Minor usability issues        | To be filled |
-| Positive feedback             | To be filled |
-| Changes made after testing    | To be filled |
-| Remaining limitations         | To be filled |
+| Area                          | Result                                                                                                                                                                                                                  |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Number of participants tested | 1 external participant                                                                                                                                                                                                  |
+| Overall task completion       | The participant completed the core group, expense, OCR review, item assignment, settlement calculation, and settlement interpretation workflow. The tax and service charge allocation step was not separately recorded. |
+| Major usability issues        | The Debts page displayed an incorrect empty state stating that the user was not a member of any group.                                                                                                                  |
+| Minor usability issues        | The group detail workflow order was unclear, the bottom navigation `Add` button was confusing, and the settlement result was not immediately noticeable after calculation.                                              |
+| Positive feedback             | Group creation was straightforward. OCR review and item editing were understandable. Item assignment and settlement calculation were completed successfully.                                                            |
+| Changes made after testing    | No changes have been recorded as completed yet. Four interface and workflow improvements have been prioritised.                                                                                                         |
+| Remaining limitations         | The observed navigation, empty-state, workflow guidance, and settlement visibility issues remain pending improvement.                                                                                                   |
 
 ---
 
 ## Issues Found
 
-Complete this table after testing.
-
-| ID        | Issue        | Severity     | Evidence     | Action       |
-| --------- | ------------ | ------------ | ------------ | ------------ |
-| UT-MS3-01 | To be filled | To be filled | To be filled | To be filled |
-| UT-MS3-02 | To be filled | To be filled | To be filled | To be filled |
-| UT-MS3-03 | To be filled | To be filled | To be filled | To be filled |
+| ID        | Issue                                                                                         | Severity | Evidence                                                                                                                                   | Action                                                                               |
+| --------- | --------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| UT-MS3-01 | The group detail page did not make the first step of the expense workflow sufficiently clear. | Medium   | The participant was not always sure what to do first when creating an expense.                                                             | Clarify the starting action and improve workflow guidance on the group detail page.  |
+| UT-MS3-02 | The expense workflow did not clearly communicate the expected sequence of actions.            | Medium   | The participant was not clearly guided through expense creation, receipt upload, item review, item assignment, and settlement calculation. | Add clearer visual sequencing, labels, or step-based guidance.                       |
+| UT-MS3-03 | The bottom navigation `Add` button behaved like another Groups button.                        | Medium   | The participant expected the button to open a creation action but was taken to group-related navigation instead.                           | Make the button open a meaningful creation action or revise its label and icon.      |
+| UT-MS3-04 | The Debts page incorrectly stated that the user was not a member of any group.                | High     | The participant had already joined groups, but the Debts page displayed an incorrect membership empty state.                               | Fix the membership or debt-loading logic and improve the empty-state behaviour.      |
+| UT-MS3-05 | The settlement result was difficult to notice after calculation.                              | Medium   | The participant had to scroll upward to locate the settlement summary and was not immediately sure where to look.                          | Scroll to, highlight, or reposition the updated settlement result after calculation. |
 
 ### Severity Guide
 
@@ -288,8 +340,9 @@ Capture the following evidence for the Milestone 3 documentation:
 
 When finalizing the README or Milestone 3 report:
 
-* Do not claim that user testing has been completed until at least one real external tester has been observed.
+* State clearly that one real external participant completed a user testing session on 23 July 2026.
 * Keep internal developer testing separate from external user testing.
 * Report both successfully completed tasks and moments of confusion.
-* Include at least one concrete improvement, or planned improvement, based on the testing results.
+* Include the planned improvements arising from the completed session.
+* Do not claim that an improvement has been implemented unless the corresponding change has actually been completed.
 * Use screenshots that do not expose secrets, passwords, or private database URLs.
