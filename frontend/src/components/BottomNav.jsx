@@ -51,7 +51,7 @@ function NavIcon({ type, active }) {
 const navItems = [
   { id: 'home', label: 'Home', path: '/dashboard' },
   { id: 'groups', label: 'Groups', path: '/groups' },
-  { id: 'add', label: 'Add', path: '/groups' },
+  { id: 'add', label: 'Add', path: '/groups?create=1' },
   { id: 'debts', label: 'Debts', path: '/debts' },
   { id: 'profile', label: 'Profile', path: '/profile' },
 ];
