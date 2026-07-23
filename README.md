@@ -48,7 +48,7 @@ The project focuses on **item-level expense splitting** rather than relying sole
 22. [How to Run the Backend](#22-how-to-run-the-backend)
 23. [How to Run the Frontend](#23-how-to-run-the-frontend)
 24. [How to Run Tests](#24-how-to-run-tests)
-25. [Screenshots and Evidence Placeholders](#25-screenshots-and-evidence-placeholders)
+25. [Screenshots and Evidence Checklist](#25-screenshots-and-evidence-checklist)
 26. [Team Contributions](#26-team-contributions)
 27. [Project Log and Hours](#27-project-log-and-hours)
 28. [Known Limitations](#28-known-limitations)
@@ -113,14 +113,13 @@ For Milestone 3, we extended the Milestone 2 prototype into a more complete and 
 * Documented the testing strategy and user testing plan.
 * Prepared the project for public Milestone 3 deployment.
 
-### Remaining Milestone 3 Submission Tasks
+### Final Milestone 3 Submission Status
 
-* Add final deployment links.
-* Add final screenshots.
-* Complete the poster.
-* Complete the video.
-* Conduct final README polishing.
-* Update the final project log and cumulative hours.
+* Public frontend, backend, and API documentation links have been added.
+* Automated frontend and backend checks are covered by GitHub Actions.
+* User testing has been completed and documented in `docs/user_testing_ms3.md`.
+* Deployment and route-refresh behaviour were manually retested on Render.
+* Remaining non-code submission work includes poster completion, video recording, final screenshots, and final project-log hour confirmation.
 
 ---
 
@@ -619,30 +618,30 @@ This addresses the Milestone 2 feedback that tests were previously executed manu
 
 Manual testing focuses on validating end-to-end user workflows.
 
-| Test Area              | Manual Test Case                        | Expected Result                                      | Status      |
-| ---------------------- | --------------------------------------- | ---------------------------------------------------- | ----------- |
-| Login                  | Log in as a demo user                   | The user enters protected application pages          | Implemented |
-| Group Creation         | Create a new group                      | The group appears in the group list                  | Implemented |
-| Add Member             | Owner adds a group member               | The member appears on the group detail page          | Implemented |
-| Expense Creation       | Create an expense inside a group        | The expense appears under the group                  | Implemented |
-| Manual Receipt         | Create a manual receipt                 | The receipt is stored and displayed                  | Implemented |
-| OCR Upload             | Upload a receipt image                  | An OCR review draft appears                          | Implemented |
-| OCR Review             | Edit parsed item rows                   | Edited values are saved                              | Implemented |
-| Add/Delete OCR Row     | Add and remove review rows              | The review table updates correctly                   | Implemented |
-| Item Assignment        | Assign an item to members               | The split preview updates                            | Implemented |
-| Tax/Service Allocation | Apply charges to item shares            | Final totals include the allocated charges           | Implemented |
-| Settlement Calculation | Calculate the settlement                | Debts are generated                                  | Implemented |
-| Debt Summary           | View the group summary                  | Outstanding totals and member balances are displayed | Implemented |
-| Mark Paid              | Debtor marks a debt as paid             | The status becomes `marked_paid`                     | Implemented |
-| Confirm Received       | Receiver confirms the payment           | The status becomes `confirmed_received`              | Implemented |
-| Deployment             | Open the public application link        | The application loads publicly                       | TODO        |
-| User Testing           | External user completes the task script | Observations are recorded                            | TODO        |
+| Test Area              | Manual Test Case                                          | Expected Result                                        | Status      |
+| ---------------------- | --------------------------------------------------------- | ------------------------------------------------------ | ----------- |
+| Login                  | Log in as a demo user                                     | The user enters protected application pages            | Implemented |
+| Group Creation         | Create a new group                                        | The group appears in the group list                    | Implemented |
+| Add Member             | Owner adds a group member                                 | The member appears on the group detail page            | Implemented |
+| Expense Creation       | Create an expense inside a group                          | The expense appears under the group                    | Implemented |
+| Manual Receipt         | Create a manual receipt                                   | The receipt is stored and displayed                    | Implemented |
+| OCR Upload             | Upload a receipt image                                    | An OCR review draft appears                            | Implemented |
+| OCR Review             | Edit parsed item rows                                     | Edited values are saved                                | Implemented |
+| Add/Delete OCR Row     | Add and remove review rows                                | The review table updates correctly                     | Implemented |
+| Item Assignment        | Assign an item to members                                 | The split preview updates                              | Implemented |
+| Tax/Service Allocation | Apply charges to item shares                              | Final totals include the allocated charges             | Implemented |
+| Settlement Calculation | Calculate the settlement                                  | Debts are generated                                    | Implemented |
+| Debt Summary           | View the group summary                                    | Outstanding totals and member balances are displayed   | Implemented |
+| Mark Paid              | Debtor marks a debt as paid                               | The status becomes `marked_paid`                       | Implemented |
+| Confirm Received       | Receiver confirms the payment                             | The status becomes `confirmed_received`                | Implemented |
+| Deployment             | Open the public application link and refresh routed pages | The deployed application loads and route refresh works | Implemented |
+| User Testing           | Participants complete the task script and retest fixes    | Observations and follow-up fixes are documented        | Completed   |
 
 ---
 
 ## 19. User Testing
 
-User testing is planned for Milestone 3.
+User testing was completed for Milestone 3 and documented as part of the submission evidence.
 
 The user testing plan is documented in:
 
@@ -671,8 +670,6 @@ docs/user_testing_ms3.md
 * Whether the split preview is understandable.
 * Whether the user trusts the settlement results.
 * Suggestions for improvement.
-
-> **TODO:** Add completed user testing observations before the final Milestone 3 submission.
 
 ---
 
@@ -847,23 +844,23 @@ RUN_PADDLEOCR_TESTS=1 python -m pytest -v tests/test_paddleocr_engine.py
 
 ---
 
-## 25. Screenshots and Evidence Placeholders
+## 25. Screenshots and Evidence Checklist
 
-> **TODO:** Replace the placeholders with final screenshots after deployment and final manual testing.
+The following screenshots should be captured from the deployed application and GitHub before final submission.
 
-| Screenshot                        | Purpose                                                       | Status |
-| --------------------------------- | ------------------------------------------------------------- | ------ |
-| Login Page                        | Show the application entry point and prototype authentication | TODO   |
-| Groups Dashboard                  | Show the group overview workflow                              | TODO   |
-| Group Detail Page                 | Show members, expenses, and the settlement summary            | TODO   |
-| OCR Receipt Upload                | Show OCR-assisted receipt intake                              | TODO   |
-| OCR Review Table                  | Show editable parsed receipt items                            | TODO   |
-| Item Assignment                   | Show selected users for shared items                          | TODO   |
-| Tax and Service Charge Allocation | Show the fair-allocation preview                              | TODO   |
-| Group Debt Summary                | Show member balances and outstanding settlements              | TODO   |
-| Debts Page                        | Show settlement lifecycle actions                             | TODO   |
-| GitHub Actions                    | Show passing CI checks                                        | TODO   |
-| Deployed Application              | Show the working public deployment link                       | TODO   |
+| Screenshot                        | Purpose                                                       | Status     |
+| --------------------------------- | ------------------------------------------------------------- | ---------- |
+| Login Page                        | Show the application entry point and prototype authentication | To capture |
+| Groups Dashboard                  | Show the group overview workflow                              | To capture |
+| Group Detail Page                 | Show members, expenses, and the settlement summary            | To capture |
+| OCR Receipt Upload                | Show OCR-assisted receipt intake                              | To capture |
+| OCR Review Table                  | Show editable parsed receipt items                            | To capture |
+| Item Assignment                   | Show selected users for shared items                          | To capture |
+| Tax and Service Charge Allocation | Show the fair-allocation preview                              | To capture |
+| Group Debt Summary                | Show member balances and outstanding settlements              | To capture |
+| Debts Page                        | Show settlement lifecycle actions                             | To capture |
+| GitHub Actions                    | Show passing CI checks                                        | To capture |
+| Deployed Application              | Show the working public deployment link                       | To capture |
 
 ### Suggested Image Paths
 
@@ -936,7 +933,7 @@ Fair split and settlement accuracy user flow
 
 Milestone 3 requires approximately 140 cumulative hours per person by the end of the milestone.
 
-> **TODO:** Insert the final confirmed cumulative hours before submission.
+The final cumulative hour count should be confirmed against the team project log before submission. The expected Milestone 3 target is approximately 140 cumulative hours per person.
 
 ### Planned Log Categories
 
@@ -960,9 +957,8 @@ Current limitations include:
 * OCR behavior depends on the configured OCR engine and receipt image quality.
 * Mock OCR is used by default for stability.
 * The frontend is mobile-first and may require additional desktop layout polishing.
-* Deployment is still in progress.
-* User testing results have not yet been finalized.
-* Free hosting services may enter sleep mode after periods of inactivity.
+* Deployment uses free-tier hosting, so the backend may require a short wake-up period after inactivity.
+* User testing has identified remaining workflow polish items around the `Add` action, receipt assignment sequence, and settlement visibility.
 * Payment proof is represented using URL or string fields rather than actual file storage.
 * Advanced notification and reminder features have not been implemented.
 
@@ -996,4 +992,4 @@ The project now supports a realistic workflow for creating groups, managing expe
 
 The main Milestone 3 improvements address earlier feedback by making OCR user-facing, strengthening backend financial logic, expanding automated tests, adding continuous integration, improving settlement visibility, and preparing the project for deployment and final submission.
 
-The remaining work before the final Milestone 3 submission focuses on deployment, final screenshots, user testing evidence, poster preparation, video preparation, and final README polishing.
+The remaining work before the final Milestone 3 submission focuses on final screenshots, poster preparation, video recording, and confirmation of the final project-log hours.
