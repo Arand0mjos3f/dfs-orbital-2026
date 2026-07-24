@@ -12,6 +12,18 @@ class ItemCreate(BaseModel):
     total_price: Decimal = Field(ge=0)
 
 
+class ItemBatchCreate(ItemCreate):
+    original_name: str | None = Field(default=None, max_length=255)
+    original_unit_price: Decimal | None = Field(default=None, ge=0)
+    original_total_price: Decimal | None = Field(default=None, ge=0)
+    is_manually_edited: bool = False
+
+
+class ReceiptItemBatchCreate(BaseModel):
+    replace_existing: bool = True
+    items: list[ItemBatchCreate] = Field(min_length=1)
+
+
 class ItemUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=255)
     quantity: int | None = Field(default=None, ge=1)
