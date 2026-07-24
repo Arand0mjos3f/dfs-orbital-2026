@@ -11,9 +11,10 @@ from app.crud.item import (
     list_items_by_receipt,
     update_item,
 )
+from app.crud.item_share import delete_item_share, list_item_shares_by_item
 from app.crud.receipt import get_receipt
 from app.db.database import get_db
-from app.schemas.item import ItemCreate, ItemRead, ItemUpdate
+from app.schemas.item import ItemCreate, ItemRead, ItemUpdate, ReceiptItemBatchCreate
 
 
 router = APIRouter(tags=["items"])
@@ -74,6 +75,65 @@ def create_receipt_item(
     return {
         "success": True,
         "data": ItemRead.model_validate(item),
+    }
+
+
+@router.post(
+    "/receipts/{receipt_id}/items/batch",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_receipt_items_batch(
+    receipt_id: uuid.UUID,
+    batch_in: ReceiptItemBatchCreate,
+    db: Session = Depends(get_db),
+):
+    receipt = get_receipt(db, receipt_id)
+
+    if receipt is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "RECEIPT_NOT_FOUND",
+                "message": "The receipt does not exist.",
+            },
+        )
+
+    for item_in in batch_in.items:
+        _validate_item_total(
+            item_in.quantity,
+            item_in.unit_price,
+            item_in.total_price,
+        )
+
+    if batch_in.replace_existing:
+        existing_items = list_items_by_receipt(db, receipt_id)
+
+        for existing_item in existing_items:
+            for existing_share in list_item_shares_by_item(db, existing_item.id):
+                delete_item_share(db, existing_share)
+
+        for existing_item in existing_items:
+            delete_item(db, existing_item)
+
+    created_items = [
+        create_item(
+            db,
+            receipt_id=receipt_id,
+            name=item_in.name,
+            quantity=item_in.quantity,
+            unit_price=item_in.unit_price,
+            total_price=item_in.total_price,
+            original_name=item_in.original_name,
+            original_unit_price=item_in.original_unit_price,
+            original_total_price=item_in.original_total_price,
+            is_manually_edited=item_in.is_manually_edited,
+        )
+        for item_in in batch_in.items
+    ]
+
+    return {
+        "success": True,
+        "data": [ItemRead.model_validate(item) for item in created_items],
     }
 
 
