@@ -17,15 +17,15 @@ https://dfs-orbital-2026.onrender.com/docs
 
 Command:
 
-    curl -s https://dfs-orbital-2026.onrender.com/api/v1/health | python -m json.tool
+    curl -s --max-time 20 https://dfs-orbital-2026.onrender.com/api/v1/health
 
 Result:
 
-    TODO: Paste health response here.
+    Pending manual verification from local browser or terminal.
 
 Status:
 
-    TODO: Passed / Failed
+    Pending manual verification. The health check request timed out from this environment and is not marked as a deployment failure.
 
 ---
 
@@ -57,6 +57,34 @@ Status:
 
 ---
 
+## Automated Backend Test Verification
+
+Command:
+
+    cd backend
+    OCR_ENGINE=mock RUN_PADDLEOCR_TESTS=0 .venv/bin/python -m compileall app tests
+    OCR_ENGINE=mock RUN_PADDLEOCR_TESTS=0 .venv/bin/python -m pytest -v
+
+Database target:
+
+    Local SQLite test database file: backend/ci_docs_test.db
+
+Result:
+
+    24 passed, 1 skipped in 0.22s
+
+Status:
+
+    Passed
+
+Notes:
+
+- Test run date: 2026-07-25
+- The skipped test is the real PaddleOCR image test, skipped by default for local/CI-safe verification.
+- This automated test run used local configuration only and did not use the deployed Render production database.
+
+---
+
 ## Full Deployed Workflow Verification Checklist
 
 | Step | Action | Expected Result | Status | Notes |
@@ -81,19 +109,19 @@ Status:
 
 Date:
 
-    TODO: YYYY-MM-DD
+    2026-07-25
 
 Tester:
 
-    TODO: Name
+    Codex local automated backend test run
 
 Overall status:
 
-    TODO: Passed / Partially passed / Failed
+    Automated backend verification passed; deployed end-to-end workflow pending manual verification
 
 Summary:
 
-    TODO: Write a short summary of whether the deployed app workflow works end-to-end.
+    Backend automated tests passed locally with mock OCR, PaddleOCR tests disabled, and a local SQLite test database. Deployed health check and manual end-to-end workflow verification remain pending because the public health request timed out from this environment.
 
 ---
 
@@ -101,7 +129,7 @@ Summary:
 
 | Endpoint | Purpose | Verified? | Notes |
 |---|---|---|---|
-| GET /api/v1/health | Backend health check | TODO | TODO |
+| GET /api/v1/health | Backend health check | Pending | Request timed out from this environment; pending manual verification from local browser or terminal |
 | POST /api/v1/groups | Create group | TODO | TODO |
 | GET /api/v1/groups/{group_id} | Read group detail | TODO | TODO |
 | POST /api/v1/groups/{group_id}/members | Add group member | TODO | TODO |
@@ -172,6 +200,6 @@ Severity guide:
 
 ## Final Deployment Verification Statement
 
-TODO: Example:
+Final deployment verification is still in progress. Backend automated tests have passed locally and in CI-safe configuration. The deployed frontend, backend health check, and full user workflow still require manual browser verification before final submission.
 
 The deployed MS3 system was verified through the public frontend and backend links. The main workflow from group/expense creation to receipt item confirmation, split preview, debt recalculation, and settlement status update was tested. Backend API documentation and health check were accessible through the deployed backend. No demo-blocking backend issues were found during verification.

@@ -190,18 +190,34 @@ The following MS3 regression tests were added.
 
 ### 6.3 Local pytest command
 
-Command:
+Compile command:
 
     cd backend
-    python -m pytest -v
+    OCR_ENGINE=mock RUN_PADDLEOCR_TESTS=0 .venv/bin/python -m compileall app tests
+
+Pytest command:
+
+    cd backend
+    OCR_ENGINE=mock RUN_PADDLEOCR_TESTS=0 .venv/bin/python -m pytest -v
+
+Database target:
+
+    Local SQLite test database file: backend/ci_docs_test.db
 
 Observed result:
 
-    24 passed, 1 skipped in 0.18s
+    24 passed, 1 skipped in 0.22s
 
-Example result format:
+Final pytest summary:
 
     24 passed, 1 skipped
+
+Notes:
+
+- Test run date: 2026-07-25
+- Python interpreter used: `backend/.venv/bin/python`
+- Full pytest output was reviewed locally. The final summary is recorded above.
+- The skipped test is the real PaddleOCR image test, skipped because `RUN_PADDLEOCR_TESTS=0` for local/CI-safe verification.
 
 ### 6.4 CI testing
 
@@ -214,9 +230,12 @@ Backend CI job:
 - Installs backend dependencies
 - Runs backend compile check
 - Runs backend pytest suite
-- Uses mock OCR mode
+- Uses the default mock OCR mode
+- Uses a local SQLite CI database
 - Skips heavy PaddleOCR tests by default
 - Runs automatically on pull requests and pushes
+
+The local MS3 evidence run mirrors the CI-safe backend testing path: compile check plus verbose pytest, mock OCR behavior, PaddleOCR disabled by default, and a local SQLite database instead of any deployed production database.
 
 Evidence to capture:
 
@@ -250,7 +269,7 @@ Database-related evidence:
 Evidence to capture:
 
 - ERD diagram
-- Render PostgreSQL dashboard screenshot, with secrets hidden
+- Render PostgreSQL dashboard screenshot, with private values hidden
 - Alembic migration evidence
 - Example API call that creates or reads database records
 
@@ -314,7 +333,7 @@ Recommended backend screenshots for MS3 report or presentation:
 | GitHub Actions CI success page | Shows automated backend testing | TODO |
 | Backend regression tests log | Shows MS3 backend tests pass | TODO |
 | Render backend deployment page | Shows deployed backend service | TODO |
-| Render PostgreSQL page | Shows deployed database, with secrets hidden | TODO |
+| Render PostgreSQL page | Shows deployed database, with private values hidden | TODO |
 | Frontend split preview page | Shows backend preview result integrated into UI | TODO |
 | Debts page | Shows backend debt calculation integrated into UI | TODO |
 
@@ -342,4 +361,3 @@ Possible future improvements:
 ## 12. Final Backend Evidence Statement
 
 The MS3 backend provides the core technical foundation for Debt-First Search's OCR-assisted and fairness-focused receipt splitting workflow. It supports receipt upload, OCR parsing, reviewed item confirmation, item-level share assignment, tax and service charge allocation, cent-safe split preview, debt recalculation, automated regression testing, CI, and public deployment. These backend features provide evidence of advanced functionality, database-backed system design, multi-level testing, and production-style deployment.
-

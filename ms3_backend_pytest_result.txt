@@ -1,0 +1,34 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.2, pytest-9.0.3, pluggy-1.6.0 -- /Users/sunjingyismacbook/Desktop/dfs-orbital-2026/backend/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/sunjingyismacbook/Desktop/dfs-orbital-2026/backend
+plugins: anyio-4.13.0
+collecting ... collected 25 items
+
+tests/test_charge_allocation.py::test_allocate_receipt_charges_proportionally_updates_share_totals PASSED [  4%]
+tests/test_group_debt_summary.py::test_group_debt_summary_counts_outstanding_and_member_balances PASSED [  8%]
+tests/test_ms3_batch_items_api.py::test_batch_replace_existing_clears_old_shares_and_preserves_ocr_fields PASSED [ 12%]
+tests/test_ms3_batch_items_api.py::test_batch_append_when_replace_existing_false_keeps_existing_items PASSED [ 16%]
+tests/test_ms3_batch_items_api.py::test_batch_invalid_item_total_returns_stable_error_code PASSED [ 20%]
+tests/test_ms3_batch_items_api.py::test_batch_empty_items_returns_validation_error PASSED [ 24%]
+tests/test_ms3_charge_allocation_api.py::test_allocate_charges_is_proportional_and_cent_safe PASSED [ 28%]
+tests/test_ms3_charge_allocation_api.py::test_allocate_charges_without_item_shares_returns_clear_error PASSED [ 32%]
+tests/test_ms3_debt_recalculate_api.py::test_recalculate_creates_pending_then_cancels_and_recreates_from_latest_shares PASSED [ 36%]
+tests/test_ms3_debt_recalculate_api.py::test_recalculate_missing_expense_returns_expense_not_found PASSED [ 40%]
+tests/test_ms3_debt_recalculate_api.py::test_recalculate_expense_without_item_shares_returns_not_ready PASSED [ 44%]
+tests/test_ms3_split_preview_api.py::test_split_preview_returns_users_receipts_debts_rounding_and_warnings PASSED [ 48%]
+tests/test_ms3_split_preview_api.py::test_split_preview_missing_expense_returns_expense_not_found PASSED [ 52%]
+tests/test_ms3_split_preview_api.py::test_split_preview_expense_with_no_receipts_returns_not_ready PASSED [ 56%]
+tests/test_ms3_split_preview_api.py::test_split_preview_receipts_without_item_shares_returns_not_ready PASSED [ 60%]
+tests/test_ocr_service.py::test_mock_ocr_engine_extracts_raw_text PASSED [ 64%]
+tests/test_ocr_service.py::test_get_mock_ocr_engine PASSED               [ 68%]
+tests/test_ocr_service.py::test_run_receipt_ocr_with_mock_engine PASSED  [ 72%]
+tests/test_ocr_service.py::test_run_mock_ocr_keeps_backward_compatible_output PASSED [ 76%]
+tests/test_paddleocr_engine.py::test_paddleocr_engine_extracts_text_from_real_receipt SKIPPED [ 80%]
+tests/test_receipt_parser.py::test_parse_receipt_text_with_tax_service_and_total PASSED [ 84%]
+tests/test_receipt_parser.py::test_parse_receipt_text_without_explicit_total PASSED [ 88%]
+tests/test_receipt_parser.py::test_parse_receipt_text_ignores_lines_without_price PASSED [ 92%]
+tests/test_receipt_parser.py::test_parse_multiline_receipt_table_with_thousand_style_amounts PASSED [ 96%]
+tests/test_settlement_integration.py::test_settlement_calculation_and_payment_lifecycle PASSED [100%]
+
+======================== 24 passed, 1 skipped in 0.22s =========================
