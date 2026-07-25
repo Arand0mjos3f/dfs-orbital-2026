@@ -1,3 +1,4 @@
+from functools import lru_cache
 from pathlib import Path
 from typing import Protocol
 
@@ -27,8 +28,8 @@ class PaddleOcrEngine:
     """
     PaddleOCR engine for real receipt image OCR.
 
-    This engine is optional. Use OCR_ENGINE=paddleocr only after installing
-    PaddlePaddle and PaddleOCR in the active virtual environment.
+    The deployed backend uses a cached engine instance because PaddleOCR model
+    initialization is expensive on Render's free instance.
     """
 
     def __init__(self) -> None:
@@ -40,7 +41,12 @@ class PaddleOcrEngine:
                 "OCR dependencies from requirements-ocr.txt first."
             ) from exc
 
-        self._ocr = PaddleOCR(lang="en")
+        self._ocr = PaddleOCR(
+            lang="en",
+            use_doc_orientation_classify=False,
+            use_doc_unwarping=False,
+            use_textline_orientation=False,
+        )
 
     def extract_text(self, image_path: Path) -> str:
         if not image_path.exists():
@@ -145,11 +151,6 @@ def _extract_text_from_legacy_entry(entry) -> str | None:
     if not entry:
         return None
 
-    # Legacy PaddleOCR result shape:
-    # [
-    #   [[x1, y1], [x2, y2], [x3, y3], [x4, y4]],
-    #   ("recognized text", confidence)
-    # ]
     if isinstance(entry, (list, tuple)) and len(entry) >= 2:
         text_info = entry[1]
 
@@ -167,6 +168,7 @@ def _extract_text_from_legacy_entry(entry) -> str | None:
     return None
 
 
+@lru_cache(maxsize=4)
 def get_ocr_engine(engine_name: str = "mock") -> OcrEngine:
     if engine_name == "mock":
         return MockOcrEngine()
