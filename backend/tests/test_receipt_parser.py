@@ -93,3 +93,37 @@ Refund
     assert result["subtotal_amount"] == Decimal("225000.00")
     assert result["tax_amount"] == Decimal("22500.00")
     assert result["total_amount"] == Decimal("247500.00")
+
+
+def test_parse_receipt_text_with_grouped_item_names_and_currency_amounts():
+    raw_text = """LIONCITY BISTRO
+Singapore
+Receipt No: 018472Date:25/07/20267:42 PM
+Laksa
+Satay (6 pcs)
+Milo Dinosaur
+$6.80
+$8.50
+$3.20
+Subtotal
+$18.50
+$1.85
+Service Charge
+$1.83GST========Total
+$22.18
+Thank you and please come again!
+"""
+
+    result = parse_receipt_text(raw_text)
+
+    assert len(result["items"]) == 3
+    assert result["items"][0]["name"] == "Laksa"
+    assert result["items"][0]["total_price"] == Decimal("6.80")
+    assert result["items"][1]["name"] == "Satay (6 pcs)"
+    assert result["items"][1]["total_price"] == Decimal("8.50")
+    assert result["items"][2]["name"] == "Milo Dinosaur"
+    assert result["items"][2]["total_price"] == Decimal("3.20")
+    assert result["subtotal_amount"] == Decimal("18.50")
+    assert result["service_charge_amount"] == Decimal("1.85")
+    assert result["tax_amount"] == Decimal("1.83")
+    assert result["total_amount"] == Decimal("22.18")
