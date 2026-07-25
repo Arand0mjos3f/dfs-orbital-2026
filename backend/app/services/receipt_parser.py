@@ -2,12 +2,24 @@ import re
 from decimal import Decimal, ROUND_HALF_UP
 
 
+MONEY_TOKEN_PATTERN = (
+    r"(?:S\$|SGD|USD|[$])?\s*"
+    r"(?:\d{1,3}(?:[.,]\d{3})+|\d+)(?:[.,]\d{1,2})?"
+)
+
 TRAILING_MONEY_PATTERN = re.compile(
-    r"(?P<amount>(?:\d{1,3}(?:[.,]\d{3})+|\d+)(?:[.,]\d{1,2})?)\s*$"
+    rf"(?P<amount>{MONEY_TOKEN_PATTERN})\s*$",
+    re.IGNORECASE,
+)
+
+LEADING_MONEY_PATTERN = re.compile(
+    rf"^\s*(?P<amount>{MONEY_TOKEN_PATTERN})",
+    re.IGNORECASE,
 )
 
 PURE_MONEY_PATTERN = re.compile(
-    r"^(?:\d{1,3}(?:[.,]\d{3})+|\d+)(?:[.,]\d{1,2})?$"
+    rf"^{MONEY_TOKEN_PATTERN}$",
+    re.IGNORECASE,
 )
 
 QUANTITY_PATTERN = re.compile(r"^\d+$")
@@ -59,7 +71,12 @@ def _normalise_label(label: str) -> str:
 
 
 def _normalise_amount_string(value: str) -> str:
-    value = value.strip().replace(" ", "")
+    value = re.sub(
+        r"^(?:S\$|SGD|USD|[$])\s*",
+        "",
+        value.strip(),
+        flags=re.IGNORECASE,
+    ).replace(" ", "")
 
     if "," in value and "." in value:
         # Example: 1,234.56
@@ -126,8 +143,29 @@ def _extract_trailing_amount(line: str) -> tuple[str, Decimal] | None:
     return label, amount
 
 
-def _parse_summary_value(lines: list[str], index: int) -> Decimal | None:
+def _extract_leading_amount(line: str) -> Decimal | None:
+    match = LEADING_MONEY_PATTERN.search(line)
+
+    if match is None:
+        return None
+
+    return _parse_money(match.group("amount"))
+
+
+def _parse_summary_value(
+    lines: list[str],
+    index: int,
+    *,
+    use_leading_amount: bool = False,
+    use_previous_amount: bool = False,
+) -> Decimal | None:
     current_line = lines[index]
+
+    if use_leading_amount:
+        leading_amount = _extract_leading_amount(current_line)
+
+        if leading_amount is not None:
+            return leading_amount
 
     extracted = _extract_trailing_amount(current_line)
 
@@ -136,6 +174,9 @@ def _parse_summary_value(lines: list[str], index: int) -> Decimal | None:
 
     if index + 1 < len(lines) and _is_money_line(lines[index + 1]):
         return _parse_money(lines[index + 1])
+
+    if use_previous_amount and index > 0 and _is_money_line(lines[index - 1]):
+        return _parse_money(lines[index - 1])
 
     return None
 
@@ -166,6 +207,38 @@ def _parse_multiline_table_items(lines: list[str]) -> list[dict]:
         if not _looks_like_item_name(line):
             index += 1
             continue
+
+        name_start_index = index
+        possible_names = []
+
+        while index < len(lines) and _looks_like_item_name(lines[index]):
+            possible_names.append(lines[index])
+            index += 1
+
+        possible_prices = []
+
+        while index < len(lines) and _is_money_line(lines[index]):
+            possible_prices.append(_parse_money(lines[index]))
+            index += 1
+
+        if len(possible_names) >= 2 and len(possible_prices) >= 2:
+            item_names = possible_names[-len(possible_prices) :]
+
+            for item_name, total_price in zip(item_names, possible_prices):
+                items.append(
+                    {
+                        "name": item_name,
+                        "original_name": item_name,
+                        "unit_price": total_price,
+                        "quantity": 1,
+                        "total_price": total_price,
+                        "is_manually_edited": False,
+                    }
+                )
+
+            continue
+
+        index = name_start_index
 
         # Pattern:
         # item name
@@ -257,32 +330,44 @@ def parse_receipt_text(raw_text: str) -> dict:
 
     for index, line in enumerate(lines):
         normalised_line = _normalise_label(line)
+        has_subtotal_keyword = _is_keyword_line(normalised_line, SUBTOTAL_KEYWORDS)
+        has_tax_keyword = _is_keyword_line(normalised_line, TAX_KEYWORDS)
+        has_service_keyword = _is_keyword_line(normalised_line, SERVICE_KEYWORDS)
+        has_total_keyword = (
+            _is_keyword_line(normalised_line, TOTAL_KEYWORDS)
+            and not has_subtotal_keyword
+        )
 
-        if _is_keyword_line(normalised_line, SUBTOTAL_KEYWORDS):
+        if has_subtotal_keyword:
             value = _parse_summary_value(lines, index)
             if value is not None:
                 subtotal_amount = value
-            continue
 
-        if _is_keyword_line(normalised_line, TAX_KEYWORDS):
-            value = _parse_summary_value(lines, index)
+        if has_tax_keyword:
+            value = _parse_summary_value(
+                lines,
+                index,
+                use_leading_amount=True,
+                use_previous_amount=True,
+            )
             if value is not None:
                 tax_amount += value
                 tax_amount = _round_money(tax_amount)
-            continue
 
-        if _is_keyword_line(normalised_line, SERVICE_KEYWORDS):
-            value = _parse_summary_value(lines, index)
+        if has_service_keyword:
+            value = _parse_summary_value(
+                lines,
+                index,
+                use_previous_amount=True,
+            )
             if value is not None:
                 service_charge_amount += value
                 service_charge_amount = _round_money(service_charge_amount)
-            continue
 
-        if _is_keyword_line(normalised_line, TOTAL_KEYWORDS):
+        if has_total_keyword:
             value = _parse_summary_value(lines, index)
             if value is not None:
                 total_amount = value
-            continue
 
     items = _parse_multiline_table_items(lines)
 
