@@ -5,7 +5,11 @@ import {
   getGroupDebts,
   recalculateExpenseDebts,
 } from '../api/debts';
-import { createGroupExpense, getGroupExpenses } from '../api/expenses';
+import {
+  createGroupExpense,
+  getGroupExpenses,
+  updateExpense,
+} from '../api/expenses';
 import { getUsers } from '../api/users';
 import AddMemberForm from '../components/AddMemberForm';
 import ExpenseReceiptItems from '../components/ExpenseReceiptItems';
@@ -118,6 +122,10 @@ export default function GroupDetail() {
   const [expenseTitle, setExpenseTitle] = useState('');
   const [expenseDescription, setExpenseDescription] = useState('');
   const [isSavingExpense, setIsSavingExpense] = useState(false);
+  const [editingExpenseId, setEditingExpenseId] = useState('');
+  const [editExpenseTitle, setEditExpenseTitle] = useState('');
+  const [editExpenseDescription, setEditExpenseDescription] = useState('');
+  const [isUpdatingExpense, setIsUpdatingExpense] = useState(false);
   const [calculatingExpenseId, setCalculatingExpenseId] = useState('');
 
   const userById = useMemo(
@@ -327,6 +335,51 @@ export default function GroupDetail() {
       setExpensesError('Failed to create expense');
     } finally {
       setIsSavingExpense(false);
+    }
+  };
+
+  const startEditingExpense = (expense) => {
+    setEditingExpenseId(expense.id);
+    setEditExpenseTitle(expense.title);
+    setEditExpenseDescription(expense.description || '');
+    setExpensesError(null);
+  };
+
+  const cancelEditingExpense = () => {
+    setEditingExpenseId('');
+    setEditExpenseTitle('');
+    setEditExpenseDescription('');
+    setExpensesError(null);
+  };
+
+  const handleUpdateExpense = async (event, expenseId) => {
+    event.preventDefault();
+
+    if (!editExpenseTitle.trim()) return;
+
+    setIsUpdatingExpense(true);
+    setExpensesError(null);
+
+    try {
+      const response = await updateExpense(expenseId, {
+        title: editExpenseTitle.trim(),
+        description: editExpenseDescription.trim() || null,
+      });
+
+      setExpenses((currentExpenses) =>
+        currentExpenses.map((expense) =>
+          expense.id === expenseId ? response.data.data : expense
+        )
+      );
+      cancelEditingExpense();
+    } catch (requestError) {
+      console.error('Error updating expense:', requestError);
+      setExpensesError(
+        requestError.response?.data?.detail?.message ||
+          'Failed to update expense'
+      );
+    } finally {
+      setIsUpdatingExpense(false);
     }
   };
 
@@ -635,21 +688,100 @@ export default function GroupDetail() {
 
               return (
                 <article key={expense.id} className={cardClass}>
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-lg font-extrabold text-slate-900">
-                        {expense.title}
-                      </h3>
+                  {editingExpenseId === expense.id ? (
+                    <form
+                      onSubmit={(event) =>
+                        handleUpdateExpense(event, expense.id)
+                      }
+                      className="space-y-3"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <p className="text-sm font-extrabold text-slate-900">
+                          Edit expense details
+                        </p>
 
-                      <p className="mt-2 text-sm font-semibold text-slate-400">
-                        {expense.description || 'No description'}
-                      </p>
+                        <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-extrabold text-[#4F46E5]">
+                          {expense.status}
+                        </span>
+                      </div>
+
+                      <label className="block">
+                        <span className="mb-1 block text-xs font-bold text-slate-500">
+                          Name
+                        </span>
+                        <input
+                          type="text"
+                          value={editExpenseTitle}
+                          onChange={(event) =>
+                            setEditExpenseTitle(event.target.value)
+                          }
+                          className="w-full rounded-2xl border border-slate-200 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+                          required
+                          maxLength={150}
+                          autoFocus
+                        />
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1 block text-xs font-bold text-slate-500">
+                          Description
+                        </span>
+                        <textarea
+                          value={editExpenseDescription}
+                          onChange={(event) =>
+                            setEditExpenseDescription(event.target.value)
+                          }
+                          className="min-h-24 w-full resize-none rounded-2xl border border-slate-200 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+                          placeholder="No description"
+                        />
+                      </label>
+
+                      <div className="flex gap-3">
+                        <button
+                          type="submit"
+                          disabled={
+                            isUpdatingExpense || !editExpenseTitle.trim()
+                          }
+                          className="flex-1 rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+                        >
+                          {isUpdatingExpense ? 'Saving...' : 'Save changes'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={cancelEditingExpense}
+                          disabled={isUpdatingExpense}
+                          className="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-extrabold text-slate-600 disabled:text-slate-300"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <h3 className="text-lg font-extrabold text-slate-900">
+                          {expense.title}
+                        </h3>
+
+                        <p className="mt-2 text-sm font-semibold text-slate-400">
+                          {expense.description || 'No description'}
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={() => startEditingExpense(expense)}
+                          className="mt-3 text-xs font-extrabold text-[#4F46E5]"
+                          aria-label={`Edit ${expense.title} expense details`}
+                        >
+                          Edit details
+                        </button>
+                      </div>
+
+                      <span className="shrink-0 rounded-full bg-indigo-50 px-3 py-1 text-xs font-extrabold text-[#4F46E5]">
+                        {expense.status}
+                      </span>
                     </div>
-
-                    <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-extrabold text-[#4F46E5]">
-                      {expense.status}
-                    </span>
-                  </div>
+                  )}
 
                   <div className="mt-5 flex items-center justify-between text-xs font-bold text-slate-400">
                     <span>{formatDate(expense.created_at)}</span>
