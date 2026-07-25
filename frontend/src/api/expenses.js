@@ -7,3 +7,6 @@ export const getGroupExpenses = (groupId, userId) =>
 
 export const createGroupExpense = (groupId, payload) =>
   api.post(`/groups/${groupId}/expenses`, payload);
+
+export const updateExpense = (expenseId, payload) =>
+  api.patch(`/expenses/${expenseId}`, payload);

@@ -30,8 +30,8 @@ Backend health check:
 
 - Receipt image upload API
 - OCR service integration
-- Mock OCR engine for stable deployed demo
-- PaddleOCR integration for local real OCR testing
+- Mock OCR engine for local and CI-safe testing
+- Production PaddleOCR integration using PP-OCRv5 mobile models
 - Receipt text parser
 - OCR-reviewed item confirmation
 - Batch item confirmation endpoint
@@ -56,6 +56,7 @@ The following endpoints are the main MS3 backend evidence.
 
 | Endpoint | Purpose | MS3 Evidence |
 |---|---|---|
+| `PATCH /api/v1/expenses/{expense_id}` | Update an expense name, description, or status | Supports correcting expense details after creation |
 | `POST /api/v1/expenses/{expense_id}/receipts/upload` | Upload a receipt image and run OCR/parsing | Supports OCR-assisted receipt entry |
 | `POST /api/v1/receipts/{receipt_id}/items/batch` | Confirm reviewed OCR items in one request | Supports user-facing OCR review flow |
 | `GET /api/v1/receipts/{receipt_id}/items` | Read confirmed items under a receipt | Allows frontend to display saved receipt items |
@@ -83,10 +84,42 @@ Evidence to capture:
 
 - Swagger screenshot of `POST /api/v1/expenses/{expense_id}/receipts/upload`
 - Upload response showing receipt information and parsed items
-- Local PaddleOCR test evidence
-- Deployed mock OCR demo evidence
+- Deployed PaddleOCR logs showing `PP-OCRv5_mobile_det` and `PP-OCRv5_mobile_rec`
+- Deployed upload response showing `201 Created`
 
-### 5.2 OCR item review and batch confirmation
+Deployment verification on 2026-07-26:
+
+- Render loaded `PP-OCRv5_mobile_det` and `PP-OCRv5_mobile_rec`.
+- A real PNG receipt upload returned `201 Created`.
+- Three reviewed items were created with `201 Created`.
+- Receipt and item retrieval returned `200 OK`.
+- The user confirmed that the detected content came from the uploaded receipt rather than mock data.
+- OCR parsing quality was usable but imperfect, so manual review remains part of the intended workflow.
+
+### 5.2 Expense detail editing
+
+Frontend and backend support:
+
+- Displays an `Edit details` action directly below each expense description.
+- Opens inline fields for expense name and description.
+- Saves through `PATCH /api/v1/expenses/{expense_id}`.
+- Provides Save and Cancel actions.
+- Updates the displayed expense immediately after a successful response.
+
+User-flow verification on 2026-07-26:
+
+1. Created an expense named `Dinner before edit`.
+2. Opened `Edit details`.
+3. Changed the name to `Dinner after edit`.
+4. Changed the description to `Updated after confirmation`.
+5. Saved and reloaded the page.
+6. Confirmed that both edited values persisted.
+
+Result:
+
+    Passed locally; frontend change is uncommitted and not yet deployed.
+
+### 5.3 OCR item review and batch confirmation
 
 Backend support:
 
@@ -102,7 +135,7 @@ Evidence to capture:
 - API response showing `created_item_count`
 - Test result showing old item shares are cleared before replacement
 
-### 5.3 Tax and service charge allocation
+### 5.4 Tax and service charge allocation
 
 Backend support:
 
@@ -120,7 +153,7 @@ Evidence to capture:
 - API response showing tax and service charge allocation
 - Regression test result showing allocation sums match receipt totals
 
-### 5.4 Split preview
+### 5.5 Split preview
 
 Backend support:
 
@@ -141,7 +174,7 @@ Evidence to capture:
 - Frontend split preview screenshot
 - Regression tests for cent-safe allocation and preview payload
 
-### 5.5 Debt recalculation
+### 5.6 Debt recalculation
 
 Backend support:
 
@@ -218,8 +251,26 @@ Notes:
 - Python interpreter used: `backend/.venv/bin/python`
 - Full pytest output was reviewed locally. The final summary is recorded above.
 - The skipped test is the real PaddleOCR image test, skipped because `RUN_PADDLEOCR_TESTS=0` for local/CI-safe verification.
+- On 2026-07-26, backend source and test compilation passed. A fresh pytest run was blocked by the local Python installation failing to load `pyexpat` and by `httpx` being absent from the existing virtual environment. The `24 passed, 1 skipped` result above is retained as the latest complete backend suite result rather than being misrepresented as a new run.
 
-### 6.4 CI testing
+### 6.4 Frontend verification
+
+Commands:
+
+    cd frontend
+    npm run lint
+    npm test
+    npm run build
+
+Observed result on 2026-07-26:
+
+    ESLint passed
+    4 tests passed
+    Vite production build passed
+
+The browser user test also verified expense creation, discovery of the `Edit details` action, editing both fields, saving, and persistence after reload.
+
+### 6.5 CI testing
 
 GitHub Actions workflow:
 
@@ -299,8 +350,8 @@ Backend design principles:
 - Deterministic cent-safe rounding
 - User review before final OCR item confirmation
 - Recalculation instead of unsafe overwriting for settlement debts
-- Stable mock OCR mode for deployment
-- Optional real PaddleOCR integration for local testing
+- Stable mock OCR mode for local and CI-safe testing
+- Real PaddleOCR deployment using smaller mobile models on a 2 GB backend instance
 
 ### Design decisions
 
@@ -314,8 +365,10 @@ Backend design principles:
 | Use proportional tax/service allocation | Matches how receipt-level charges should be fairly distributed |
 | Use Decimal for money | Avoids floating-point rounding errors |
 | Use debt recalculation | Allows users to edit shares and regenerate debts safely |
-| Use mock OCR in public deployment | Keeps Render deployment stable and avoids heavy OCR model hosting |
-| Keep PaddleOCR local evidence | Demonstrates real OCR integration without risking public demo stability |
+| Use PP-OCRv5 mobile models in production | Reduces model memory use while retaining real OCR functionality |
+| Disable oneDNN and limit OCR CPU threads | Avoids the observed Paddle inference incompatibility and controls resource use |
+| Use Render Standard for the OCR backend | The 512 MB Free instance restarted during model initialization; Standard provides 2 GB RAM |
+| Pin `paddleocr==3.7.0` | Preserves the exact dependency version verified in production |
 
 ## 9. Screenshot Evidence Checklist
 
@@ -339,9 +392,9 @@ Recommended backend screenshots for MS3 report or presentation:
 
 ## 10. Known Limitations
 
-- The deployed public backend uses `OCR_ENGINE=mock` for stability.
-- Real PaddleOCR integration was implemented and tested locally but is not hosted in the public Render deployment due to dependency size and deployment resource constraints.
+- The deployed public backend uses real PaddleOCR and requires a Render Standard instance; the 512 MB Free and Starter tiers are insufficient for the verified configuration.
 - Receipt parsing is heuristic-based and may require manual correction for complex receipt layouts.
+- Receipt images currently use service-local storage and should move to durable object storage for long-term production use.
 - The current authentication flow may still use mock/demo authentication depending on final frontend configuration.
 - CSV/PDF export is treated as future work unless extra time is available.
 
@@ -349,8 +402,9 @@ Recommended backend screenshots for MS3 report or presentation:
 
 Possible future improvements:
 
-- Deploy real PaddleOCR with a stronger hosting environment or container setup
 - Improve receipt parser robustness for more receipt formats and languages
+- Move uploaded receipt images to durable object storage
+- Add OCR confidence scores and stronger image preprocessing
 - Add real authentication and authorization
 - Add CSV/PDF export
 - Add more frontend integration tests
