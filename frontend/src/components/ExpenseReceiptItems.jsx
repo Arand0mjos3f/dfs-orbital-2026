@@ -516,17 +516,28 @@ export default function ExpenseReceiptItems({
     try {
       const amount = Number(itemPrice).toFixed(2);
 
-      await createItem(activeReceipt.id, {
+      const response = await createItem(activeReceipt.id, {
         name: itemName.trim(),
         quantity: 1,
         unit_price: amount,
         total_price: amount,
       });
+      const createdItem = response.data.data;
 
       setItemName('');
       setItemPrice('');
+      setItemsByReceipt((currentItemsByReceipt) => ({
+        ...currentItemsByReceipt,
+        [activeReceipt.id]: [
+          createdItem,
+          ...(currentItemsByReceipt[activeReceipt.id] || []),
+        ],
+      }));
+      setSharesByItem((currentShares) => ({
+        ...currentShares,
+        [createdItem.id]: [],
+      }));
       await onSettlementInvalidated?.(expense.id);
-      await loadReceiptsAndItems();
     } catch (requestError) {
       console.error('Error creating item:', requestError);
       setError(
