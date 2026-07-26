@@ -120,7 +120,14 @@ Result:
 
 Deployment note:
 
-    The expense-edit frontend change is uncommitted and not yet deployed at the time of this document update.
+    The expense-edit frontend change was deployed and verified in production after source commit fa4e2a6.
+
+Production verification:
+
+    PATCH /api/v1/expenses/eb35b6a5-7d49-49c2-b7b9-2b0995905ff4 HTTP/1.1" 200 OK
+    GET /api/v1/groups/2b6808a5-fc99-4d47-a81e-61a15f93c88c/expenses?... HTTP/1.1" 200 OK
+
+The edited expense name and description remained visible after refreshing the deployed frontend.
 
 ---
 
@@ -133,7 +140,7 @@ Deployment note:
 | 3 | Create or open a group | Group page loads correctly | Passed | Group detail and member information loaded in the tested workflow. |
 | 4 | Add group members | Members are shown in group detail | Passed | Deployment logs recorded member creation with `201 Created` and subsequent retrieval with `200 OK`. |
 | 5 | Create an expense | Expense appears under selected group | Passed | Deployment logs recorded expense creation with `201 Created`. |
-| 5a | Edit expense name and description | Updated details remain after reload | Passed locally | `Edit details`, save, and reload flow passed; production deployment pending. |
+| 5a | Edit expense name and description | Updated details remain after reload | Passed | Deployed `PATCH` returned `200 OK`; edited values remained visible after refresh. |
 | 6 | Create or upload a receipt | Receipt is created under expense | Passed | Real PNG OCR upload returned `201 Created`. |
 | 7 | Review OCR/manual receipt items | Items are visible and editable/reviewable | Passed | User confirmed that real OCR results appeared; parsing quality was imperfect but reviewable. |
 | 8 | Confirm receipt items | Items are saved to backend | Passed | Three item creation requests returned `201 Created`, followed by `GET .../items 200 OK`. |
@@ -157,11 +164,11 @@ Tester:
 
 Overall status:
 
-    Core deployed OCR workflow passed; expense editing passed locally; remaining settlement lifecycle steps are pending re-verification
+    Core deployed OCR and expense-editing workflows passed; remaining settlement lifecycle steps are pending re-verification
 
 Summary:
 
-    The public health endpoint returned HTTP 200. The deployed Standard instance loaded the PP-OCRv5 mobile models, processed a real PNG receipt, returned `201 Created`, and saved three parsed items. The new expense-edit interaction passed a local browser user test, including persistence after reload. The frontend passed lint, four tests, and a production build. Settlement share creation, preview, recalculation, and payment-state transitions were not re-run and remain pending rather than being claimed as passed.
+    The public health endpoint returned HTTP 200. The deployed Standard instance loaded the PP-OCRv5 mobile models, processed a real PNG receipt, returned `201 Created`, and saved three parsed items. Expense editing passed both local and deployed tests: the production PATCH returned `200 OK`, and the edited values persisted after refresh. The frontend passed lint, four tests, and a production build. Settlement share creation, preview, recalculation, and payment-state transitions were not re-run and remain pending rather than being claimed as passed.
 
 ---
 
@@ -174,7 +181,7 @@ Summary:
 | GET /api/v1/groups/{group_id} | Read group detail | Passed | Group detail loaded during the verified workflow. |
 | POST /api/v1/groups/{group_id}/members | Add group member | Passed | Deployment log returned `201 Created`. |
 | POST /api/v1/groups/{group_id}/expenses | Create expense | Passed | Deployment log returned `201 Created`. |
-| PATCH /api/v1/expenses/{expense_id} | Edit expense name and description | Passed locally | Browser test confirmed saved values persisted after reload; frontend change not yet deployed. |
+| PATCH /api/v1/expenses/{expense_id} | Edit expense name and description | Passed | Deployed request returned `200 OK`; saved values persisted after refresh. |
 | POST /api/v1/expenses/{expense_id}/receipts | Create manual receipt | Not re-run | Real OCR upload was tested instead. |
 | POST /api/v1/expenses/{expense_id}/receipts/upload | Upload receipt image | Passed | Real PaddleOCR PNG upload returned `201 Created`. |
 | POST /api/v1/receipts/{receipt_id}/items/batch | Confirm reviewed OCR items | Passed through UI flow | Reviewed items were persisted; three item creation responses returned `201 Created`. |
@@ -211,7 +218,7 @@ Summary:
 
 | Issue | Step | Severity | Status | Notes |
 |---|---|---:|---|---|
-| Expense details could not be edited after creation | Expense creation and review | Medium | Fixed locally; deployment pending | Added a visible `Edit details` action below the expense description with name/description fields, Save, and Cancel. |
+| Expense details could not be edited after creation | Expense creation and review | Medium | Resolved and deployed | Added a visible `Edit details` action below the expense description with name/description fields, Save, and Cancel; production PATCH returned `200 OK`. |
 | PaddleOCR restarted the 512 MB Render Free backend | Receipt upload | High | Resolved | Switched to PP-OCRv5 mobile models, disabled oneDNN, limited CPU threads, and moved the backend to a Standard 2 GB instance. |
 | OCR parsing is weak for some receipt layouts | OCR review | Medium | Open, mitigated | Results remain reviewable and editable before confirmation. |
 
@@ -227,7 +234,7 @@ Severity guide:
 
 | Issue | Fix | Commit / PR | Status |
 |---|---|---|---|
-| Expense details could not be edited | Added PATCH API client call and inline expense editor | Uncommitted local change | Passed local user test; pending user commit/deployment |
+| Expense details could not be edited | Added PATCH API client call and inline expense editor | Source commit `fa4e2a6` | Passed local and deployed user tests |
 | PaddleOCR runtime failure | Added mobile models and oneDNN/CPU settings | Merged before this verification | Passed deployed real-PNG test |
 | Unpinned OCR package | Pinned `paddleocr==3.7.0` | Merged before this verification | Passed deployed real-PNG test |
 
@@ -244,4 +251,4 @@ Severity guide:
 
 ## Final Deployment Verification Statement
 
-Core deployment verification passed for public health, group/expense access, real OCR receipt upload, OCR item review, and item persistence. Expense name and description editing passed locally and is ready for the user's commit and deployment. Share assignment, split preview, debt recalculation, and settlement status transitions remain explicitly pending re-verification. No demo-blocking issue was observed in the verified core OCR workflow.
+Core deployment verification passed for public health, group/expense access, real OCR receipt upload, OCR item review, item persistence, and expense name/description editing. The deployed edit request returned `200 OK`, and the saved values remained visible after refresh. Share assignment, split preview, debt recalculation, and settlement status transitions remain explicitly pending re-verification. No demo-blocking issue was observed in the verified core OCR and expense-editing workflows.
