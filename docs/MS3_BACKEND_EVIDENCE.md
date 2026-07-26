@@ -246,19 +246,20 @@ Database target:
 
 Observed result:
 
-    24 passed, 1 skipped in 0.22s
+    25 passed, 1 skipped in 0.22s
 
 Final pytest summary:
 
-    24 passed, 1 skipped
+    25 passed, 1 skipped
 
 Notes:
 
-- Test run date: 2026-07-25
-- Python interpreter used: `backend/.venv/bin/python`
+- Test run date: 2026-07-26
+- Python interpreter used: clean temporary Python 3.12.13 virtual environment
 - Full pytest output was reviewed locally. The final summary is recorded above.
 - The skipped test is the real PaddleOCR image test, skipped because `RUN_PADDLEOCR_TESTS=0` for local/CI-safe verification.
-- On 2026-07-26, backend source and test compilation passed. A fresh pytest run was blocked by the local Python installation failing to load `pyexpat` and by `httpx` being absent from the existing virtual environment. The `24 passed, 1 skipped` result above is retained as the latest complete backend suite result rather than being misrepresented as a new run.
+- Backend source and test compilation passed before the full suite.
+- Dependencies were installed from the pinned `backend/requirements.txt`.
 
 ### 6.4 Frontend verification
 

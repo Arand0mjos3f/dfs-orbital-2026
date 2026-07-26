@@ -75,7 +75,7 @@ Database target:
 
 Result:
 
-    24 passed, 1 skipped in 0.22s
+    25 passed, 1 skipped in 0.22s
 
 Status:
 
@@ -83,10 +83,11 @@ Status:
 
 Notes:
 
-- Test run date: 2026-07-25
+- Test run date: 2026-07-26
 - The skipped test is the real PaddleOCR image test, skipped by default for local/CI-safe verification.
 - This automated test run used local configuration only and did not use the deployed Render production database.
-- On 2026-07-26, backend application and test compilation passed again. A fresh pytest run could not be completed because the local Python installation could not load its `pyexpat` library and the existing virtual environment was missing `httpx`; the earlier passing result above remains the latest complete backend suite result and is not represented as a new run.
+- Backend application and test compilation passed before the full pytest run.
+- The suite ran in a clean temporary Python 3.12.13 environment with the pinned dependencies from `backend/requirements.txt`.
 
 ---
 
