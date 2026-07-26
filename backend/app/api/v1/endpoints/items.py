@@ -2,6 +2,7 @@ import uuid
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from app.crud.item import (
@@ -14,6 +15,7 @@ from app.crud.item import (
 from app.crud.item_share import delete_item_share, list_item_shares_by_item
 from app.crud.receipt import get_receipt
 from app.db.database import get_db
+from app.models.item_share import ItemShare
 from app.schemas.item import ItemCreate, ItemRead, ItemUpdate, ReceiptItemBatchCreate
 
 
@@ -218,11 +220,8 @@ def delete_receipt_item(
             },
         )
 
-    existing_shares = list_item_shares_by_item(db, item.id)
-
-    for existing_share in existing_shares:
-        db.delete(existing_share)
-
+    db.execute(delete(ItemShare).where(ItemShare.item_id == item.id))
+    db.flush()
     db.delete(item)
     db.commit()
 
