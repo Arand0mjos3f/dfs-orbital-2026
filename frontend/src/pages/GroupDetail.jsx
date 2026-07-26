@@ -80,6 +80,16 @@ function formatDate(value) {
   });
 }
 
+function formatExpenseStatus(status) {
+  const labels = {
+    draft: 'Draft',
+    settlement_stale: 'Needs recalculation',
+    settlement_current: 'Settlement current',
+  };
+
+  return labels[status] || status;
+}
+
 function formatUser(userId, userById) {
   return userById[String(userId)]?.username || String(userId).slice(0, 8);
 }
@@ -140,6 +150,7 @@ export default function GroupDetail() {
   const [editExpenseDescription, setEditExpenseDescription] = useState('');
   const [isUpdatingExpense, setIsUpdatingExpense] = useState(false);
   const [calculatingExpenseId, setCalculatingExpenseId] = useState('');
+  const [settlementReadyByExpense, setSettlementReadyByExpense] = useState({});
 
   const userById = useMemo(
     () => Object.fromEntries(users.map((user) => [String(user.id), user])),
@@ -402,7 +413,12 @@ export default function GroupDetail() {
 
     try {
       await recalculateExpenseDebts(expenseId);
-      await Promise.all([refreshDebts(), refreshDebtSummary()]);
+      await updateExpense(expenseId, { status: 'settlement_current' });
+      await Promise.all([
+        refreshDebts(),
+        refreshDebtSummary(),
+        refreshExpenses(),
+      ]);
     } catch (requestError) {
       console.error('Error calculating debts:', requestError);
       setDebtsError(
@@ -413,6 +429,51 @@ export default function GroupDetail() {
       setCalculatingExpenseId('');
     }
   };
+
+  const handleSettlementInvalidated = useCallback(async (expenseId) => {
+    const expense = expenses.find((entry) => entry.id === expenseId);
+    const hasActiveDebts = (debtByExpenseId[expenseId] || []).some(
+      (debt) => debt.status !== 'cancelled'
+    );
+
+    if (expense?.status === 'settlement_stale') return;
+    if (expense?.status !== 'settlement_current' && !hasActiveDebts) return;
+
+    setExpenses((currentExpenses) =>
+      currentExpenses.map((expense) =>
+        expense.id === expenseId
+          ? { ...expense, status: 'settlement_stale' }
+          : expense
+      )
+    );
+
+    try {
+      await updateExpense(expenseId, { status: 'settlement_stale' });
+    } catch (requestError) {
+      console.error('Error marking settlement as outdated:', requestError);
+      setExpensesError('Bill changed, but its settlement status could not be updated');
+    }
+  }, [debtByExpenseId, expenses]);
+
+  const handleSettlementReadinessChange = useCallback(
+    (expenseId, isReady, message) => {
+      setSettlementReadyByExpense((currentState) => {
+        const currentReadiness = currentState[expenseId];
+        if (
+          currentReadiness?.isReady === isReady &&
+          currentReadiness?.message === message
+        ) {
+          return currentState;
+        }
+
+        return {
+          ...currentState,
+          [expenseId]: { isReady, message },
+        };
+      });
+    },
+    []
+  );
 
   if (isLoading) {
     return (
@@ -698,6 +759,15 @@ export default function GroupDetail() {
               const hasCalculatedDebts = expenseDebts.some(
                 (debt) => debt.status !== 'cancelled'
               );
+              const settlementIsStale =
+                expense.status === 'settlement_stale';
+              const settlementReadiness =
+                settlementReadyByExpense[expense.id];
+              const settlementIsReady =
+                settlementReadiness?.isReady === true;
+              const settlementBlockedMessage =
+                settlementReadiness?.message ||
+                'Complete assignments and charges first';
 
               return (
                 <article key={expense.id} className={cardClass}>
@@ -714,7 +784,7 @@ export default function GroupDetail() {
                         </p>
 
                         <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-extrabold text-[#6D4AEF]">
-                          {expense.status}
+                          {formatExpenseStatus(expense.status)}
                         </span>
                       </div>
 
@@ -791,7 +861,7 @@ export default function GroupDetail() {
                       </div>
 
                       <span className="shrink-0 rounded-full bg-indigo-50 px-3 py-1 text-xs font-extrabold text-[#6D4AEF]">
-                        {expense.status}
+                        {formatExpenseStatus(expense.status)}
                       </span>
                     </div>
                   )}
@@ -804,23 +874,41 @@ export default function GroupDetail() {
                   <ExpenseReceiptItems
                     expense={expense}
                     members={enrichedMembers}
+                    onSettlementInvalidated={handleSettlementInvalidated}
+                    onSettlementReadinessChange={
+                      handleSettlementReadinessChange
+                    }
                   />
 
                   <div className="mt-5 border-t border-slate-100 pt-5">
+                    {settlementIsStale && (
+                      <p className="mb-3 rounded-2xl bg-[#E4F3FF] px-4 py-3 text-sm font-semibold text-[#27658B]">
+                        Bill changed — review assignments, apply receipt charges,
+                        then recalculate the settlement.
+                      </p>
+                    )}
+
                     <button
                       type="button"
                       onClick={() => handleCalculateDebts(expense.id)}
                       disabled={
-                        hasCalculatedDebts ||
+                        (!settlementIsStale && hasCalculatedDebts) ||
+                        !settlementIsReady ||
                         calculatingExpenseId === expense.id
                       }
                       className="w-full rounded-2xl bg-[#6D4AEF] px-4 py-3 text-sm font-extrabold text-white hover:bg-[#5938D6] disabled:bg-slate-300"
                     >
-                      {hasCalculatedDebts
-                        ? 'Settlement calculated'
-                        : calculatingExpenseId === expense.id
+                      {calculatingExpenseId === expense.id
                           ? 'Calculating settlement...'
-                          : 'Calculate settlement'}
+                          : settlementIsStale
+                            ? settlementIsReady
+                              ? 'Recalculate settlement'
+                              : settlementBlockedMessage
+                            : hasCalculatedDebts
+                              ? 'Settlement calculated'
+                              : settlementIsReady
+                                ? 'Calculate settlement'
+                                : settlementBlockedMessage}
                     </button>
                   </div>
                 </article>

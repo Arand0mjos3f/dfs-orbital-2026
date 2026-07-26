@@ -65,7 +65,48 @@ function shareHasCharges(share) {
   );
 }
 
-export default function ExpenseReceiptItems({ expense, members }) {
+function receiptChargesAreApplied(receipt, receiptItems, sharesByItem) {
+  if (!receiptHasCharges(receipt)) return true;
+  if (receiptItems.length === 0) return false;
+
+  const shares = receiptItems.flatMap((item) => sharesByItem[item.id] || []);
+  const allocatedTax = shares.reduce(
+    (total, share) => total + Number(share.tax_share_amount || 0),
+    0
+  );
+  const allocatedService = shares.reduce(
+    (total, share) => total + Number(share.service_charge_share_amount || 0),
+    0
+  );
+
+  return (
+    Math.abs(allocatedTax - Number(receipt.tax_amount || 0)) < 0.005 &&
+    Math.abs(
+      allocatedService - Number(receipt.service_charge_amount || 0)
+    ) < 0.005
+  );
+}
+
+function receiptItemTotalMatches(receipt, receiptItems) {
+  if (receiptItems.length === 0) return false;
+
+  const itemTotal = receiptItems.reduce(
+    (total, item) => total + Number(item.total_price || 0),
+    0
+  );
+  const expectedItemTotal = receiptHasCharges(receipt)
+    ? Number(receipt.subtotal_amount || 0)
+    : Number(receipt.total_amount || 0);
+
+  return Math.abs(itemTotal - expectedItemTotal) < 0.005;
+}
+
+export default function ExpenseReceiptItems({
+  expense,
+  members,
+  onSettlementInvalidated,
+  onSettlementReadinessChange,
+}) {
   const [receipts, setReceipts] = useState([]);
   const [itemsByReceipt, setItemsByReceipt] = useState({});
   const [sharesByItem, setSharesByItem] = useState({});
@@ -128,6 +169,96 @@ export default function ExpenseReceiptItems({ expense, members }) {
       activeItems.every((item) => (sharesByItem[item.id] || []).length > 0),
     [activeItems, sharesByItem]
   );
+
+  const allExpenseItems = useMemo(
+    () => Object.values(itemsByReceipt).flat(),
+    [itemsByReceipt]
+  );
+
+  const allExpenseItemsAssigned = useMemo(
+    () =>
+      allExpenseItems.length > 0 &&
+      allExpenseItems.every(
+        (item) => (sharesByItem[item.id] || []).length > 0
+      ),
+    [allExpenseItems, sharesByItem]
+  );
+
+  const allReceiptChargesApplied = useMemo(
+    () =>
+      receipts.every((receipt) =>
+        receiptChargesAreApplied(
+          receipt,
+          itemsByReceipt[receipt.id] || [],
+          sharesByItem
+        )
+      ),
+    [itemsByReceipt, receipts, sharesByItem]
+  );
+
+  const allReceiptItemTotalsMatch = useMemo(
+    () =>
+      receipts.length > 0 &&
+      receipts.every((receipt) =>
+        receiptItemTotalMatches(
+          receipt,
+          itemsByReceipt[receipt.id] || []
+        )
+      ),
+    [itemsByReceipt, receipts]
+  );
+
+  const activeReceiptChargesApplied = useMemo(
+    () =>
+      activeReceipt
+        ? receiptChargesAreApplied(activeReceipt, activeItems, sharesByItem)
+        : false,
+    [activeItems, activeReceipt, sharesByItem]
+  );
+
+  const activeReceiptItemTotalMatches = useMemo(
+    () =>
+      activeReceipt
+        ? receiptItemTotalMatches(activeReceipt, activeItems)
+        : false,
+    [activeItems, activeReceipt]
+  );
+
+  const settlementReadinessMessage =
+    allExpenseItems.length === 0
+      ? 'Add receipt items first'
+      : !allReceiptItemTotalsMatch
+        ? 'Match item totals to receipt first'
+        : !allExpenseItemsAssigned
+          ? 'Assign all items first'
+          : !allReceiptChargesApplied
+            ? 'Apply tax and service first'
+            : '';
+  const settlementIsReady = settlementReadinessMessage === '';
+
+  useEffect(() => {
+    onSettlementReadinessChange?.(
+      expense.id,
+      settlementIsReady,
+      settlementReadinessMessage
+    );
+  }, [
+    expense.id,
+    onSettlementReadinessChange,
+    settlementIsReady,
+    settlementReadinessMessage,
+  ]);
+
+  useEffect(() => {
+    if (!isLoading && !settlementIsReady) {
+      onSettlementInvalidated?.(expense.id);
+    }
+  }, [
+    expense.id,
+    isLoading,
+    onSettlementInvalidated,
+    settlementIsReady,
+  ]);
 
   const buildReceiptItemState = useCallback(async (loadedReceipts) => {
     const itemEntries = await Promise.all(
@@ -232,6 +363,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
       setReceiptTotal('');
       setPayerId('');
       setActiveReceiptId(response.data.data.id);
+      await onSettlementInvalidated?.(expense.id);
       await loadReceiptsAndItems();
     } catch (requestError) {
       console.error('Error creating receipt:', requestError);
@@ -274,6 +406,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
       setPayerId('');
       uploadForm.reset();
 
+      await onSettlementInvalidated?.(expense.id);
       await loadReceiptsAndItems();
       setActiveReceiptId(uploadedReceipt.id);
     } catch (requestError) {
@@ -359,6 +492,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
       );
 
       setOcrReview(null);
+      await onSettlementInvalidated?.(expense.id);
       await loadReceiptsAndItems();
     } catch (requestError) {
       console.error('Error saving OCR items:', requestError);
@@ -391,6 +525,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
 
       setItemName('');
       setItemPrice('');
+      await onSettlementInvalidated?.(expense.id);
       await loadReceiptsAndItems();
     } catch (requestError) {
       console.error('Error creating item:', requestError);
@@ -406,18 +541,36 @@ export default function ExpenseReceiptItems({ expense, members }) {
     setEditingItemId(item.id);
     setEditItemName(item.name);
     setEditItemPrice(Number(item.total_price || 0).toFixed(2));
+    setSelectedUsersByItem((currentSelections) => ({
+      ...currentSelections,
+      [item.id]: (sharesByItem[item.id] || []).map((share) =>
+        String(share.user_id)
+      ),
+    }));
     setError('');
     setNotice('');
   };
 
   const cancelEditingItem = () => {
+    const cancelledItemId = editingItemId;
     setEditingItemId('');
     setEditItemName('');
     setEditItemPrice('');
+    setSelectedUsersByItem((currentSelections) => ({
+      ...currentSelections,
+      [cancelledItemId]: [],
+    }));
   };
 
   const handleUpdateItem = async (item) => {
     if (!editItemName.trim() || editItemPrice === '') return;
+
+    const selectedUserIds = selectedUsersByItem[item.id] || [];
+    const existingShares = sharesByItem[item.id] || [];
+    if (selectedUserIds.length === 0 && existingShares.length > 0) {
+      setError('Choose at least one member for this item');
+      return;
+    }
 
     const amount = Number(editItemPrice);
     if (!Number.isFinite(amount) || amount < 0) {
@@ -431,21 +584,49 @@ export default function ExpenseReceiptItems({ expense, members }) {
 
     try {
       const formattedAmount = amount.toFixed(2);
-
-      await updateItem(item.id, {
+      const financialChanged =
+        Math.abs(amount - Number(item.total_price || 0)) >= 0.005;
+      const currentUserIds = existingShares
+        .map((share) => String(share.user_id))
+        .sort();
+      const nextUserIds = [...selectedUserIds].sort();
+      const assignmentsChanged =
+        currentUserIds.length !== nextUserIds.length ||
+        currentUserIds.some((userId, index) => userId !== nextUserIds[index]);
+      const updatePayload = {
         name: editItemName.trim(),
-        quantity: 1,
-        unit_price: formattedAmount,
-        total_price: formattedAmount,
-      });
+      };
+
+      if (financialChanged) {
+        Object.assign(updatePayload, {
+          quantity: 1,
+          unit_price: formattedAmount,
+          total_price: formattedAmount,
+        });
+      }
+
+      await updateItem(item.id, updatePayload);
+
+      if (
+        (financialChanged || assignmentsChanged) &&
+        selectedUserIds.length > 0
+      ) {
+        await createEqualItemShares(item.id, selectedUserIds);
+      }
+
+      if (financialChanged || assignmentsChanged) {
+        await onSettlementInvalidated?.(expense.id);
+      }
 
       cancelEditingItem();
       await loadReceiptsAndItems();
 
-      if ((sharesByItem[item.id] || []).length > 0) {
+      if (financialChanged || assignmentsChanged) {
         setNotice(
-          'Item updated. Reassign it if needed, then recalculate the settlement totals.'
+          'Item and assignments updated. Apply receipt charges again, then recalculate the settlement.'
         );
+      } else {
+        setNotice('Item name updated.');
       }
     } catch (requestError) {
       console.error('Error updating item:', requestError);
@@ -472,6 +653,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
     try {
       await deleteItem(item.id);
       if (editingItemId === item.id) cancelEditingItem();
+      await onSettlementInvalidated?.(expense.id);
       await loadReceiptsAndItems();
       setNotice(
         hasAssignments
@@ -527,6 +709,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
         ...currentSelections,
         [item.id]: [],
       }));
+      await onSettlementInvalidated?.(expense.id);
     } catch (requestError) {
       console.error('Error assigning item:', requestError);
       setError(
@@ -555,6 +738,8 @@ export default function ExpenseReceiptItems({ expense, members }) {
         ...currentShares,
         ...updatedSharesByItem,
       }));
+      await onSettlementInvalidated?.(expense.id);
+      setNotice('Tax and service applied to shares.');
     } catch (requestError) {
       console.error('Error allocating receipt charges:', requestError);
       setError(
@@ -786,14 +971,27 @@ export default function ExpenseReceiptItems({ expense, members }) {
                   <button
                     type="button"
                     onClick={handleAllocateReceiptCharges}
-                    disabled={!allActiveItemsAssigned || isAllocatingCharges}
-                    className="mt-4 w-full rounded-2xl bg-[#6D4AEF] px-4 py-3 text-sm font-extrabold text-white hover:bg-[#5938D6] disabled:bg-[#F7F3FA] disabled:text-slate-400"
+                    disabled={
+                      activeReceiptChargesApplied ||
+                      !activeReceiptItemTotalMatches ||
+                      !allActiveItemsAssigned ||
+                      isAllocatingCharges
+                    }
+                    className={`mt-4 w-full rounded-2xl px-4 py-3 text-sm font-extrabold ${
+                      activeReceiptChargesApplied
+                        ? 'bg-[#DDF8EF] text-[#3F8F79]'
+                        : 'bg-[#6D4AEF] text-white hover:bg-[#5938D6] disabled:bg-[#F7F3FA] disabled:text-slate-400'
+                    }`}
                   >
-                    {isAllocatingCharges
-                      ? 'Applying...'
-                      : allActiveItemsAssigned
-                        ? 'Apply Tax and Service to Shares'
-                        : 'Assign All Items First'}
+                    {activeReceiptChargesApplied
+                      ? '✓ Tax and service applied'
+                      : isAllocatingCharges
+                        ? 'Applying...'
+                        : !activeReceiptItemTotalMatches
+                          ? 'Match item totals first'
+                          : allActiveItemsAssigned
+                            ? 'Apply Tax and Service to Shares'
+                            : 'Assign All Items First'}
                   </button>
                 </div>
               )}
@@ -873,6 +1071,42 @@ export default function ExpenseReceiptItems({ expense, members }) {
                               className="min-w-0 rounded-2xl border border-slate-100 bg-white px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#6D4AEF]"
                               aria-label="Item price"
                             />
+
+                            <div className="col-span-2">
+                              <p className="mb-2 text-xs font-extrabold uppercase text-slate-400">
+                                Assigned members
+                              </p>
+
+                              <div className="grid gap-2 sm:grid-cols-2">
+                                {members.map((member) => {
+                                  const userId = String(member.user_id);
+                                  const isSelected = (
+                                    selectedUsersByItem[item.id] || []
+                                  ).includes(userId);
+
+                                  return (
+                                    <label
+                                      key={`edit-${item.id}-${member.user_id}`}
+                                      className={`flex cursor-pointer items-center gap-2 rounded-2xl px-3 py-2 text-xs font-bold ${
+                                        isSelected
+                                          ? 'bg-indigo-50 text-[#5938D6]'
+                                          : 'bg-white text-slate-500'
+                                      }`}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        onChange={() =>
+                                          handleToggleUser(item.id, userId)
+                                        }
+                                        className="h-4 w-4 accent-[#6D4AEF]"
+                                      />
+                                      <span>{formatMemberLabel(member)}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
 
                             <div className="col-span-2 flex gap-2">
                               <button

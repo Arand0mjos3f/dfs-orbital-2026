@@ -19,14 +19,24 @@ router = APIRouter(tags=["expenses"])
 
 
 def _validate_expense_status(status_value: str) -> None:
-    allowed_statuses = {"draft", "confirmed", "settled", "cancelled"}
+    allowed_statuses = {
+        "draft",
+        "confirmed",
+        "settlement_current",
+        "settlement_stale",
+        "settled",
+        "cancelled",
+    }
 
     if status_value not in allowed_statuses:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
                 "code": "INVALID_EXPENSE_STATUS",
-                "message": "Expense status must be draft, confirmed, settled, or cancelled.",
+                "message": (
+                    "Expense status must be draft, confirmed, settlement_current, "
+                    "settlement_stale, settled, or cancelled."
+                ),
             },
         )
 
