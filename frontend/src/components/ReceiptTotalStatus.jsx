@@ -38,7 +38,7 @@ export default function ReceiptTotalStatus({ receipt, items }) {
   if (subtotalMatches && hasCharges) {
     return (
       <div className="rounded-2xl bg-indigo-50 px-4 py-3">
-        <p className="text-sm font-extrabold text-[#4F46E5]">
+        <p className="text-sm font-extrabold text-[#6D4AEF]">
           Item total matches receipt subtotal
         </p>
 

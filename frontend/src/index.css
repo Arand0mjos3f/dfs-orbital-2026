@@ -1,5 +1,51 @@
 @import 'tailwindcss';
 
+@theme {
+  /* Product foundation */
+  --color-slate-900: #241c35;
+  --color-slate-700: #4e455a;
+  --color-slate-600: #62596e;
+  --color-slate-500: #70677c;
+  --color-slate-400: #91899b;
+  --color-slate-300: #cfc7d3;
+  --color-slate-200: #e9e1ec;
+  --color-slate-100: #f4eef5;
+
+  /* Brand */
+  --color-indigo-700: #5938d6;
+  --color-indigo-500: #6d4aef;
+  --color-indigo-400: #8a70ef;
+  --color-indigo-200: #c9b9ff;
+  --color-indigo-100: #dde0ff;
+  --color-indigo-50: #f1ebff;
+
+  /* Financial states */
+  --color-emerald-700: #12644f;
+  --color-emerald-600: #167a61;
+  --color-emerald-100: #cff4e8;
+  --color-emerald-50: #ddf8ef;
+  --color-rose-700: #a43c45;
+  --color-rose-600: #c24952;
+  --color-rose-100: #ffe3d3;
+  --color-rose-50: #ffe6e3;
+  --color-amber-700: #946200;
+  --color-amber-600: #946200;
+  --color-amber-50: #fff2c9;
+  --color-sky-700: #27658b;
+  --color-sky-100: #ddf3ff;
+  --color-red-500: #b4233c;
+  --color-red-400: #c24952;
+  --color-red-50: #fde8ec;
+
+  /* Keep the login screen in the same product family. */
+  --color-gray-800: #241c35;
+  --color-gray-700: #4e455a;
+  --color-gray-400: #91899b;
+  --color-gray-200: #e9e1ec;
+  --color-gray-100: #fff9f4;
+  --color-gray-50: #ffffff;
+}
+
 :root {
   font-family:
     Inter,
@@ -9,8 +55,28 @@
     BlinkMacSystemFont,
     'Segoe UI',
     sans-serif;
-  color: #111827;
-  background: #f8fafc;
+  color: #241c35;
+  background: #fff9f4;
+  --background: #fff9f4;
+  --surface: #ffffff;
+  --text-primary: #241c35;
+  --text-secondary: #70677c;
+  --text-muted: #91899b;
+  --border: #e9e1ec;
+  --primary: #6d4aef;
+  --primary-hover: #5938d6;
+  --primary-soft: #f1ebff;
+  --focus-ring: #c9b9ff;
+  --positive: #167a61;
+  --positive-soft: #ddf8ef;
+  --outgoing: #c24952;
+  --outgoing-soft: #ffe6e3;
+  --warning: #946200;
+  --warning-soft: #fff2c9;
+  --info: #27658b;
+  --info-soft: #e4f3ff;
+  --danger: #b4233c;
+  --danger-soft: #fde8ec;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -22,14 +88,14 @@
 }
 
 html {
-  background: #f8fafc;
+  background: #fff9f4;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #f8fafc;
+  background: #fff9f4;
 }
 
 button,
@@ -48,4 +114,38 @@ button:disabled {
 
 #root {
   min-height: 100vh;
+}
+
+::selection {
+  color: #241c35;
+  background: #dde0ff;
+}
+
+.feature-panel {
+  color: var(--text-primary);
+  background: #ffffff;
+  border: 1px solid #d8caff;
+}
+
+.soft-card-shadow {
+  border: 1px solid #d8caff;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 0 0 3px rgb(201 185 255 / 35%);
 }

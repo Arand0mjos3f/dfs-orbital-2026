@@ -6,7 +6,7 @@ import { getUsers } from '../api/users';
 import { useAuthStore } from '../store/useAuthStore';
 
 const cardClass =
-  'rounded-[24px] bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.05)]';
+  'rounded-[24px] border border-[#D8CAFF] bg-white p-5';
 
 function formatCurrency(value) {
   return `$${Number(value || 0).toFixed(2)}`;
@@ -143,7 +143,7 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-dvh bg-[#F8FAFC] px-5 pb-8 pt-5">
+      <div className="min-h-dvh bg-[#FFF9F4] px-5 pb-8 pt-5">
         <div className={cardClass}>
           <p className="text-center text-sm font-semibold text-slate-400">
             Loading dashboard...
@@ -155,9 +155,9 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="min-h-dvh bg-[#F8FAFC] px-5 pb-8 pt-5">
+      <div className="min-h-dvh bg-[#FFF9F4] px-5 pb-8 pt-5">
         <div className={cardClass}>
-          <p className="text-center text-sm font-semibold text-[#EF4444]">
+          <p className="text-center text-sm font-semibold text-[#B4233C]">
             {error}
           </p>
         </div>
@@ -166,7 +166,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#F8FAFC] px-5 pb-8 pt-5">
+    <div className="min-h-dvh bg-[#FFF9F4] px-5 pb-8 pt-5">
       <header className="mb-6">
         <p className="text-sm font-semibold text-slate-400">Welcome back</p>
         <h1 className="mt-1 text-3xl font-extrabold text-slate-900">
@@ -174,24 +174,24 @@ export default function Dashboard() {
         </h1>
       </header>
 
-      <section className="mb-6 rounded-[24px] bg-slate-900 p-6 text-white shadow-[0_8px_30px_rgba(15,23,42,0.08)]">
-        <p className="text-sm font-semibold text-slate-400">
+      <section className="mb-6 rounded-[24px] border border-[#342A49] bg-[#241C35] p-6">
+        <p className="text-sm font-semibold text-[#E8DFF5]">
           Total Balance
         </p>
 
         <div className="mt-5 grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm font-medium text-slate-400">
+            <p className="text-sm font-medium text-[#E8DFF5]">
               Owed to you
             </p>
-            <p className="mt-2 text-3xl font-extrabold text-[#10B981]">
+            <p className="mt-2 text-3xl font-extrabold text-[#A7E8D5]">
               {formatCurrency(amountOwedToYou)}
             </p>
           </div>
 
           <div>
-            <p className="text-sm font-medium text-slate-400">You owe</p>
-            <p className="mt-2 text-3xl font-extrabold text-[#EF4444]">
+            <p className="text-sm font-medium text-[#E8DFF5]">You owe</p>
+            <p className="mt-2 text-3xl font-extrabold text-[#FFB8B2]">
               {formatCurrency(amountYouOwe)}
             </p>
           </div>
@@ -207,7 +207,7 @@ export default function Dashboard() {
           <button
             type="button"
             onClick={() => navigate('/debts')}
-            className="text-sm font-extrabold text-[#4F46E5]"
+            className="text-sm font-extrabold text-[#6D4AEF]"
           >
             View all
           </button>
@@ -235,8 +235,8 @@ export default function Dashboard() {
                       <p
                         className={`font-extrabold ${
                           isPayer
-                            ? 'text-[#EF4444]'
-                            : 'text-[#10B981]'
+                            ? 'text-[#B96870]'
+                            : 'text-[#3F8F79]'
                         }`}
                       >
                         {isPayer

@@ -62,9 +62,12 @@ export default function Login() {
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-[393px] rounded-2xl bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)]">
+      <div className="w-full max-w-[393px] rounded-2xl border border-[#D8CAFF] bg-white p-6">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-extrabold text-gray-800">
+          <span className="inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-extrabold text-indigo-500">
+            Split fairly, stay friendly ✦
+          </span>
+          <h1 className="mt-4 text-3xl font-extrabold text-gray-800">
             DFS Orbital
           </h1>
           <p className="mt-2 text-sm text-gray-400">
@@ -123,7 +126,7 @@ export default function Login() {
 
           <button
             type="submit"
-            className="w-full rounded-xl bg-gray-800 px-4 py-3 text-sm font-bold text-white transition hover:bg-gray-700"
+            className="w-full rounded-xl bg-[#6D4AEF] px-4 py-3 text-sm font-bold text-white hover:bg-[#5938D6]"
           >
             Sign In
           </button>

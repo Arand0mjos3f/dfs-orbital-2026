@@ -500,7 +500,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
               <select
                 value={payerId}
                 onChange={(event) => setPayerId(event.target.value)}
-                className="w-full rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+                className="w-full rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#6D4AEF]"
                 required
               >
                 <option value="">Choose payer</option>
@@ -514,7 +514,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
 
               <form onSubmit={handleUploadReceiptImage} className="space-y-3">
                 <label className="block rounded-2xl border border-dashed border-indigo-200 bg-indigo-50 px-4 py-4">
-                  <span className="block text-sm font-extrabold text-[#4F46E5]">
+                  <span className="block text-sm font-extrabold text-[#6D4AEF]">
                     Upload receipt image
                   </span>
                   <span className="mt-1 block text-xs font-semibold text-indigo-400">
@@ -526,14 +526,14 @@ export default function ExpenseReceiptItems({ expense, members }) {
                     onChange={(event) =>
                       setReceiptImageFile(event.target.files?.[0] || null)
                     }
-                    className="mt-3 block w-full text-xs font-semibold text-slate-500 file:mr-3 file:rounded-full file:border-0 file:bg-white file:px-3 file:py-2 file:text-xs file:font-extrabold file:text-[#4F46E5]"
+                    className="mt-3 block w-full text-xs font-semibold text-slate-500 file:mr-3 file:rounded-full file:border-0 file:bg-white file:px-3 file:py-2 file:text-xs file:font-extrabold file:text-[#6D4AEF]"
                   />
                 </label>
 
                 <button
                   type="submit"
                   disabled={!payerId || !receiptImageFile || isUploadingReceipt}
-                  className="w-full rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+                  className="w-full rounded-2xl bg-[#6D4AEF] hover:bg-[#5938D6] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
                 >
                   {isUploadingReceipt ? 'Uploading...' : 'Upload and Parse Receipt'}
                 </button>
@@ -554,7 +554,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                   step="0.01"
                   value={receiptTotal}
                   onChange={(event) => setReceiptTotal(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+                  className="w-full rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#6D4AEF]"
                   placeholder="Receipt total"
                   required
                 />
@@ -562,7 +562,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                 <button
                   type="submit"
                   disabled={!payerId || isSavingReceipt}
-                  className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+                  className="w-full rounded-2xl bg-[#6D4AEF] px-4 py-3 text-sm font-extrabold text-white hover:bg-[#5938D6] disabled:bg-slate-300"
                 >
                   {isSavingReceipt ? 'Creating...' : 'Create Manual Receipt'}
                 </button>
@@ -574,7 +574,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                 <select
                   value={activeReceipt?.id || ''}
                   onChange={(event) => setActiveReceiptId(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+                  className="w-full rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#6D4AEF]"
                 >
                   {receipts.map((receipt, index) => (
                     <option key={receipt.id} value={receipt.id}>
@@ -597,7 +597,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                       </p>
                     </div>
 
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[#4F46E5]">
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[#6D4AEF]">
                       {activeOcrReview.items.length} items
                     </span>
                   </div>
@@ -614,7 +614,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                           onChange={(event) =>
                             handleUpdateOcrItem(index, 'name', event.target.value)
                           }
-                          className="min-w-0 rounded-2xl border border-white bg-white px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#4F46E5]"
+                          className="min-w-0 rounded-2xl border border-white bg-white px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#6D4AEF]"
                           placeholder="Item name"
                         />
 
@@ -630,7 +630,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                               event.target.value
                             )
                           }
-                          className="min-w-0 rounded-2xl border border-white bg-white px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#4F46E5]"
+                          className="min-w-0 rounded-2xl border border-white bg-white px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#6D4AEF]"
                           placeholder="Price"
                         />
 
@@ -649,7 +649,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                     <button
                       type="button"
                       onClick={handleAddOcrItem}
-                      className="rounded-2xl bg-white px-4 py-3 text-sm font-extrabold text-[#4F46E5]"
+                      className="rounded-2xl bg-white px-4 py-3 text-sm font-extrabold text-[#6D4AEF]"
                     >
                       Add Row
                     </button>
@@ -658,7 +658,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                       type="button"
                       onClick={handleSaveOcrItems}
                       disabled={isSavingOcrItems}
-                      className="rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+                      className="rounded-2xl bg-[#6D4AEF] hover:bg-[#5938D6] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
                     >
                       {isSavingOcrItems ? 'Saving...' : 'Save OCR Items'}
                     </button>
@@ -669,19 +669,19 @@ export default function ExpenseReceiptItems({ expense, members }) {
               <ReceiptTotalStatus receipt={activeReceipt} items={activeItems} />
 
               {activeReceiptHasCharges && (
-                <div className="rounded-2xl bg-slate-900 px-4 py-4">
+                <div className="rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-sm font-extrabold text-white">
+                      <p className="text-sm font-extrabold text-slate-900">
                         Tax and service allocation
                       </p>
-                      <p className="mt-1 text-xs font-semibold text-slate-300">
+                      <p className="mt-1 text-xs font-semibold text-slate-500">
                         Add {formatCurrency(getReceiptChargeTotal(activeReceipt))}{' '}
                         from the receipt into member final shares.
                       </p>
                     </div>
 
-                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-extrabold text-white">
+                    <span className="rounded-full bg-[#F8E6A6] px-3 py-1 text-xs font-extrabold text-[#795A00]">
                       Tax {formatCurrency(activeReceipt.tax_amount)} · Service{' '}
                       {formatCurrency(activeReceipt.service_charge_amount)}
                     </span>
@@ -710,7 +710,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                   type="text"
                   value={itemName}
                   onChange={(event) => setItemName(event.target.value)}
-                  className="min-w-0 rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+                  className="min-w-0 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#6D4AEF]"
                   placeholder="Item name"
                   required
                 />
@@ -721,7 +721,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                   step="0.01"
                   value={itemPrice}
                   onChange={(event) => setItemPrice(event.target.value)}
-                  className="min-w-0 rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+                  className="min-w-0 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#6D4AEF]"
                   placeholder="Price"
                   required
                 />
@@ -729,14 +729,14 @@ export default function ExpenseReceiptItems({ expense, members }) {
                 <button
                   type="submit"
                   disabled={isSavingItem}
-                  className="col-span-2 rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+                  className="col-span-2 rounded-2xl bg-[#6D4AEF] hover:bg-[#5938D6] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
                 >
                   {isSavingItem ? 'Adding...' : 'Add Item'}
                 </button>
               </form>
 
               {activeItems.length === 0 ? (
-                <p className="rounded-2xl bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-400">
+                <p className="rounded-2xl bg-[#FFF9F4] px-4 py-3 text-sm font-semibold text-slate-400">
                   No items added yet.
                 </p>
               ) : (
@@ -750,7 +750,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                     return (
                       <div
                         key={item.id}
-                        className="rounded-2xl bg-[#F8FAFC] p-4"
+                        className="rounded-2xl bg-[#FFF9F4] p-4"
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div>
@@ -789,7 +789,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                                 return (
                                   <div
                                     key={share.id}
-                                    className="rounded-xl bg-[#F8FAFC] px-3 py-2"
+                                    className="rounded-xl bg-[#FFF9F4] px-3 py-2"
                                   >
                                     <div className="flex items-center justify-between gap-3">
                                       <span className="text-xs font-bold text-slate-500">
@@ -854,7 +854,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                                       key={`${item.id}-${member.user_id}`}
                                       className={`flex cursor-pointer items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-bold ${
                                         isSelected
-                                          ? 'border-[#4F46E5] bg-indigo-50 text-[#4F46E5]'
+                                          ? 'border-[#6D4AEF] bg-indigo-50 text-[#6D4AEF]'
                                           : 'border-white bg-white text-slate-500'
                                       }`}
                                     >
@@ -864,7 +864,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                                         onChange={() =>
                                           handleToggleUser(item.id, userId)
                                         }
-                                        className="h-4 w-4 accent-[#4F46E5]"
+                                        className="h-4 w-4 accent-[#6D4AEF]"
                                       />
 
                                       <span>{formatMemberLabel(member)}</span>
@@ -881,7 +881,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                                 selectedUserIds.length === 0 ||
                                 isSavingSharesByItem[item.id]
                               }
-                              className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-400"
+                              className="w-full rounded-2xl bg-[#6D4AEF] px-4 py-3 text-sm font-extrabold text-white hover:bg-[#5938D6] disabled:bg-slate-400"
                             >
                               {isSavingSharesByItem[item.id]
                                 ? 'Assigning...'
@@ -902,7 +902,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
       )}
 
       {error && (
-        <p className="mt-3 text-sm font-semibold text-[#EF4444]">{error}</p>
+        <p className="mt-3 text-sm font-semibold text-[#B4233C]">{error}</p>
       )}
     </div>
   );

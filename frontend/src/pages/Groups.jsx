@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useGroupStore } from '../store/groupStore';
 
 const cardClass =
-  'rounded-[24px] bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.05)]';
+  'rounded-[24px] border border-[#D8CAFF] bg-white p-5';
 
 export default function Groups() {
   const navigate = useNavigate();
@@ -118,7 +118,7 @@ export default function Groups() {
   };
 
   return (
-    <div className="min-h-dvh bg-[#F8FAFC] px-5 pb-8 pt-5">
+    <div className="min-h-dvh bg-[#FFF9F4] px-5 pb-8 pt-5">
       <header className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-extrabold text-slate-900">
           My Groups
@@ -127,7 +127,7 @@ export default function Groups() {
         <button
           type="button"
           onClick={handleToggleCreate}
-          className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#4F46E5] text-2xl font-light leading-none text-white"
+          className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#6D4AEF] hover:bg-[#5938D6] text-2xl font-light leading-none text-white"
         >
           +
         </button>
@@ -142,7 +142,7 @@ export default function Groups() {
             type="text"
             value={newGroupName}
             onChange={(event) => setNewGroupName(event.target.value)}
-            className="w-full rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+            className="w-full rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#6D4AEF]"
             placeholder="Group name"
             required
           />
@@ -151,13 +151,13 @@ export default function Groups() {
             type="text"
             value={newGroupDesc}
             onChange={(event) => setNewGroupDesc(event.target.value)}
-            className="w-full rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+            className="w-full rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#6D4AEF]"
             placeholder="Description"
           />
 
           <button
             type="submit"
-            className="w-full rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white"
+            className="w-full rounded-2xl bg-[#6D4AEF] hover:bg-[#5938D6] px-4 py-3 text-sm font-extrabold text-white"
           >
             Create Group
           </button>
@@ -172,7 +172,7 @@ export default function Groups() {
         </div>
       ) : error ? (
         <div
-          className={`${cardClass} text-center text-sm font-semibold text-[#EF4444]`}
+          className={`${cardClass} text-center text-sm font-semibold text-[#B4233C]`}
         >
           {error}
         </div>
@@ -212,14 +212,14 @@ export default function Groups() {
                       type="text"
                       value={editName}
                       onChange={(event) => setEditName(event.target.value)}
-                      className="w-full rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+                      className="w-full rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#6D4AEF]"
                       required
                     />
 
                     <textarea
                       value={editDesc}
                       onChange={(event) => setEditDesc(event.target.value)}
-                      className="min-h-24 w-full resize-none rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+                      className="min-h-24 w-full resize-none rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#6D4AEF]"
                       placeholder="Description"
                     />
 
@@ -228,7 +228,7 @@ export default function Groups() {
                         type="button"
                         onClick={() => handleUpdateGroup(group.id)}
                         disabled={isSaving}
-                        className="rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+                        className="rounded-2xl bg-[#6D4AEF] hover:bg-[#5938D6] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
                       >
                         {isSaving ? 'Saving...' : 'Save'}
                       </button>
@@ -261,7 +261,7 @@ export default function Groups() {
                           event.stopPropagation();
                           navigate(`/groups/${group.id}`);
                         }}
-                        className="rounded-2xl bg-[#4F46E5] px-4 py-2.5 text-xs font-extrabold text-white"
+                        className="rounded-2xl bg-[#F1EBFF] px-4 py-2.5 text-xs font-extrabold text-[#5938D6] hover:bg-[#E8DEFF]"
                       >
                         Open
                       </button>
@@ -285,7 +285,7 @@ export default function Groups() {
                               event.stopPropagation();
                               handleDeleteGroup(group.id);
                             }}
-                            className="rounded-2xl bg-red-50 px-4 py-2.5 text-xs font-extrabold text-[#EF4444]"
+                            className="rounded-2xl bg-red-50 px-4 py-2.5 text-xs font-extrabold text-[#B4233C]"
                           >
                             Delete
                           </button>

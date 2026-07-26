@@ -107,7 +107,7 @@ export default function AddMemberForm({
             setSelectedUserId(event.target.value);
             setError('');
           }}
-          className="min-w-0 flex-1 rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+          className="min-w-0 flex-1 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#6D4AEF]"
           required
         >
           <option value="">Choose a user</option>
@@ -121,14 +121,14 @@ export default function AddMemberForm({
         <button
           type="submit"
           disabled={isAddingMember}
-          className="rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+          className="rounded-2xl bg-[#6D4AEF] hover:bg-[#5938D6] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
         >
           {isAddingMember ? 'Adding...' : 'Add'}
         </button>
       </div>
 
       {error && (
-        <p className="mt-3 text-sm font-semibold text-[#EF4444]">
+        <p className="mt-3 text-sm font-semibold text-[#B4233C]">
           {error}
         </p>
       )}

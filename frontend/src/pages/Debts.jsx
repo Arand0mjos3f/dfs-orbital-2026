@@ -10,7 +10,7 @@ import { getUsers } from '../api/users';
 import { useAuthStore } from '../store/useAuthStore';
 
 const cardClass =
-  'rounded-[24px] bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.05)]';
+  'rounded-[24px] border border-[#D8CAFF] bg-white p-5';
 
 const selectedGroupStorageKey = 'dfs-selected-debt-group';
 
@@ -42,7 +42,7 @@ function getStatusClass(status) {
     return 'bg-slate-100 text-slate-400';
   }
 
-  return 'bg-indigo-50 text-[#4F46E5]';
+  return 'bg-indigo-50 text-[#6D4AEF]';
 }
 
 export default function Debts() {
@@ -272,9 +272,9 @@ export default function Debts() {
 
   if (authError) {
     return (
-      <div className="min-h-dvh bg-[#F8FAFC] px-5 pb-8 pt-5">
+      <div className="min-h-dvh bg-[#FFF9F4] px-5 pb-8 pt-5">
         <div className={cardClass}>
-          <p className="text-center text-sm font-semibold text-[#EF4444]">
+          <p className="text-center text-sm font-semibold text-[#B4233C]">
             {authError}
           </p>
         </div>
@@ -284,7 +284,7 @@ export default function Debts() {
 
   if (isLoadingPage) {
     return (
-      <div className="min-h-dvh bg-[#F8FAFC] px-5 pb-8 pt-5">
+      <div className="min-h-dvh bg-[#FFF9F4] px-5 pb-8 pt-5">
         <div className={cardClass}>
           <p className="text-center text-sm font-semibold text-slate-400">
             Loading settlements...
@@ -295,7 +295,7 @@ export default function Debts() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#F8FAFC] px-5 pb-8 pt-5">
+    <div className="min-h-dvh bg-[#FFF9F4] px-5 pb-8 pt-5">
       <header className="mb-6">
         <p className="text-sm font-semibold text-slate-400">
           {currentUser?.username || 'Current user'}
@@ -307,7 +307,7 @@ export default function Debts() {
 
       {pageError ? (
         <section className={cardClass}>
-          <p className="text-center text-sm font-semibold text-[#EF4444]">
+          <p className="text-center text-sm font-semibold text-[#B4233C]">
             {pageError}
           </p>
         </section>
@@ -319,7 +319,7 @@ export default function Debts() {
 
           <Link
             to="/groups?create=1"
-            className="mt-4 inline-flex rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white"
+            className="mt-4 inline-flex rounded-2xl bg-[#6D4AEF] hover:bg-[#5938D6] px-4 py-3 text-sm font-extrabold text-white"
           >
             Create Group
           </Link>
@@ -338,7 +338,7 @@ export default function Debts() {
               id="debt-group"
               value={selectedGroupId}
               onChange={handleGroupChange}
-              className="w-full rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+              className="w-full rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#6D4AEF]"
             >
               {groups.map((group) => (
                 <option key={group.id} value={group.id}>
@@ -349,16 +349,16 @@ export default function Debts() {
           </section>
 
           <section className="mb-5 grid grid-cols-2 gap-3">
-            <div className="rounded-[24px] bg-slate-900 p-5 text-white">
-              <p className="text-xs font-bold text-slate-400">You owe</p>
-              <p className="mt-2 text-2xl font-extrabold text-[#EF4444]">
+            <div className="rounded-[24px] border border-[#FFD3CE] bg-[#FFE6E3] p-5">
+              <p className="text-xs font-bold text-[#C24952]">You owe</p>
+              <p className="mt-2 text-2xl font-extrabold text-[#C24952]">
                 {formatCurrency(amountYouOwe)}
               </p>
             </div>
 
-            <div className="rounded-[24px] bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.05)]">
+            <div className="rounded-[24px] border border-[#D8CAFF] bg-white p-5">
               <p className="text-xs font-bold text-slate-400">Owed to you</p>
-              <p className="mt-2 text-2xl font-extrabold text-[#10B981]">
+              <p className="mt-2 text-2xl font-extrabold text-[#167A61]">
                 {formatCurrency(amountOwedToYou)}
               </p>
             </div>
@@ -375,7 +375,7 @@ export default function Debts() {
                 </h2>
               </div>
 
-              <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-extrabold text-[#4F46E5]">
+              <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-extrabold text-[#6D4AEF]">
                 {activeDebts.length}
               </span>
             </div>
@@ -385,7 +385,7 @@ export default function Debts() {
                 Loading group debts...
               </p>
             ) : activeDebts.length === 0 ? (
-              <p className="rounded-2xl bg-[#F8FAFC] px-4 py-4 text-center text-sm font-semibold text-slate-400">
+              <p className="rounded-2xl bg-[#FFF9F4] px-4 py-4 text-center text-sm font-semibold text-slate-400">
                 No calculated settlements for this group.
               </p>
             ) : (
@@ -404,7 +404,7 @@ export default function Debts() {
                   return (
                     <div
                       key={debt.id}
-                      className="rounded-2xl border border-slate-100 bg-[#F8FAFC] p-4"
+                      className="rounded-2xl border border-slate-100 bg-white p-4"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
@@ -430,7 +430,7 @@ export default function Debts() {
                           type="button"
                           onClick={() => handleMarkPaid(debt.id)}
                           disabled={isActionLoading}
-                          className="mt-4 w-full rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+                          className="mt-4 w-full rounded-2xl bg-[#6D4AEF] hover:bg-[#5938D6] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
                         >
                           {isActionLoading ? 'Updating...' : 'Mark paid'}
                         </button>
@@ -441,7 +441,7 @@ export default function Debts() {
                           type="button"
                           onClick={() => handleConfirmReceived(debt.id)}
                           disabled={isActionLoading}
-                          className="mt-4 w-full rounded-2xl bg-[#10B981] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+                          className="mt-4 w-full rounded-2xl bg-[#167A61] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
                         >
                           {isActionLoading
                             ? 'Updating...'
@@ -473,7 +473,7 @@ export default function Debts() {
             )}
 
             {debtError && (
-              <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-[#EF4444]">
+              <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-[#B4233C]">
                 {debtError}
               </p>
             )}

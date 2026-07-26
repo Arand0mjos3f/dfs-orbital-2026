@@ -17,7 +17,18 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useGroupStore } from '../store/groupStore';
 
 const cardClass =
-  'rounded-[24px] bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.05)]';
+  'rounded-[24px] border border-[#D8CAFF] bg-white p-5';
+
+function memberColorIndex(member, colorCount) {
+  const memberKey = String(member.id || member.user_id || member.username || 'U');
+  let hash = 0;
+
+  for (const character of memberKey) {
+    hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  }
+
+  return hash % colorCount;
+}
 
 function AvatarStack({ members }) {
   const labels =
@@ -26,10 +37,12 @@ function AvatarStack({ members }) {
       : [{ user_id: 'J' }, { user_id: 'A' }, { user_id: 'B' }];
 
   const colors = [
-    'bg-indigo-100 text-indigo-700',
-    'bg-emerald-100 text-emerald-700',
-    'bg-rose-100 text-rose-700',
+    'bg-[#FFE3D3] text-[#8A4B35]',
     'bg-sky-100 text-sky-700',
+    'bg-emerald-100 text-emerald-700',
+    'bg-[#F8E6A6] text-[#795A00]',
+    'bg-indigo-100 text-indigo-700',
+    'bg-indigo-50 text-indigo-700',
   ];
 
   return (
@@ -37,7 +50,7 @@ function AvatarStack({ members }) {
       {labels.slice(0, 4).map((member, index) => (
         <div
           key={member.id || member.user_id || index}
-          className={`flex h-9 w-9 items-center justify-center rounded-full border-2 border-white text-xs font-extrabold ${colors[index % colors.length]}`}
+          className={`flex h-9 w-9 items-center justify-center rounded-full border-2 border-white text-xs font-extrabold ${colors[memberColorIndex(member, colors.length)]}`}
         >
           {String(member.username || member.user_id || 'U')
             .slice(0, 1)
@@ -403,7 +416,7 @@ export default function GroupDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-dvh bg-[#F8FAFC] px-5 pb-8 pt-5">
+      <div className="min-h-dvh bg-[#FFF9F4] px-5 pb-8 pt-5">
         <div className={cardClass}>
           <p className="text-center text-sm font-semibold text-slate-400">
             Loading group...
@@ -415,9 +428,9 @@ export default function GroupDetail() {
 
   if (error) {
     return (
-      <div className="min-h-dvh bg-[#F8FAFC] px-5 pb-8 pt-5">
+      <div className="min-h-dvh bg-[#FFF9F4] px-5 pb-8 pt-5">
         <div className={cardClass}>
-          <p className="text-center text-sm font-semibold text-[#EF4444]">
+          <p className="text-center text-sm font-semibold text-[#B4233C]">
             {error}
           </p>
         </div>
@@ -426,10 +439,10 @@ export default function GroupDetail() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#F8FAFC] px-5 pb-8 pt-5">
+    <div className="min-h-dvh bg-[#FFF9F4] px-5 pb-8 pt-5">
       <header className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <Link to="/groups" className="text-sm font-extrabold text-[#4F46E5]">
+          <Link to="/groups" className="text-sm font-extrabold text-[#6D4AEF]">
             Back
           </Link>
 
@@ -445,7 +458,7 @@ export default function GroupDetail() {
         <button
           type="button"
           onClick={() => setIsCreatingExpense((value) => !value)}
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#4F46E5] text-2xl font-light leading-none text-white"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#6D4AEF] hover:bg-[#5938D6] text-2xl font-light leading-none text-white"
         >
           +
         </button>
@@ -468,7 +481,7 @@ export default function GroupDetail() {
             {enrichedMembers.map((member) => (
               <div
                 key={member.id}
-                className="flex items-center justify-between rounded-2xl bg-[#F8FAFC] px-4 py-3"
+                className="flex items-center justify-between rounded-2xl bg-[#FFF9F4] px-4 py-3"
               >
                 <div>
                   <p className="text-sm font-extrabold text-slate-900">
@@ -497,40 +510,40 @@ export default function GroupDetail() {
         )}
       </section>
 
-      <section className={`${cardClass} mb-5 bg-slate-900 text-white`}>
+      <section className={`${cardClass} feature-panel mb-5`}>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-slate-400">
+            <p className="text-sm font-semibold text-slate-500">
               Settlement Summary
             </p>
 
-            <p className="mt-3 text-3xl font-extrabold text-[#10B981]">
+            <p className="mt-3 text-3xl font-extrabold text-[#6D4AEF]">
               {formatCurrency(summaryOutstandingAmount)}
             </p>
 
-            <p className="mt-2 text-sm font-semibold text-slate-400">
+            <p className="mt-2 text-sm font-semibold text-slate-500">
               {summaryOutstandingCount === 0
                 ? 'No outstanding settlement transactions.'
                 : `${summaryOutstandingCount} settlement transaction${summaryOutstandingCount === 1 ? '' : 's'} outstanding.`}
             </p>
           </div>
 
-          <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-extrabold text-white">
-            DFS
+          <span className="rounded-full border border-[#D8CAFF] bg-[#F1EBFF] px-3 py-1 text-xs font-extrabold text-[#5938D6]">
+            Settle up
           </span>
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-white/10 px-4 py-3">
-            <p className="text-xs font-bold text-slate-400">Outstanding</p>
-            <p className="mt-1 text-lg font-extrabold text-white">
+          <div className="rounded-2xl border border-[#FFD3CE] bg-[#FFE6E3] px-4 py-3">
+            <p className="text-xs font-bold text-[#C24952]">Outstanding</p>
+            <p className="mt-1 text-lg font-extrabold text-[#C24952]">
               {summaryOutstandingCount}
             </p>
           </div>
 
-          <div className="rounded-2xl bg-white/10 px-4 py-3">
-            <p className="text-xs font-bold text-slate-400">Settled</p>
-            <p className="mt-1 text-lg font-extrabold text-white">
+          <div className="rounded-2xl border border-[#BDEAD9] bg-[#DDF8EF] px-4 py-3">
+            <p className="text-xs font-bold text-[#167A61]">Settled</p>
+            <p className="mt-1 text-lg font-extrabold text-[#167A61]">
               {summarySettledCount}
             </p>
           </div>
@@ -538,18 +551,18 @@ export default function GroupDetail() {
 
         <div className="mt-5 space-y-3">
           {isSettlementLoading ? (
-            <p className="rounded-2xl bg-white/10 px-4 py-3 text-sm font-semibold text-slate-300">
+            <p className="rounded-2xl bg-[#F7F3FA] px-4 py-3 text-sm font-semibold text-slate-500">
               Loading settlement summary...
             </p>
           ) : pendingDebts.length === 0 ? (
-            <p className="rounded-2xl bg-white/10 px-4 py-3 text-sm font-semibold text-slate-300">
+            <p className="rounded-2xl bg-[#F7F3FA] px-4 py-3 text-sm font-semibold text-slate-500">
               Assigned and settled transactions will appear in the Debts tab.
             </p>
           ) : (
             pendingDebts.map((debt) => (
               <div
                 key={debt.id}
-                className="rounded-2xl bg-white px-4 py-3 text-slate-900"
+                className="rounded-2xl border border-slate-100 bg-[#F7F3FA] px-4 py-3 text-slate-900"
               >
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-extrabold">
@@ -557,7 +570,7 @@ export default function GroupDetail() {
                     {formatUser(debt.to_user_id, userById)}
                   </p>
 
-                  <p className="text-sm font-extrabold text-[#10B981]">
+                  <p className="text-sm font-extrabold text-[#167A61]">
                     {formatCurrency(debt.amount)}
                   </p>
                 </div>
@@ -571,8 +584,8 @@ export default function GroupDetail() {
         </div>
 
         {memberSummaries.length > 0 && (
-          <div className="mt-5 border-t border-white/10 pt-5">
-            <p className="text-sm font-extrabold text-white">
+          <div className="mt-5 border-t border-indigo-200 pt-5">
+            <p className="text-sm font-extrabold text-slate-900">
               Member Balances
             </p>
 
@@ -583,7 +596,7 @@ export default function GroupDetail() {
                 return (
                   <div
                     key={summary.user_id}
-                    className="rounded-2xl bg-white px-4 py-3 text-slate-900"
+                    className="rounded-2xl border border-slate-100 bg-[#F7F3FA] px-4 py-3 text-slate-900"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-extrabold">
@@ -610,7 +623,7 @@ export default function GroupDetail() {
         )}
 
         {debtsError && (
-          <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-[#EF4444]">
+          <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-[#B4233C]">
             {debtsError}
           </p>
         )}
@@ -623,7 +636,7 @@ export default function GroupDetail() {
           <button
             type="button"
             onClick={() => setIsCreatingExpense((value) => !value)}
-            className="rounded-2xl bg-[#4F46E5] px-4 py-2 text-xs font-extrabold text-white"
+            className="rounded-2xl bg-[#6D4AEF] hover:bg-[#5938D6] px-4 py-2 text-xs font-extrabold text-white"
           >
             Add Expense
           </button>
@@ -638,7 +651,7 @@ export default function GroupDetail() {
               type="text"
               value={expenseTitle}
               onChange={(event) => setExpenseTitle(event.target.value)}
-              className="w-full rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+              className="w-full rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#6D4AEF]"
               placeholder="Expense title"
               required
             />
@@ -646,14 +659,14 @@ export default function GroupDetail() {
             <textarea
               value={expenseDescription}
               onChange={(event) => setExpenseDescription(event.target.value)}
-              className="min-h-24 w-full resize-none rounded-2xl border border-slate-100 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+              className="min-h-24 w-full resize-none rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#6D4AEF]"
               placeholder="Description"
             />
 
             <button
               type="submit"
               disabled={isSavingExpense}
-              className="w-full rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+              className="w-full rounded-2xl bg-[#6D4AEF] hover:bg-[#5938D6] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
             >
               {isSavingExpense ? 'Creating...' : 'Create Expense'}
             </button>
@@ -668,7 +681,7 @@ export default function GroupDetail() {
           </div>
         ) : expensesError ? (
           <div className={`${cardClass} text-center`}>
-            <p className="text-sm font-semibold text-[#EF4444]">
+            <p className="text-sm font-semibold text-[#B4233C]">
               {expensesError}
             </p>
           </div>
@@ -700,7 +713,7 @@ export default function GroupDetail() {
                           Edit expense details
                         </p>
 
-                        <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-extrabold text-[#4F46E5]">
+                        <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-extrabold text-[#6D4AEF]">
                           {expense.status}
                         </span>
                       </div>
@@ -715,7 +728,7 @@ export default function GroupDetail() {
                           onChange={(event) =>
                             setEditExpenseTitle(event.target.value)
                           }
-                          className="w-full rounded-2xl border border-slate-200 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#6D4AEF]"
                           required
                           maxLength={150}
                           autoFocus
@@ -731,7 +744,7 @@ export default function GroupDetail() {
                           onChange={(event) =>
                             setEditExpenseDescription(event.target.value)
                           }
-                          className="min-h-24 w-full resize-none rounded-2xl border border-slate-200 bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#4F46E5]"
+                          className="min-h-24 w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-[#6D4AEF]"
                           placeholder="No description"
                         />
                       </label>
@@ -742,7 +755,7 @@ export default function GroupDetail() {
                           disabled={
                             isUpdatingExpense || !editExpenseTitle.trim()
                           }
-                          className="flex-1 rounded-2xl bg-[#4F46E5] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+                          className="flex-1 rounded-2xl bg-[#6D4AEF] hover:bg-[#5938D6] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
                         >
                           {isUpdatingExpense ? 'Saving...' : 'Save changes'}
                         </button>
@@ -770,14 +783,14 @@ export default function GroupDetail() {
                         <button
                           type="button"
                           onClick={() => startEditingExpense(expense)}
-                          className="mt-3 text-xs font-extrabold text-[#4F46E5]"
+                          className="mt-3 text-xs font-extrabold text-[#6D4AEF]"
                           aria-label={`Edit ${expense.title} expense details`}
                         >
                           Edit details
                         </button>
                       </div>
 
-                      <span className="shrink-0 rounded-full bg-indigo-50 px-3 py-1 text-xs font-extrabold text-[#4F46E5]">
+                      <span className="shrink-0 rounded-full bg-indigo-50 px-3 py-1 text-xs font-extrabold text-[#6D4AEF]">
                         {expense.status}
                       </span>
                     </div>
@@ -801,7 +814,7 @@ export default function GroupDetail() {
                         hasCalculatedDebts ||
                         calculatingExpenseId === expense.id
                       }
-                      className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+                      className="w-full rounded-2xl bg-[#6D4AEF] px-4 py-3 text-sm font-extrabold text-white hover:bg-[#5938D6] disabled:bg-slate-300"
                     >
                       {hasCalculatedDebts
                         ? 'Settlement calculated'

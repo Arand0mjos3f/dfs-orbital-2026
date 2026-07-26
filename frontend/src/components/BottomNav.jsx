@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 
 function NavIcon({ type, active }) {
-  const color = active ? '#4F46E5' : '#94A3B8';
+  const color = active ? '#6D4AEF' : '#8B8296';
 
   const icons = {
     home: <path d="M4 11 12 4l8 7v8.5a.5.5 0 0 1-.5.5H15v-6H9v6H4.5a.5.5 0 0 1-.5-.5V11Z" />,
@@ -63,7 +63,7 @@ export default function BottomNav() {
     new URLSearchParams(location.search).get('create') === '1';
 
   return (
-    <nav className="fixed bottom-3 left-1/2 z-50 w-[calc(100%-28px)] max-w-[402px] -translate-x-1/2 rounded-[24px] border border-white/80 bg-white/85 shadow-[0_8px_30px_rgba(15,23,42,0.05)] backdrop-blur-2xl">
+    <nav className="fixed bottom-3 left-1/2 z-50 w-[calc(100%-28px)] max-w-[402px] -translate-x-1/2 rounded-[24px] border border-[#D8CAFF] bg-white">
       <div className="flex h-[58px] items-center justify-around px-2">
         {navItems.map((item) => {
           const active =
@@ -77,12 +77,14 @@ export default function BottomNav() {
             <Link
               key={item.id}
               to={item.path}
-              className="flex h-full flex-1 flex-col items-center justify-center gap-1"
+              className={`my-1 flex h-[50px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl ${
+                active ? 'bg-indigo-50' : 'bg-transparent'
+              }`}
             >
               <NavIcon type={item.id} active={active} />
               <span
                 className={`text-[10px] font-semibold leading-none ${
-                  active ? 'text-[#4F46E5]' : 'text-slate-400'
+                  active ? 'text-[#6D4AEF]' : 'text-slate-400'
                 }`}
               >
                 {item.label}
