@@ -189,6 +189,11 @@ def update_receipt_item(
     if update_data:
         update_data["is_manually_edited"] = True
 
+    financial_fields = {"quantity", "unit_price", "total_price"}
+    if financial_fields.intersection(update_data):
+        for existing_share in list_item_shares_by_item(db, item.id):
+            db.delete(existing_share)
+
     updated_item = update_item(db, item, update_data)
 
     return {
@@ -213,7 +218,13 @@ def delete_receipt_item(
             },
         )
 
-    delete_item(db, item)
+    existing_shares = list_item_shares_by_item(db, item.id)
+
+    for existing_share in existing_shares:
+        db.delete(existing_share)
+
+    db.delete(item)
+    db.commit()
 
     return {
         "success": True,

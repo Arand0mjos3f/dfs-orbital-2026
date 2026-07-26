@@ -52,12 +52,12 @@ export default function ReceiptTotalStatus({ receipt, items }) {
   }
 
   return (
-    <div className="rounded-2xl bg-amber-50 px-4 py-3">
-      <p className="text-sm font-extrabold text-amber-700">
+    <div className="rounded-2xl border border-[#FFD3CE] bg-[#FFE6E3] px-4 py-3">
+      <p className="text-sm font-extrabold text-[#B96870]">
         Item total does not match receipt subtotal
       </p>
 
-      <p className="mt-1 text-xs font-semibold text-amber-700">
+      <p className="mt-1 text-xs font-semibold text-[#B96870]">
         Subtotal {formatCurrency(receiptSubtotal)} | Items{' '}
         {formatCurrency(itemTotal)} | Difference{' '}
         {formatCurrency(subtotalDifference)}

@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { createItem, getItems } from '../api/items';
+import {
+  createItem,
+  deleteItem,
+  getItems,
+  updateItem,
+} from '../api/items';
 import {
   allocateReceiptCharges,
   createEqualItemShares,
@@ -77,9 +82,14 @@ export default function ExpenseReceiptItems({ expense, members }) {
   const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
   const [isSavingOcrItems, setIsSavingOcrItems] = useState(false);
   const [isSavingItem, setIsSavingItem] = useState(false);
+  const [editingItemId, setEditingItemId] = useState('');
+  const [editItemName, setEditItemName] = useState('');
+  const [editItemPrice, setEditItemPrice] = useState('');
+  const [itemActionId, setItemActionId] = useState('');
   const [isSavingSharesByItem, setIsSavingSharesByItem] = useState({});
   const [isAllocatingCharges, setIsAllocatingCharges] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
 
   const memberMap = useMemo(
     () =>
@@ -392,6 +402,92 @@ export default function ExpenseReceiptItems({ expense, members }) {
     }
   };
 
+  const startEditingItem = (item) => {
+    setEditingItemId(item.id);
+    setEditItemName(item.name);
+    setEditItemPrice(Number(item.total_price || 0).toFixed(2));
+    setError('');
+    setNotice('');
+  };
+
+  const cancelEditingItem = () => {
+    setEditingItemId('');
+    setEditItemName('');
+    setEditItemPrice('');
+  };
+
+  const handleUpdateItem = async (item) => {
+    if (!editItemName.trim() || editItemPrice === '') return;
+
+    const amount = Number(editItemPrice);
+    if (!Number.isFinite(amount) || amount < 0) {
+      setError('Enter a valid item price');
+      return;
+    }
+
+    setItemActionId(item.id);
+    setError('');
+    setNotice('');
+
+    try {
+      const formattedAmount = amount.toFixed(2);
+
+      await updateItem(item.id, {
+        name: editItemName.trim(),
+        quantity: 1,
+        unit_price: formattedAmount,
+        total_price: formattedAmount,
+      });
+
+      cancelEditingItem();
+      await loadReceiptsAndItems();
+
+      if ((sharesByItem[item.id] || []).length > 0) {
+        setNotice(
+          'Item updated. Reassign it if needed, then recalculate the settlement totals.'
+        );
+      }
+    } catch (requestError) {
+      console.error('Error updating item:', requestError);
+      setError(
+        requestError.response?.data?.detail?.message || 'Failed to update item'
+      );
+    } finally {
+      setItemActionId('');
+    }
+  };
+
+  const handleDeleteItem = async (item) => {
+    const hasAssignments = (sharesByItem[item.id] || []).length > 0;
+    const warning = hasAssignments
+      ? `Remove "${item.name}"? Its member assignments will also be removed, and settlement totals must be recalculated.`
+      : `Remove "${item.name}"?`;
+
+    if (!window.confirm(warning)) return;
+
+    setItemActionId(item.id);
+    setError('');
+    setNotice('');
+
+    try {
+      await deleteItem(item.id);
+      if (editingItemId === item.id) cancelEditingItem();
+      await loadReceiptsAndItems();
+      setNotice(
+        hasAssignments
+          ? 'Item and assignments removed. Recalculate the settlement totals.'
+          : 'Item removed.'
+      );
+    } catch (requestError) {
+      console.error('Error deleting item:', requestError);
+      setError(
+        requestError.response?.data?.detail?.message || 'Failed to remove item'
+      );
+    } finally {
+      setItemActionId('');
+    }
+  };
+
   const handleToggleUser = (itemId, userId) => {
     setSelectedUsersByItem((currentSelections) => {
       const currentItemSelections = currentSelections[itemId] || [];
@@ -606,7 +702,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                     {activeOcrReview.items.map((item, index) => (
                       <div
                         key={item.id}
-                        className="grid grid-cols-[1fr_96px_36px] gap-2"
+                        className="grid grid-cols-[1fr_96px_68px] gap-2"
                       >
                         <input
                           type="text"
@@ -637,9 +733,9 @@ export default function ExpenseReceiptItems({ expense, members }) {
                         <button
                           type="button"
                           onClick={() => handleRemoveOcrItem(index)}
-                          className="rounded-2xl bg-white text-xs font-extrabold text-red-400"
+                          className="rounded-2xl bg-[#FFE6E3] px-2 text-xs font-extrabold text-[#B96870]"
                         >
-                          ×
+                          Remove
                         </button>
                       </div>
                     ))}
@@ -681,7 +777,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                       </p>
                     </div>
 
-                    <span className="rounded-full bg-[#F8E6A6] px-3 py-1 text-xs font-extrabold text-[#795A00]">
+                    <span className="rounded-full bg-[#E4F3FF] px-3 py-1 text-xs font-extrabold text-[#27658B]">
                       Tax {formatCurrency(activeReceipt.tax_amount)} · Service{' '}
                       {formatCurrency(activeReceipt.service_charge_amount)}
                     </span>
@@ -691,7 +787,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                     type="button"
                     onClick={handleAllocateReceiptCharges}
                     disabled={!allActiveItemsAssigned || isAllocatingCharges}
-                    className="mt-4 w-full rounded-2xl bg-white px-4 py-3 text-sm font-extrabold text-slate-900 disabled:bg-slate-500 disabled:text-slate-300"
+                    className="mt-4 w-full rounded-2xl bg-[#6D4AEF] px-4 py-3 text-sm font-extrabold text-white hover:bg-[#5938D6] disabled:bg-[#F7F3FA] disabled:text-slate-400"
                   >
                     {isAllocatingCharges
                       ? 'Applying...'
@@ -729,7 +825,7 @@ export default function ExpenseReceiptItems({ expense, members }) {
                 <button
                   type="submit"
                   disabled={isSavingItem}
-                  className="col-span-2 rounded-2xl bg-[#6D4AEF] hover:bg-[#5938D6] px-4 py-3 text-sm font-extrabold text-white disabled:bg-slate-300"
+                  className="col-span-2 rounded-2xl bg-[#F1EBFF] px-4 py-3 text-sm font-extrabold text-[#5938D6] hover:bg-[#E8DEFF] disabled:bg-slate-100 disabled:text-slate-400"
                 >
                   {isSavingItem ? 'Adding...' : 'Add Item'}
                 </button>
@@ -746,27 +842,97 @@ export default function ExpenseReceiptItems({ expense, members }) {
                     const selectedUserIds = selectedUsersByItem[item.id] || [];
                     const isAssigned = itemShares.length > 0;
                     const itemShareHasCharges = itemShares.some(shareHasCharges);
+                    const isEditing = editingItemId === item.id;
+                    const isActing = itemActionId === item.id;
 
                     return (
                       <div
                         key={item.id}
                         className="rounded-2xl bg-[#FFF9F4] p-4"
                       >
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <p className="text-sm font-extrabold text-slate-900">
-                              {item.name}
-                            </p>
+                        {isEditing ? (
+                          <div className="grid grid-cols-[1fr_96px] gap-2">
+                            <input
+                              type="text"
+                              value={editItemName}
+                              onChange={(event) =>
+                                setEditItemName(event.target.value)
+                              }
+                              className="min-w-0 rounded-2xl border border-slate-100 bg-white px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#6D4AEF]"
+                              aria-label="Item name"
+                            />
 
-                            <p className="mt-1 text-xs font-semibold text-slate-400">
-                              Quantity {item.quantity}
-                            </p>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={editItemPrice}
+                              onChange={(event) =>
+                                setEditItemPrice(event.target.value)
+                              }
+                              className="min-w-0 rounded-2xl border border-slate-100 bg-white px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#6D4AEF]"
+                              aria-label="Item price"
+                            />
+
+                            <div className="col-span-2 flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateItem(item)}
+                                disabled={isActing}
+                                className="rounded-xl bg-[#F1EBFF] px-3 py-2 text-xs font-extrabold text-[#5938D6] disabled:text-slate-400"
+                              >
+                                {isActing ? 'Saving...' : 'Save'}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={cancelEditingItem}
+                                disabled={isActing}
+                                className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-extrabold text-slate-500"
+                              >
+                                Cancel
+                              </button>
+                            </div>
                           </div>
+                        ) : (
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <p className="text-sm font-extrabold text-slate-900">
+                                {item.name}
+                              </p>
 
-                          <p className="text-sm font-extrabold text-slate-900">
-                            {formatCurrency(item.total_price)}
-                          </p>
-                        </div>
+                              <p className="mt-1 text-xs font-semibold text-slate-400">
+                                Quantity {item.quantity}
+                              </p>
+                            </div>
+
+                            <div className="text-right">
+                              <p className="text-sm font-extrabold text-slate-900">
+                                {formatCurrency(item.total_price)}
+                              </p>
+
+                              <div className="mt-2 flex justify-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => startEditingItem(item)}
+                                  disabled={isActing}
+                                  className="rounded-xl bg-[#F1EBFF] px-3 py-1.5 text-xs font-extrabold text-[#5938D6]"
+                                >
+                                  Edit
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteItem(item)}
+                                  disabled={isActing}
+                                  className="rounded-xl bg-[#FFE6E3] px-3 py-1.5 text-xs font-extrabold text-[#B96870]"
+                                >
+                                  {isActing ? 'Removing...' : 'Remove'}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
 
                         {isAssigned ? (
                           <div className="mt-4 rounded-2xl bg-white px-4 py-3">
@@ -899,6 +1065,12 @@ export default function ExpenseReceiptItems({ expense, members }) {
             </div>
           )}
         </>
+      )}
+
+      {notice && (
+        <p className="mt-3 rounded-2xl bg-[#E4F3FF] px-4 py-3 text-sm font-semibold text-[#27658B]">
+          {notice}
+        </p>
       )}
 
       {error && (
