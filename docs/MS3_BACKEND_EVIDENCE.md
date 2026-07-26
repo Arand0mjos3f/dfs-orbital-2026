@@ -117,7 +117,14 @@ User-flow verification on 2026-07-26:
 
 Result:
 
-    Passed locally; frontend change is uncommitted and not yet deployed.
+    Passed locally and in the deployed application.
+
+Production evidence:
+
+    PATCH /api/v1/expenses/eb35b6a5-7d49-49c2-b7b9-2b0995905ff4 HTTP/1.1" 200 OK
+    GET /api/v1/groups/2b6808a5-fc99-4d47-a81e-61a15f93c88c/expenses?... HTTP/1.1" 200 OK
+
+The edited name and description remained visible after refreshing the deployed frontend. The expense-edit source change was recorded in commit `fa4e2a6`.
 
 ### 5.3 OCR item review and batch confirmation
 
