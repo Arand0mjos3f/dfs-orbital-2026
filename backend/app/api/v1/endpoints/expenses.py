@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.crud.expense import (
@@ -13,9 +13,23 @@ from app.crud.group import get_group, get_group_member
 from app.crud.user import get_user
 from app.db.database import get_db
 from app.schemas.expense import ExpenseCreate, ExpenseRead, ExpenseUpdate
+from app.services.export_service import build_expense_report, generate_csv, generate_pdf
 
 
 router = APIRouter(tags=["expenses"])
+
+
+def _get_export_report(db: Session, expense_id: uuid.UUID):
+    report = build_expense_report(db, expense_id)
+    if report is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "EXPENSE_NOT_FOUND",
+                "message": "The expense does not exist.",
+            },
+        )
+    return report
 
 
 def _validate_expense_status(status_value: str) -> None:
@@ -155,6 +169,44 @@ def get_expense_detail(
         "success": True,
         "data": ExpenseRead.model_validate(expense),
     }
+
+
+@router.get(
+    "/expenses/{expense_id}/export/csv",
+    summary="Download an expense report as CSV",
+    description="Exports stored expense, receipt, allocation, user total, and settlement data.",
+)
+def export_expense_csv(
+    expense_id: uuid.UUID,
+    db: Session = Depends(get_db),
+):
+    report = _get_export_report(db, expense_id)
+    return Response(
+        content=generate_csv(report),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="dfs-expense-{expense_id}.csv"'
+        },
+    )
+
+
+@router.get(
+    "/expenses/{expense_id}/export/pdf",
+    summary="Download an expense report as PDF",
+    description="Exports the same stored report data as the CSV endpoint in a printable PDF.",
+)
+def export_expense_pdf(
+    expense_id: uuid.UUID,
+    db: Session = Depends(get_db),
+):
+    report = _get_export_report(db, expense_id)
+    return Response(
+        content=generate_pdf(report),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="dfs-expense-{expense_id}.pdf"'
+        },
+    )
 
 
 @router.patch("/expenses/{expense_id}")
